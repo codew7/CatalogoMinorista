@@ -510,11 +510,12 @@
                 
                 const img = document.createElement('img');
                 img.src = imageUrls[0];
+                img.loading = 'lazy'; // Agregar lazy loading
                 img.onerror = function() {
-                this.src = 'no-disponible.png'; // Imagen de respaldo
+                    this.src = 'no-disponible.png'; // Imagen de respaldo
                 };
                 img.addEventListener('click', () => {
-                abrirLightbox(imageUrls);
+                    abrirLightbox(imageUrls);
                 });
                 card.appendChild(img);
             }
