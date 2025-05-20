@@ -8,49 +8,58 @@
 	
     <title>Catálogo HomePoint</title>
 
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N8G59PZ6N4"></script>
     <script>
-        //const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491121891006&text&type=phone_number&app_absent=0";
-        const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491154597288&text&type=phone_number&app_absent=0";
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-        //const MARQUEE_TEXT = "💲&nbsp; Valores publicados en dólares o cotización al Blue del día &nbsp;💲";
-        const MARQUEE_TEXT = "🏪  Visita nuestro Showroom en Vicente López  🛍️    -    🚚  ENVÍOS A TODO EL PAÍS  📦";
-
-        const ITEMUSD = ""; // 5 Mayor - blank Minor
-        const ITEMPESOS = "4"; // 6 Mayor - 4 Minor
-
-        // Verifica Login
-        //window.addEventListener('DOMContentLoaded', (event) => {
-        //const usuarioLogueado = localStorage.getItem('usuarioLogueado');
-        //if (!usuarioLogueado) {
-        //    window.location.href = 'index.html';  // Redirige al login si no está logueado
-        //}});
-        
+    gtag('config', 'G-N8G59PZ6N4');
     </script>
+
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1111115260773145');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1111115260773145&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
 	
     <style>
 	    
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-            color: #333;
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+        color: #333;
         }
 
         header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            background-color: #FFFFFF;
-            color: black;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px;
+        background-color: #FFFFFF;
+        color: black;
         }
 
         header h1 {
-            margin: 0;
-            font-size: 14px;
-            font-style: italic;
-            margin-top: 13px;
+        margin: 0;
+        font-size: 14px;
+	    font-style: italic;
+	    margin-top: 13px;
         }
 		
         .controls {
@@ -92,10 +101,10 @@
 
         .grid {
             display: grid;
-            gap: 10px;
+            gap: 14px;
             padding: 14px;
             justify-content: center;
-            max-width: 94%;
+            max-width: 90%;
             margin: 0 auto;
         }
 
@@ -147,7 +156,7 @@
         }
 
         .card h3 {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: bold;
             text-align: center;
             color: #333;
@@ -167,8 +176,8 @@
         }
 
         .lightbox img {
-            max-width: 80%;
-            max-height: 80%;
+            max-width: 90%;
+            max-height: 90%;
         }
 
         .lightbox:target {
@@ -202,7 +211,7 @@
             background-color: #4CAF50;
             cursor: pointer;
             transition: background-color 0.3s, color 0.3s;
-            text-align: center;
+            text-align: center; /* Centra el texto */
         }
 
         .pagination-button:hover {
@@ -267,30 +276,26 @@
 		
     </style>
 </head>
-
-	<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-N8G59PZ6N4"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-N8G59PZ6N4');
-</script>
 	
 <body>
 
-<header style="display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #FFFFFF; width: 90%; margin: 0 auto; border-radius: 10px;">
-    <img src="logo.png" alt="Logo de HomePoint" width="300" height=auto>
-    <div style="text-align: center; font-size: 16px; font-style: italic; ">
-        Distribuidora Mayorista & Minorista
-    </div>
-    <a href="#" onclick="window.open(WHATSAPP_URL, '_blank')" target="_blank" style="margin-top: 10px; position: relative;">
-        <img src="whatsapp.png" alt="WhatsApp" width="50" height="50" style="position: fixed; bottom: 30px; right: 20px; z-index: 1000; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
-    </a>
-</header>
+    <header style="display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #FFFFFF; width: 90%; margin: 0 auto; border-radius: 10px;">
+        <img src="logo.png" alt="Logo de HomePoint" width="300" height=auto>
+        <div style="text-align: center; font-size: 16px; font-style: italic; ">
+            Distribuidora Mayorista & Minorista
+        </div>
+        <a href="https://api.whatsapp.com/send/?phone=5491154597288&text&type=phone_number&app_absent=0" target="_blank" style="margin-top: 10px; position: relative;">
+        <!--- <a href="https://api.whatsapp.com/send/?phone=5491121891006&text&type=phone_number&app_absent=0" target="_blank" style="margin-top: 10px; position: relative;"> -->
+            <img src="whatsapp.png" alt="WhatsApp" width="50" height="50" style="position: fixed; bottom: 30px; right: 20px; z-index: 1000; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
+        </a>
+    </header>
 
-<div id="carousel" style="position: relative; width: 100%; max-width: 90%; margin: 20px auto; overflow: hidden; height: 300px; border-radius: 10px;">
+    <div style="text-align: center; font-size: 14px; font-style: italic; width: calc(100% - 20px); display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 10px; padding-right: 20px;">
+        Acceso Mayorista
+        <button onclick="window.location.href='https://homepoint.dev.ar/'" style="padding: 5px 10px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: auto;">Login</button>
+    </div>
+
+<div id="carousel" style="position: relative; width: 100%; max-width: 90%; margin: 15px auto; overflow: hidden; height: 300px; border-radius: 10px;">
     <div id="carousel-images" style="display: flex; transition: transform 0.5s ease-in-out; height: 100%; width: 100%;">
         <div style="flex: 0 0 100%; height: 100%;">
             <img src="image1.jpg" alt="Imagen 1" style="width: 100%; height: 100%; object-fit: cover;">
@@ -332,9 +337,13 @@
 
 <header style="text-align: center; padding: 10px 20px; background-color: #FFFFFF; width: 85%; margin: 0 auto; border-radius: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden;">
     <div style="white-space: nowrap; animation: marquee 15s linear infinite;">
-        <h1 id="marquee-text" style="font-size: 18px; font-style: italic; margin: 0; text-align: center; display: inline-block; color: #4CAF50;"></h1>
+        <h1 style="font-size: 16px; font-style: italic; margin: 0; text-align: center; display: inline-block; color: #4CAF50;">
+            🏪&nbsp; Visita nuestro Showroom en Vicente López &nbsp;🛍️ &nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;  🚚&nbsp; ENVÍOS A TODO EL PAÍS &nbsp;📦 <br>
+        <!--   💲&nbsp; Valores publicados en dólares o cotización al Blue del día &nbsp;💲 <br> -->
+        </h1>
     </div>
 </header>
+
 
 <style>
     @keyframes marquee {
@@ -369,11 +378,11 @@
     <p id="error" style="text-align: center; color: red; font-weight: bold;"></p>
 
     <div class="grid" id="catalogo">
-        <!-- Los datos se cargarán aquí -->
+        
     </div>
 
     <div class="pagination" id="pagination">
-        <!-- Controles de paginación -->
+        
     </div>
 
     <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
@@ -394,7 +403,7 @@
     <script>
         const API_KEY = 'AIzaSyDwiZWDc66tv4usDIA-IreiJMLFuk0236Q';
         const SPREADSHEET_ID = '1cD50d0-oSTogEe9tYo9ABUSP1ONCy3SAV92zsYYIG84';
-        const RANGO = 'A2:G';
+        const RANGO = 'A2:E';
         const ITEMS_PER_PAGE = 30;
 
         let productos = [];
@@ -411,19 +420,18 @@
                 return response.json();
             })
             .then(data => {
-                loadingMessage.style.display = 'none'; // Ocultar el mensaje de carga
+                loadingMessage.style.display = 'none';
                 const items = data.values;
                 if (!items || items.length === 0) throw new Error("No se encontraron datos en la hoja.");
                 
                 // Filtrar para ocultar artículos con etiqueta "No disponible"
                 // y ordenar descendente por el código (índice 2)
                 productos = items
-                    .filter(item => item[4].toLowerCase() !== 'no disponible')
+                    .filter(item => item[4].toLowerCase() !== 'no disponible') // NO MODIFICAR POR 5
                     .sort((a, b) => parseInt(b[2]) - parseInt(a[2]));
                 
                 mostrarPagina(1);
 
-                // Usar la lista filtrada para obtener categorías
                 const categoriasSet = new Set(productos.map(item => item[0]));
                 const selectCategorias = document.getElementById('categorias');
                 categoriasSet.forEach(categoria => {
@@ -514,26 +522,19 @@
 
             const info = document.createElement('div');
             info.classList.add('info');
-            info.textContent = `Código: ${item[2]}`;
+            info.textContent = `${item[0]} | Código: ${item[2]}`;
             card.appendChild(info);
 
-            //--const valor = document.createElement('p'); // Minorista
-            //--valor.innerHTML = `<strong>Valor:</strong> ${item[4]}`;
-            //--card.appendChild(valor);
-
-            const valorUSD = document.createElement('p'); // Mayorista
-            valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[ITEMUSD]}`;
-            card.appendChild(valorUSD);
-
-            const valorPesos = document.createElement('p'); // Mayorista
-            valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
-            card.appendChild(valorPesos);
+            const valor = document.createElement('p');
+            valor.innerHTML = `<strong>Valor:</strong> ${item[4]}`;
+            // valor.innerHTML = `<strong>Valor USD:</strong> ${item[5]}`;
+            card.appendChild(valor);
 
             // Contenedor para el selector de cantidad y el botón
             const actionContainer = document.createElement('div');
             actionContainer.style.display = 'flex';
             actionContainer.style.alignItems = 'center';
-            actionContainer.style.justifyContent = 'center';
+            actionContainer.style.justifyContent = 'center'; // Centrar horizontalmente
             actionContainer.style.gap = '10px';
 
             // Selector de cantidad
@@ -579,10 +580,10 @@
                     existe.cantidad = cantidad;
                 } else {
                     // Si no existe, lo agregamos al carrito
-                    agregarAlCarrito(articulo.textContent, item[5], cantidad);
+                    agregarAlCarrito(articulo.textContent, item[4], cantidad);
                 }
 
-                actualizarCarrito(); // Refrescar el carrito
+                actualizarCarrito();
             });
             actionContainer.appendChild(btnAgregar);
 
@@ -632,7 +633,7 @@
                 btnPagina.textContent = i;
                 btnPagina.classList.add('pagination-button');
                 if (i === paginaActual) {
-                    btnPagina.classList.add('active'); // Clase para el botón activo
+                    btnPagina.classList.add('active');
                 }
                 btnPagina.addEventListener('click', () => mostrarPagina(i, datos));
                 pagination.appendChild(btnPagina);
@@ -642,7 +643,7 @@
             if (paginaActual < totalPaginas) {
                 const btnSiguiente = document.createElement('button');
                 btnSiguiente.textContent = 'Siguiente';
-                btnSiguiente.style.width = '100px'; // Define el ancho del botón
+                btnSiguiente.style.width = '100px';
                 btnSiguiente.addEventListener('click', () => mostrarPagina(paginaActual + 1, datos));
                 pagination.appendChild(btnSiguiente);
             }
@@ -745,21 +746,14 @@
             carrito.forEach(item => {
                 mensaje += `- ${item.nombre} - Cantidad: ${item.cantidad}%0A`;
             });
-            window.open(`${WHATSAPP_URL}&text=${mensaje}`);
+            window.open(`https://api.whatsapp.com/send/?phone=5491154597288&text=${mensaje}&type=phone_number&app_absent=0`);
+            //window.open(`https://api.whatsapp.com/send/?phone=5491121891006&text=${mensaje}&type=phone_number&app_absent=0`);
         }
         
         function limpiarCarrito() {
             carrito = [];
             actualizarCarrito();
-            // Vaciar todos los inputs de cantidad
-            document.querySelectorAll('input[type="number"]').forEach(input => {
-                input.value = '';
-            });
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('marquee-text').innerHTML = MARQUEE_TEXT;
-        });
     </script>
 
     <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 90%; margin: 20px auto; border-radius: 10px;">
