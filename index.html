@@ -21,7 +21,8 @@
         //const ITEMUSD = `<strong>Valor USD</strong> ${item[ITEMUSD]}`;
 
         //const ITEMPESOS = "6"; // MAYORISTA
-        const ITEMPESOS = "4"; // MINORISTA
+        //const ITEMPESOS = "4"; // MINORISTA
+        const ITEMPESOS = `<strong>Valor $</strong> ${item[4]}` // MINORISTA
 
         //-- Verifica Login MAYORISTA --//
         // window.addEventListener('DOMContentLoaded', (event) => {
@@ -527,17 +528,14 @@
             info.textContent = `Código: ${item[2]}`;
             card.appendChild(info);
 
-            //--const valor = document.createElement('p'); // Minorista
-            //--valor.innerHTML = `<strong>Valor:</strong> ${item[4]}`;
-            //--card.appendChild(valor);
-
             const valorUSD = document.createElement('p');
             valorUSD.innerHTML = ITEMUSD;
             //valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[ITEMUSD]}`;
             card.appendChild(valorUSD);
 
             const valorPesos = document.createElement('p');
-            valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
+            valorPesos.innerHTML = ITEMPESOS;
+            //valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
             card.appendChild(valorPesos);
 
             // Contenedor para el selector de cantidad y el botón
