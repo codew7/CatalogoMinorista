@@ -17,12 +17,10 @@
         const MARQUEE_TEXT = "🏪  Visita nuestro Showroom en Vicente López  🛍️    -    🚚  ENVÍOS A TODO EL PAÍS  📦"; // MINORISTA
 
         //const ITEMUSD = "5"; // MAYORISTA
-        const ITEMUSD = ""; // MINORISTA
-        //const ITEMUSD = `<strong>Valor USD</strong> ${item[ITEMUSD]}`;
+        //const ITEMUSD = ""; // MINORISTA
 
         //const ITEMPESOS = "6"; // MAYORISTA
-        //const ITEMPESOS = "4"; // MINORISTA
-        const ITEMPESOS = "`<strong>Valor $</strong> ${item[4]}`";  // MINORISTA
+        const ITEMPESOS = "4"; // MINORISTA
 
         //-- Verifica Login MAYORISTA --//
         // window.addEventListener('DOMContentLoaded', (event) => {
@@ -528,14 +526,14 @@
             info.textContent = `Código: ${item[2]}`;
             card.appendChild(info);
 
-            const valorUSD = document.createElement('p');
-            valorUSD.innerHTML = ITEMUSD;
-            //valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[ITEMUSD]}`;
-            card.appendChild(valorUSD);
+            if (ITEMPESOS == "6") {
+                const valorUSD = document.createElement('p');
+                valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[5]}`;
+                card.appendChild(valorUSD);
+            }
 
             const valorPesos = document.createElement('p');
-            valorPesos.innerHTML = ITEMPESOS;
-            //valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
+            valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
             card.appendChild(valorPesos);
 
             // Contenedor para el selector de cantidad y el botón
