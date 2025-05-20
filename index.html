@@ -18,6 +18,7 @@
 
         //const ITEMUSD = "5"; // MAYORISTA
         const ITEMUSD = ""; // MINORISTA
+        //const ITEMUSD = `<strong>Valor USD</strong> ${item[ITEMUSD]}`;
 
         //const ITEMPESOS = "6"; // MAYORISTA
         const ITEMPESOS = "4"; // MINORISTA
@@ -525,11 +526,12 @@
             //--valor.innerHTML = `<strong>Valor:</strong> ${item[4]}`;
             //--card.appendChild(valor);
 
-            const valorUSD = document.createElement('p'); // Mayorista
-            valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[ITEMUSD]}`;
+            const valorUSD = document.createElement('p');
+            valorUSD.innerHTML = ITEMUSD;
+            //valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[ITEMUSD]}`;
             card.appendChild(valorUSD);
 
-            const valorPesos = document.createElement('p'); // Mayorista
+            const valorPesos = document.createElement('p');
             valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
             card.appendChild(valorPesos);
 
