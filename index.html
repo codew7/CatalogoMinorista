@@ -774,19 +774,28 @@
         });
     </script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('a[href^="https://api.whatsapp.com/send/?phone="]').forEach(function (link) {
-        link.addEventListener('click', function () {
-            const phone = new URL(link.href).searchParams.get('phone');
-            gtag('event', 'click_whatsapp', {
-            event_category: 'interaccion',
-            event_label: 'whatsapp_' + phone
-            });
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('a[href^="https://api.whatsapp.com/send/?phone="]').forEach(function (link) {
+      const href = link.href;
+      const phone = new URL(href).searchParams.get('phone');
+
+      link.addEventListener('click', function (e) {
+        e.preventDefault(); // Previene la redirección automática
+
+        gtag('event', 'click_whatsapp', {
+          event_category: 'interaccion',
+          event_label: 'whatsapp_' + phone
         });
-        });
+
+        setTimeout(function () {
+          window.open(href, '_blank'); // Redirige después de enviar el evento
+        }, 300); // Espera 300ms antes de abrir WhatsApp
+      });
     });
-    </script>
+  });
+</script>
+
 
 
     <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 90%; margin: 20px auto; border-radius: 10px;">
