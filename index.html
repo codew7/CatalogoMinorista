@@ -60,7 +60,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 20px;
+            padding: 10px;
             background-color: #FFFFFF;
             color: black;
         }
@@ -295,7 +295,7 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 
-<header style="display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #FFFFFF; width: 90%; margin: 0 auto; border-radius: 10px;">
+<header style="display: flex; flex-direction: column; align-items: center; padding: 10px; background-color: #FFFFFF; width: 90%; margin: 0 auto; border-radius: 10px;">
     <img src="logo.png" alt="Logo de HomePoint" width="300" height=auto>
     <div style="text-align: center; font-size: 16px; font-style: italic; ">
         Distribuidora Mayorista & Minorista
@@ -445,7 +445,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 // Filtrar para ocultar artículos con etiqueta "No disponible"
                 // y ordenar descendente por el código (índice 2)
                 productos = items
-                    .filter(item => item[4].toLowerCase() !== 'no disponible')
+                //    .filter(item => item[4].toLowerCase() !== 'no disponible') //FILTRAR NO DISPONIBLE
                     .sort((a, b) => parseInt(b[2]) - parseInt(a[2]));
                 
                 mostrarPagina(1);
