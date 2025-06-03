@@ -278,7 +278,7 @@
         // Mostrar el acceso mayorista solo si ITEMPESOS es "4"
         if (typeof ITEMPESOS !== "undefined" && ITEMPESOS === "4") {
             document.write(`
-        <div style="text-align: center; font-size: 14px; font-style: italic; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
+        <div style="text-align: center; font-size: 14px; font-style: italic; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin: 15px 0;">
             Acceso Mayorista
             <button onclick="window.location.href='https://homepoint.dev.ar/'" style="padding: 5px 10px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: auto;">Login</button>
         </div>
@@ -286,7 +286,7 @@
         }
     </script>
 
-<div id="carousel" style="position: relative; width: 100%; max-width: 90%; margin: 20px auto; overflow: hidden; height: 300px; border-radius: 10px;">
+<div id="carousel" style="position: relative; width: 100%; max-width: 90%; margin: 15px auto; overflow: hidden; height: 300px; border-radius: 10px;">
     <div id="carousel-images" style="display: flex; transition: transform 0.5s ease-in-out; height: 100%; width: 100%;">
         <div style="flex: 0 0 100%; height: 100%;">
             <img src="image1.jpg" alt="Imagen 1" style="width: 100%; height: 100%; object-fit: cover;">
@@ -414,7 +414,7 @@
                 // Filtrar para ocultar artículos con etiqueta "No disponible"
                 // y ordenar descendente por el código (índice 2)
                 productos = items
-                //    .filter(item => item[4].toLowerCase() !== 'no disponible') //FILTRAR NO DISPONIBLE
+                    .filter(item => item[4].toLowerCase() !== 'no disponible') //FILTRAR NO DISPONIBLE
                     .sort((a, b) => parseInt(b[2]) - parseInt(a[2]));
                 
                 mostrarPagina(1);

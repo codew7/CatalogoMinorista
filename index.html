@@ -445,7 +445,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 // Filtrar para ocultar artículos con etiqueta "No disponible"
                 // y ordenar descendente por el código (índice 2)
                 productos = items
-                //    .filter(item => item[4].toLowerCase() !== 'no disponible') //FILTRAR NO DISPONIBLE
+                    .filter(item => item[4].toLowerCase() !== 'no disponible') //FILTRAR NO DISPONIBLE
                     .sort((a, b) => parseInt(b[2]) - parseInt(a[2]));
                 
                 mostrarPagina(1);
