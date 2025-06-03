@@ -13,7 +13,7 @@
         //const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491121891006"; // MAYORISTA
         const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491154597288"; // MINORISTA
 
-        //const MARQUEE_TEXT = "💲&nbsp; Valores publicados en dólares o cotización al Blue del día &nbsp;💲"; // MAYORISTA
+        //const MARQUEE_TEXT = "💲&nbsp; Valores publicados en dólares o cotización al Blue del día &nbsp;💲 - &nbsp; 🛒 &nbsp; COMPRA MINIMA: 4 articulos iguales o $100.000 en varios distintos &nbsp; 🛍️ &nbsp; - &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS &nbsp; 📦"; // MAYORISTA
         const MARQUEE_TEXT = "🏪  Visita nuestro Showroom en Vicente López  🛍️    -    🚚  ENVÍOS A TODO EL PAÍS  📦"; // MINORISTA
 
         //const ITEMPESOS = "6"; // MAYORISTA
@@ -309,7 +309,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // Mostrar el acceso mayorista solo si ITEMPESOS es "4"
         if (typeof ITEMPESOS !== "undefined" && ITEMPESOS === "4") {
             document.write(`
-        <div style="text-align: center; font-size: 14px; font-style: italic; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
+        <div style="text-align: center; font-size: 14px; font-style: italic; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin: 15px 0;">
             Acceso Mayorista
             <button onclick="window.location.href='https://homepoint.dev.ar/'" style="padding: 5px 10px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: auto;">Login</button>
         </div>
@@ -317,7 +317,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
     </script>
 
-<div id="carousel" style="position: relative; width: 100%; max-width: 90%; margin: 20px auto; overflow: hidden; height: 300px; border-radius: 10px;">
+<div id="carousel" style="position: relative; width: 100%; max-width: 90%; margin: 15px auto; overflow: hidden; height: 300px; border-radius: 10px;">
     <div id="carousel-images" style="display: flex; transition: transform 0.5s ease-in-out; height: 100%; width: 100%;">
         <div style="flex: 0 0 100%; height: 100%;">
             <img src="image1.jpg" alt="Imagen 1" style="width: 100%; height: 100%; object-fit: cover;">
