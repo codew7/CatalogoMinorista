@@ -150,14 +150,15 @@
         }
 
 
-        .card img {
-
-            max-height: 180px;
-            margin: 10px 0;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+.card img {
+    max-width: 100%;
+    max-height: 180px;
+    margin: 10px 0;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    object-fit: contain; /* Mantiene la relación de aspecto */
+}
 
         .card img:hover {
             transform: scale(1.1);
