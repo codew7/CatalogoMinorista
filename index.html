@@ -136,49 +136,52 @@
             }
         }
 
-.card {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-}
+        .card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            text-align: center;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
 
-
-.card h3 {
-    font-size: 15px;
-    font-weight: bold;
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px; /* Distancia extra con respecto a la imagen */
-}
-
-.card img {
-    max-width: 100%;
-    max-height: 180px;
-    margin-bottom: 5px; /* Espacio de 5px con el siguiente */
-    border-radius: 5px;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.card .info,
-.card p,
-.card .cantidad-precio,
-.card button {
-    margin-bottom: 5px; /* Márgenes regulares */
-}
-
+        .card img {
+            max-width: 100%;
+            max-height: 180px;
+            margin: 10px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
 
         .card img:hover {
             transform: scale(1.1);
         }
 
-        
+        .card .info {
+            display: flex;
+            justify-content: center;
+            font-size: 0.9em;
+            margin: 10px 0;
+        }
+
+        .card .info,
+.card p {
+    margin-bottom: 5px;
+}
+
+
+        .card h3 {
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+            color: #333;
+        }
 
         .lightbox {
             position: fixed;
