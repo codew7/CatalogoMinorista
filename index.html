@@ -306,7 +306,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div style="text-align: center; font-size: 16px; font-style: italic; margin-top: 5px;">
         Distribuidora Mayorista & Minorista
     </div>
-    <a href="#" onclick="window.open(WHATSAPP_URL, '_blank')" target="_blank" style="margin-top: 10px; position: relative;">
+    <a class="whatsapp-link" onclick="window.open(WHATSAPP_URL, '_blank')" target="_blank" style="margin-top: 10px; position: relative;">
         <img src="whatsapp.png" alt="WhatsApp" width="50" height="50" style="position: fixed; bottom: 30px; right: 20px; z-index: 1000; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
     </a>
 </header>
@@ -420,7 +420,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Contenedor del carrito de compras -->
     <div class="cart-container">
         <ul id="cart-list"></ul>
-		<button onclick="enviarPedido()"><i class="fas fa-paper-plane"></i> Enviar</button>
+		<button onclick="enviarPedido()" class="whatsapp-link"><i class="fas fa-paper-plane"></i> Enviar</button>
 		<button onclick="limpiarCarrito()"><i class="fas fa-trash"></i> Limpiar</button>
     </div>
 
@@ -800,41 +800,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <h1 style="font-size: 14px; font-style: normal; margin: 0; text-align: center; font-weight: normal;"></h1>
             <span style="display: block; margin-top: 10px;"></span>
             Contacto Consumidor Final
-            <a href="https://api.whatsapp.com/send/?phone=5491154597288&text&type=phone_number&app_absent=0" target="_blank" style="color: #4CAF50; text-decoration: none;">+54 9 11 5459-7288</a> <br>
+            <a href="https://api.whatsapp.com/send/?phone=5491154597288&text&type=phone_number&app_absent=0" target="_blank" class="whatsapp-link" style="color: #4CAF50; text-decoration: none;">+54 9 11 5459-7288</a> <br>
             <span style="display: block; margin-top: 5px;"></span>
             Venta Mayorista
-            <a href="https://api.whatsapp.com/send/?phone=5491121891006&text&type=phone_number&app_absent=0" target="_blank" style="color: #4CAF50; text-decoration: none;">+54 9 11 2189-1006</a> <br>
+            <a href="https://api.whatsapp.com/send/?phone=5491121891006&text&type=phone_number&app_absent=0" target="_blank" class="whatsapp-link" style="color: #4CAF50; text-decoration: none;">+54 9 11 2189-1006</a> <br>
             <span style="display: block; margin-top: 10px;"></span>
             Sargento Cabral 1945, Florida Oeste, Vicente López, Buenos Aires <br>
             <span style="display: block; margin-top: 20px;"></span>
             <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3286.805060845621!2d-58.51409442351304!3d-34.53316655377695!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb0d51d5740b3%3A0x2d2dfd9b7cad8e98!2sALI%2C%20Sgto.%20Cabral%201945%2C%20B1604%20Florida%20Oeste%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1ses!2sar!4v1744725791062!5m2!1ses!2sar" width="300" height="200" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </h1>
     </footer>
-
-    <script>
-  document.addEventListener('click', function (e) {
-    let el = e.target;
-
-    // Subir hasta encontrar el <a> más cercano (por si clickean un <span> dentro del link)
-    while (el && el.tagName !== 'A') {
-      el = el.parentElement;
-    }
-
-    if (el && el.tagName === 'A') {
-      const url = el.href;
-
-      // Si el link es a WhatsApp con api.whatsapp.com/send/?phone=
-      if (url.includes('https://api.whatsapp.com/send/?phone=')) {
-        window.dataLayer = window.dataLayer || [];
-        dataLayer.push({
-          event: 'clickWhatsapp',
-          whatsapp_url: url,
-          whatsapp_text: el.innerText
-        });
-      }
-    }
-  });
-</script>
 
 </body>
 </html>
