@@ -198,7 +198,7 @@
     // solo pinto si ya tengo la cotización
     if (cotizacion || cotizacionCierre) renderItems();
 
-    const bloqueado = pedidoActual.locked;
+    const bloqueado = pedidoActual.locked || pedidoActual.estado === 'Despachado';
 
     document.getElementById('agregarItemBtn').disabled = bloqueado;
     document.getElementById('guardarBtn').disabled     = bloqueado;
@@ -209,7 +209,7 @@
       admin && !bloqueado ? 'inline-block' : 'none';
 
     document.getElementById('reabrirBtn').style.display  =
-      admin &&  bloqueado ? 'inline-block' : 'none';
+      admin &&  pedidoActual.locked ? 'inline-block' : 'none';
 
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
@@ -254,7 +254,8 @@
       </tr>`;
     let total = 0;
     const coti = getCotizacionActual();
-    const bloqueado = pedidoActual.locked;
+    // Bloquea si está cerrado o despachado
+    const bloqueado = pedidoActual.locked || pedidoActual.estado === 'Despachado';
     pedidoActual.items.forEach((it, idx) => {
       const unitPesos = Math.round((it.valorUSD || 0) * coti);
       const subtotal  = Math.round(it.cantidad * unitPesos);
@@ -278,7 +279,7 @@
       qty.min   = 1;
       qty.value = it.cantidad;
       qty.style = 'width:40px;text-align:right;font-size:1em;padding:2px 2px;';
-      qty.disabled = bloqueado; // Deshabilitar si cerrado
+      qty.disabled = bloqueado; // Deshabilitar si cerrado o despachado
       qty.onchange = e => {
         if (bloqueado) return;
         pedidoActual.items[idx].cantidad = parseInt(e.target.value, 10) || 1;
@@ -298,7 +299,7 @@
       const del = document.createElement('button');
       del.textContent = 'X';
       del.className = 'eliminar-articulo';
-      del.disabled = bloqueado; // Deshabilitar si cerrado
+      del.disabled = bloqueado; // Deshabilitar si cerrado o despachado
       del.onclick = () => {
         if (bloqueado) return;
         pedidoActual.items.splice(idx, 1); renderItems();
