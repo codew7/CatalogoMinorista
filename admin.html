@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedidos | Panel Admin</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
+
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f2f2f2;padding:20px}
+    h1{text-align:center;color:#4CAF50}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th,td{padding:8px;border:1px solid #ddd;text-align:center}
+    th{background:#4CAF50;color:#fff}
+    button{padding:4px 10px;border:none;border-radius:4px;cursor:pointer}
+    .cerrar{background:#4CAF50;color:#fff}
+    .cerrado{background:#9e9e9e;color:#fff;cursor:not-allowed}
+    #filtro{margin:10px 0;padding:6px;width:200px}
+    .reabrir{background:#FF9800;color:#fff} 
+    .cancelar{background:#f44336;color:#fff} 
+    button + button{ margin-left:6px; }
+    .dot{
+  display:inline-block;width:10px;height:10px;border-radius:50%;
+  background:#f44336;           /* rojo */
+}
+
+
+  </style>
+</head>
+<body>
+  <h1>Panel de pedidos</h1>
+
+  <input id="filtro" placeholder="Filtrar por Nombre…" />
+
+  <table id="tabla">
+    <thead>
+<tr>
+  <th></th>          <!-- nuevo indicador -->
+  <th>ID</th>
+  <th>Nombre</th>
+  <th>Fecha</th>
+  <th>Items</th>
+  <th>Estado</th>
+  <th>Acciones</th>
+</tr>
+
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+  const tbody   = document.querySelector('#tabla tbody');
+  const filtro  = document.getElementById('filtro');
+
+  let pedidos   = {};           // cache local para filtrar
+
+  // listener principal
+db.ref('pedidos').on('value', snap => {
+  pedidos = [];                        // ahora un array, no objeto
+
+  snap.forEach(child => {              // recorro cada nodo hijo
+    const p = child.val() || {};
+    p.id    = child.key;               // key garantizada
+    pedidos.push(p);
+  });
+
+  renderTabla();
+});
+
+  // filtrado en vivo
+  filtro.addEventListener('input', renderTabla);
+
+  function renderTabla() {
+  const q = (filtro.value || '').toLowerCase();
+  tbody.innerHTML = '';
+
+  pedidos
+    .filter(p => (p.cliente?.nombre || '').toLowerCase().includes(q))
+    .sort((a, b) => b.timestamp - a.timestamp) // más nuevos arriba
+    .forEach(p => {
+      const tr = document.createElement('tr');
+
+      /* --- 1. Indicador de modificación --- */
+      const indCell = tr.insertCell();
+      if (p.adminViewed === false) {
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        indCell.appendChild(dot);
+      }
+
+      /* --- 2. ID con link --- */
+      const link = document.createElement('a');
+      link.href = `pedidos.html?id=${p.id}&admin=true`;
+      link.textContent = p.id;
+      link.target = '_blank';
+      // Al abrir el detalle, lo marcamos como visto
+      link.onclick = () => {
+        db.ref(`pedidos/${p.id}`).update({ adminViewed: true })
+          .catch(() => console.error('No se pudo marcar adminViewed'));
+      };
+      tr.insertCell().appendChild(link);
+
+      /* --- 3. Nombre cliente --- */
+      tr.insertCell().textContent = p.cliente?.nombre || '—';
+
+      /* --- 4. Fecha corta --- */
+      const fecha = new Date(p.timestamp);
+      tr.insertCell().textContent =
+        fecha.toLocaleDateString('es-AR') + ' ' +
+        fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+      /* --- 5. Cant. ítems --- */
+      tr.insertCell().textContent = (p.items || []).length;
+
+      /* --- 6. Estado --- */
+      tr.insertCell().textContent = p.locked ? 'CERRADO' : 'ABIERTO';
+
+      /* --- 7. Acciones --- */
+      const acciones = tr.insertCell();
+
+      if (p.locked) {
+        // Si está cerrado, solo mostrar botón Reabrir
+        const btnReabrir = document.createElement('button');
+        btnReabrir.textContent = 'Reabrir';
+        btnReabrir.className = 'reabrir';
+        btnReabrir.onclick = () => reabrirPedido(p.id);
+        acciones.appendChild(btnReabrir);
+      } else {
+        // Si está abierto, mostrar botón Cerrar y Cancelar
+        const btnCerrar = document.createElement('button');
+        btnCerrar.textContent = 'Cerrar';
+        btnCerrar.className = 'cerrar';
+        btnCerrar.onclick = () => cerrarPedido(p.id);
+        acciones.appendChild(btnCerrar);
+
+        const btnCanc = document.createElement('button');
+        btnCanc.textContent = 'Cancelar';
+        btnCanc.className = 'cancelar';
+        btnCanc.onclick = () => cancelarPedido(p.id, p.locked);
+        acciones.appendChild(btnCanc);
+      }
+
+      tbody.appendChild(tr);
+    });
+}
+
+
+  function cerrarPedido(id){
+    if(!confirm(`¿Bloquear el pedido ${id}?`)) return;
+    db.ref(`pedidos/${id}`).update({ locked: true })
+      .catch(()=>alert('Error al cerrar pedido'));
+  }
+
+  function reabrirPedido(id){
+  if(!confirm(`¿Reabrir el pedido ${id}?`)) return;
+  db.ref(`pedidos/${id}`).update({ locked:false })
+    .catch(()=>alert('Error al reabrir pedido'));
+}
+
+function cancelarPedido(id, locked){
+  if (locked) return;                                    // no borra cerrados
+  if (!confirm(`¿Eliminar definitivamente el pedido ${id}?`)) return;
+
+  db.ref(`pedidos/${id}`).remove()
+    .catch(()=>alert('Error al cancelar'));
+}
+
+  // Lista de emails de administradores
+  const adminEmails = ["distribuidorahomepoint@gmail.com"]; // <-- pon aquí los emails autorizados
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (!user) {
+      // No autenticado, redirige al login
+      window.location.href = "login.html";
+    } else if (!adminEmails.includes(user.email)) {
+      alert("Acceso solo para administradores.");
+      firebase.auth().signOut();
+      window.location.href = "login.html";
+    }
+    // Si pasa, muestra el panel
+  });
+</script>
+</body>
+</html>

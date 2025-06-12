@@ -1,0 +1,101 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Admin</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="config.js"></script>
+  <script>
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <style>
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #dbdbdb;
+        color: #333;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .login-container {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px #0002;
+        padding: 32px 28px 24px 28px;
+        max-width: 350px;
+        width: 90%;
+        margin: 40px auto 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    h2 {
+        color: #4CAF50;
+        margin-bottom: 18px;
+        font-size: 1.5em;
+        text-align: center;
+    }
+    input[type="email"], input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0 16px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1em;
+        box-sizing: border-box;
+    }
+    button {
+        width: 100%;
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 1em;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background 0.3s;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    #msg {
+        color: #e53935;
+        margin-top: 10px;
+        min-height: 24px;
+        text-align: center;
+        font-size: 1em;
+    }
+    .logo {
+        display: block;
+        margin: 0 auto 18px auto;
+        width: 120px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <img src="logoblanco.png" alt="Logo HomePoint" class="logo">
+    <h2>Acceso Administrador</h2>
+    <input id="email" type="email" placeholder="Email">
+    <input id="pass" type="password" placeholder="Contraseña">
+    <button onclick="login()">Ingresar</button>
+    <div id="msg"></div>
+  </div>
+  <script>
+    function login() {
+      const email = document.getElementById('email').value;
+      const pass  = document.getElementById('pass').value;
+      firebase.auth().signInWithEmailAndPassword(email, pass)
+        .then(() => window.location.href = "admin.html")
+        .catch(e => document.getElementById('msg').innerText = e.message);
+    }
+  </script>
+</body>
+</html>

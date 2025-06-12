@@ -6,60 +6,60 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="icon" href="faviconnegro.png" type="image/png">
 	
-    <title>Catálogo HomePoint</title>
+    <title>Catálogo Mayorista</title>
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N8G59PZ6N4"></script>
     <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
 
-    gtag('config', 'G-N8G59PZ6N4');
+        const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491121891006"; // MAYORISTA
+        //const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491154597288"; // MINORISTA
+
+        const MARQUEE_TEXT = "💲&nbsp; Valores publicados en dólares o cotización al Blue del día &nbsp;💲 - &nbsp; 🛒 &nbsp; COMPRA MINIMA: 5 articulos iguales o $100.000 en varios distintos &nbsp; 🛍️ &nbsp; - &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS &nbsp; 📦"; // MAYORISTA
+        //const MARQUEE_TEXT = "🏪 &nbsp; Visita nuestro Showroom en Vicente López &nbsp; 🛍️ &nbsp; - &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS &nbsp; 📦 &nbsp;"; // MINORISTA
+
+        const ITEMPESOS = "6"; // MAYORISTA
+        //const ITEMPESOS = "4"; // MINORISTA
+     
+        //-- Verifica Login MAYORISTA --//
+        // window.addEventListener('DOMContentLoaded', (event) => {
+        // const usuarioLogueado = localStorage.getItem('usuarioLogueado');
+        // if (!usuarioLogueado) {
+        //     window.location.href = 'index.html';  // Redirige al login si no está logueado
+        // }});
+        
     </script>
 
-    <!-- Meta Pixel Code -->
-    <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1111115260773145');
-    fbq('track', 'PageView');
-    </script>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1111115260773145&ev=PageView&noscript=1"
-    /></noscript>
-    <!-- End Meta Pixel Code -->
+        <!-- Google Tag Manager -->
+        <script> (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-5P63433D');
+        </script>
 	
     <style>
 	    
         body {
-        font-family: 'Arial', sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f5f5f5;
-        color: #333;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #dbdbdb;
+            color: #333;
         }
 
-        header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 20px;
-        background-color: #FFFFFF;
-        color: black;
+        header { 
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
         }
 
         header h1 {
-        margin: 0;
-        font-size: 14px;
-	    font-style: italic;
-	    margin-top: 13px;
+            margin: 0;
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 13px;
         }
 		
         .controls {
@@ -101,10 +101,10 @@
 
         .grid {
             display: grid;
-            gap: 14px;
+            gap: 10px;
             padding: 14px;
             justify-content: center;
-            max-width: 90%;
+            max-width: 94%;
             margin: 0 auto;
         }
 
@@ -126,13 +126,17 @@
             }
         }
 
-        .card {
+       .card {
             background-color: #fff;
             border: 1px solid #ddd;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             padding: 15px;
             text-align: center;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .card img {
@@ -142,6 +146,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: transform 0.2s;
+            object-fit: contain; /* Mantiene la relación de aspecto */
         }
 
         .card img:hover {
@@ -156,7 +161,7 @@
         }
 
         .card h3 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             text-align: center;
             color: #333;
@@ -176,8 +181,8 @@
         }
 
         .lightbox img {
-            max-width: 90%;
-            max-height: 90%;
+            max-width: 80%;
+            max-height: 80%;
         }
 
         .lightbox:target {
@@ -211,7 +216,7 @@
             background-color: #4CAF50;
             cursor: pointer;
             transition: background-color 0.3s, color 0.3s;
-            text-align: center; /* Centra el texto */
+            text-align: center;
         }
 
         .pagination-button:hover {
@@ -276,24 +281,35 @@
 		
     </style>
 </head>
-	
+
 <body>
 
-    <header style="display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #FFFFFF; width: 90%; margin: 0 auto; border-radius: 10px;">
-        <img src="logo.png" alt="Logo de HomePoint" width="300" height=auto>
-        <div style="text-align: center; font-size: 16px; font-style: italic; ">
-            Distribuidora Mayorista & Minorista
-        </div>
-        <a href="https://api.whatsapp.com/send/?phone=5491154597288&text&type=phone_number&app_absent=0" target="_blank" style="margin-top: 10px; position: relative;">
-        <!--- <a href="https://api.whatsapp.com/send/?phone=5491121891006&text&type=phone_number&app_absent=0" target="_blank" style="margin-top: 10px; position: relative;"> -->
-            <img src="whatsapp.png" alt="WhatsApp" width="50" height="50" style="position: fixed; bottom: 30px; right: 20px; z-index: 1000; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
-        </a>
-    </header>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5P63433D"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-    <div style="text-align: center; font-size: 14px; font-style: italic; width: calc(100% - 20px); display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 10px; padding-right: 20px;">
-        Acceso Mayorista
-        <button onclick="window.location.href='https://homepoint.dev.ar/'" style="padding: 5px 10px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: auto;">Login</button>
+
+<header style="display: flex; flex-direction: column; align-items: center; padding: 10px; background-color: #4CAF50; width: 90%; margin: 0 auto; border-radius: 10px;">
+    <img src="logoblanco.png" alt="Logo de HomePoint" width="300" height=auto>
+    <div style="text-align: center; font-size: 16px; font-style: italic; margin-top: 5px;">
+        Distribuidora Mayorista
     </div>
+<a href="#" onclick="window.open(WHATSAPP_URL, '_blank')" class="whatsapp-link" target="_blank" style="margin-top: 10px; position: relative;">
+        <img src="whatsapp.png" alt="WhatsApp" class="whatsapp-link" width="50" height="50" style="position: fixed; bottom: 30px; right: 20px; z-index: 1000; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
+    </a>
+</header>
+
+    <script>
+        // Mostrar el acceso mayorista solo si ITEMPESOS es "4"
+        if (typeof ITEMPESOS !== "undefined" && ITEMPESOS === "4") {
+            document.write(`
+        <div style="text-align: center; font-size: 14px; font-style: italic; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin: 15px 0;">
+            Acceso Mayorista
+            <button onclick="window.location.href='https://homepoint.dev.ar/'" style="padding: 5px 10px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: auto;">Login</button>
+        </div>
+            `);
+        }
+    </script>
 
 <div id="carousel" style="position: relative; width: 100%; max-width: 90%; margin: 15px auto; overflow: hidden; height: 300px; border-radius: 10px;">
     <div id="carousel-images" style="display: flex; transition: transform 0.5s ease-in-out; height: 100%; width: 100%;">
@@ -337,13 +353,9 @@
 
 <header style="text-align: center; padding: 10px 20px; background-color: #FFFFFF; width: 85%; margin: 0 auto; border-radius: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden;">
     <div style="white-space: nowrap; animation: marquee 15s linear infinite;">
-        <h1 style="font-size: 16px; font-style: italic; margin: 0; text-align: center; display: inline-block; color: #4CAF50;">
-            🏪&nbsp; Visita nuestro Showroom en Vicente López &nbsp;🛍️ &nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;  🚚&nbsp; ENVÍOS A TODO EL PAÍS &nbsp;📦 <br>
-        <!--   💲&nbsp; Valores publicados en dólares o cotización al Blue del día &nbsp;💲 <br> -->
-        </h1>
+        <h1 id="marquee-text" style="font-size: 18px; font-style: italic; margin: 0; text-align: center; display: inline-block; color: #4CAF50;"></h1>
     </div>
 </header>
-
 
 <style>
     @keyframes marquee {
@@ -378,11 +390,11 @@
     <p id="error" style="text-align: center; color: red; font-weight: bold;"></p>
 
     <div class="grid" id="catalogo">
-        
+        <!-- Los datos se cargarán aquí -->
     </div>
 
     <div class="pagination" id="pagination">
-        
+        <!-- Controles de paginación -->
     </div>
 
     <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
@@ -396,14 +408,14 @@
     <!-- Contenedor del carrito de compras -->
     <div class="cart-container">
         <ul id="cart-list"></ul>
-		<button onclick="enviarPedido()"><i class="fas fa-paper-plane"></i> Enviar</button>
+		<button onclick="enviarPedido()" class="whatsapp-link"><i class="fas fa-paper-plane"></i> Enviar</button>
 		<button onclick="limpiarCarrito()"><i class="fas fa-trash"></i> Limpiar</button>
     </div>
 
     <script>
         const API_KEY = 'AIzaSyDwiZWDc66tv4usDIA-IreiJMLFuk0236Q';
         const SPREADSHEET_ID = '1cD50d0-oSTogEe9tYo9ABUSP1ONCy3SAV92zsYYIG84';
-        const RANGO = 'A2:E';
+        const RANGO = 'A2:G';
         const ITEMS_PER_PAGE = 30;
 
         let productos = [];
@@ -420,18 +432,19 @@
                 return response.json();
             })
             .then(data => {
-                loadingMessage.style.display = 'none';
+                loadingMessage.style.display = 'none'; // Ocultar el mensaje de carga
                 const items = data.values;
                 if (!items || items.length === 0) throw new Error("No se encontraron datos en la hoja.");
                 
                 // Filtrar para ocultar artículos con etiqueta "No disponible"
                 // y ordenar descendente por el código (índice 2)
                 productos = items
-                    .filter(item => item[4].toLowerCase() !== 'no disponible') // NO MODIFICAR POR 5
+                    .filter(item => item[4].toLowerCase() !== 'no disponible') //FILTRAR NO DISPONIBLE
                     .sort((a, b) => parseInt(b[2]) - parseInt(a[2]));
                 
                 mostrarPagina(1);
 
+                // Usar la lista filtrada para obtener categorías
                 const categoriasSet = new Set(productos.map(item => item[0]));
                 const selectCategorias = document.getElementById('categorias');
                 categoriasSet.forEach(categoria => {
@@ -522,19 +535,24 @@
 
             const info = document.createElement('div');
             info.classList.add('info');
-            info.textContent = `${item[0]} | Código: ${item[2]}`;
+            info.textContent = `Código: ${item[2]}`;
             card.appendChild(info);
 
-            const valor = document.createElement('p');
-            valor.innerHTML = `<strong>Valor:</strong> ${item[4]}`;
-            // valor.innerHTML = `<strong>Valor USD:</strong> ${item[5]}`;
-            card.appendChild(valor);
+            if (ITEMPESOS == "6") {
+                const valorUSD = document.createElement('p');
+                valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[5]}`;
+                card.appendChild(valorUSD);
+            }
+
+            const valorPesos = document.createElement('p');
+            valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
+            card.appendChild(valorPesos);
 
             // Contenedor para el selector de cantidad y el botón
             const actionContainer = document.createElement('div');
             actionContainer.style.display = 'flex';
             actionContainer.style.alignItems = 'center';
-            actionContainer.style.justifyContent = 'center'; // Centrar horizontalmente
+            actionContainer.style.justifyContent = 'center';
             actionContainer.style.gap = '10px';
 
             // Selector de cantidad
@@ -580,10 +598,10 @@
                     existe.cantidad = cantidad;
                 } else {
                     // Si no existe, lo agregamos al carrito
-                    agregarAlCarrito(articulo.textContent, item[4], cantidad);
+                    agregarAlCarrito(articulo.textContent, item[5], cantidad);
                 }
 
-                actualizarCarrito();
+                actualizarCarrito(); // Refrescar el carrito
             });
             actionContainer.appendChild(btnAgregar);
 
@@ -633,7 +651,7 @@
                 btnPagina.textContent = i;
                 btnPagina.classList.add('pagination-button');
                 if (i === paginaActual) {
-                    btnPagina.classList.add('active');
+                    btnPagina.classList.add('active'); // Clase para el botón activo
                 }
                 btnPagina.addEventListener('click', () => mostrarPagina(i, datos));
                 pagination.appendChild(btnPagina);
@@ -643,7 +661,7 @@
             if (paginaActual < totalPaginas) {
                 const btnSiguiente = document.createElement('button');
                 btnSiguiente.textContent = 'Siguiente';
-                btnSiguiente.style.width = '100px';
+                btnSiguiente.style.width = '100px'; // Define el ancho del botón
                 btnSiguiente.addEventListener('click', () => mostrarPagina(paginaActual + 1, datos));
                 pagination.appendChild(btnSiguiente);
             }
@@ -746,14 +764,21 @@
             carrito.forEach(item => {
                 mensaje += `- ${item.nombre} - Cantidad: ${item.cantidad}%0A`;
             });
-            window.open(`https://api.whatsapp.com/send/?phone=5491154597288&text=${mensaje}&type=phone_number&app_absent=0`);
-            //window.open(`https://api.whatsapp.com/send/?phone=5491121891006&text=${mensaje}&type=phone_number&app_absent=0`);
+            window.open(`${WHATSAPP_URL}&text=${mensaje}`);
         }
         
         function limpiarCarrito() {
             carrito = [];
             actualizarCarrito();
+            // Vaciar todos los inputs de cantidad
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.value = '';
+            });
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('marquee-text').innerHTML = MARQUEE_TEXT;
+        });
     </script>
 
     <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 90%; margin: 20px auto; border-radius: 10px;">
@@ -761,10 +786,10 @@
         <h1 style="font-size: 14px; font-style: normal; margin: 0; text-align: center; font-weight: normal;"></h1>
             <span style="display: block; margin-top: 10px;"></span>
             Contacto Consumidor Final
-            <a href="https://api.whatsapp.com/send/?phone=5491154597288&text&type=phone_number&app_absent=0" target="_blank" style="color: #4CAF50; text-decoration: none;">+54 9 11 5459-7288</a> <br>
+            <a href="https://api.whatsapp.com/send/?phone=5491154597288&text&type=phone_number&app_absent=0" target="_blank" class="whatsapp-link" style="color: #4CAF50; text-decoration: none;">+54 9 11 5459-7288</a> <br>
             <span style="display: block; margin-top: 5px;"></span>
             Venta Mayorista
-            <a href="https://api.whatsapp.com/send/?phone=5491121891006&text&type=phone_number&app_absent=0" target="_blank" style="color: #4CAF50; text-decoration: none;">+54 9 11 2189-1006</a> <br>
+            <a href="https://api.whatsapp.com/send/?phone=5491121891006&text&type=phone_number&app_absent=0" target="_blank" class="whatsapp-link" style="color: #4CAF50; text-decoration: none;">+54 9 11 2189-1006</a> <br>
             <span style="display: block; margin-top: 10px;"></span>
             Sargento Cabral 1945, Florida Oeste, Vicente López, Buenos Aires <br>
             <span style="display: block; margin-top: 20px;"></span>

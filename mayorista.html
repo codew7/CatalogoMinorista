@@ -35,6 +35,15 @@
         'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
         })(window,document,'script','dataLayer','GTM-5P63433D');
         </script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
 	
     <style>
 	    
@@ -278,6 +287,28 @@
             cursor: pointer;
             margin-bottom: 5px;
         }
+
+        .modal{
+            position:fixed;inset:0;
+            background:rgba(0,0,0,.6);
+            display:none;                /* se muestra con JS */
+            justify-content:center;align-items:center;
+            z-index:3000;
+        }
+
+        .modal-content{
+            background:#fff;padding:20px;border-radius:8px;max-width:400px;width:90%;
+            box-shadow:0 2px 6px rgba(0,0,0,.3);text-align:center
+        }
+
+        .modal-content input{
+            width:100%;padding:8px;margin:6px 0;box-sizing:border-box
+        }
+
+        .modal-content button{
+            background:#4CAF50;color:#fff;border:none;padding:10px 20px;border-radius:5px;
+            cursor:pointer;margin-top:10px
+        }
 		
     </style>
 </head>
@@ -412,10 +443,26 @@
 		<button onclick="limpiarCarrito()"><i class="fas fa-trash"></i> Limpiar</button>
     </div>
 
+    <!-- === Modal solicitar datos de cliente === -->
+    <div id="clienteModal" class="modal">
+    <div class="modal-content">
+        <p><strong>Si es tu primera compra, por favor ingresa:</strong></p>
+        <input id="emailInput" type="email" placeholder="Email">
+        <input id="nombreInput"     type="text" placeholder="Nombre">
+        <input id="telefonoInput"   type="tel"  placeholder="Teléfono (en caso de requerir envío)">
+        <input id="direccionInput"  type="text"
+            placeholder="Dirección (en caso de requerir envío)">
+        <input id="dniNuevoInput"   type="tel"  placeholder="DNI (en caso de requerir envío)">
+        <hr>
+        <p><strong>Si ya sos cliente, por favor ingresa tu email:</strong></p>
+        <input id="emailClienteInput" type="email" placeholder="Email registrado">
+        <button id="continuarBtn">Continuar</button>
+    </div>
+    </div>
+
+
     <script>
-        const API_KEY = 'AIzaSyDwiZWDc66tv4usDIA-IreiJMLFuk0236Q';
-        const SPREADSHEET_ID = '1cD50d0-oSTogEe9tYo9ABUSP1ONCy3SAV92zsYYIG84';
-        const RANGO = 'A2:G';
+        src="config.js"
         const ITEMS_PER_PAGE = 30;
 
         let productos = [];
@@ -424,9 +471,21 @@
         let currentLightboxImages = [];
         let currentImageIndex = 0;
 
+        // === soporte para editar un pedido existente ===
+        const urlParams    = new URLSearchParams(window.location.search);
+        const pedidoEditId = urlParams.get('pedido');   // si viene de pedidos.html
+        const modoEdicion  = !!pedidoEditId;
+
+        if (modoEdicion) {
+        const aviso = document.createElement('div');
+        aviso.textContent = `⚙️ Estás agregando artículos al pedido #${pedidoEditId}`;
+        aviso.style.cssText = 'background:#fff7c2;padding:8px;text-align:center;font-weight:bold;';
+        document.body.prepend(aviso);
+        }
+
         const loadingMessage = document.getElementById('loading-message');
 
-        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${RANGO}?key=${API_KEY}`)
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
             .then(response => {
                 if (!response.ok) throw new Error(`Error al acceder a la API: ${response.statusText}`);
                 return response.json();
@@ -721,21 +780,6 @@
             }
         }
 
-        // Funciones del carrito de compras
-
-        // Verifica que el mismo artículo no se agregue más de una vez
-        function agregarAlCarrito(nombre, precio, cantidad) {
-            const existe = carrito.find(item => item.nombre === nombre);
-            if (existe) {
-                // Si el artículo ya existe, actualizamos la cantidad
-                existe.cantidad += cantidad;
-            } else {
-                // Si no existe, lo agregamos al carrito
-                carrito.push({ nombre, precio, cantidad });
-            }
-            actualizarCarrito();
-        }
-
         function actualizarCarrito() {
             const cartList = document.getElementById('cart-list');
             const cartContainer = document.querySelector('.cart-container');
@@ -755,17 +799,270 @@
             });
         }
 
-        function enviarPedido() {
-            if (carrito.length === 0) {
-                alert("El carrito está vacío.");
-                return;
-            }
-            let mensaje = "Hola, me interesan estos artículos:%0A";
-            carrito.forEach(item => {
-                mensaje += `- ${item.nombre} - Cantidad: ${item.cantidad}%0A`;
+        /* === Variables globales === */
+        let datosExtraCliente = {};              // email, nombre, direccion, dni
+        let pedidoEnviado = false;  // ← nueva bandera
+        let autofillDisparado = false;
+
+        /* === Referencias al modal === */
+        const modal        = document.getElementById('clienteModal');
+        const continuarBtn = document.getElementById('continuarBtn');
+        const emailInput = document.getElementById('emailInput');
+        const nombreInput = document.getElementById('nombreInput');
+        const direccionInput = document.getElementById('direccionInput');
+        const dniNuevoInput = document.getElementById('dniNuevoInput');
+        const emailClienteInput = document.getElementById('emailClienteInput');
+        const telefonoInput = document.getElementById('telefonoInput');
+
+
+        // Autocompletar datos si el email ya existe en la tabla clientes
+        ['emailClienteInput'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.addEventListener('blur', e => {
+              const email = e.target.value.trim().toLowerCase();
+              if (email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+                db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
+                  .then(snap => {
+                    const cli = snap.exists() ? Object.values(snap.val())[0] : null;
+                    if (!cli) {
+                      alert('No se encontró el email ingresado. Por favor, registrate antes de poder ingresar el pedido.');
+                      // Limpiar campos por si había datos previos
+                      nombreInput.value = '';
+                      direccionInput.value = '';
+                      dniNuevoInput.value = '';
+                      emailInput.value = '';
+                      emailClienteInput.value = '';
+                      return;
+                    }
+                    nombreInput.value    = cli.nombre    || '';
+                    direccionInput.value = cli.direccion || '';
+                    dniNuevoInput.value  = cli.dni       || '';
+                    emailInput.value     = cli.email     || '';
+                    // Si carrito NO está vacío y aún no se lanzó, continúa solo
+                    if (carrito.length && !autofillDisparado) {
+                      autofillDisparado = true;
+                      continuarBtn.click();
+                    }
+                  })
+                  .catch(e => console.error('Error consulta email cliente', e));
+              }
             });
-            window.open(`${WHATSAPP_URL}&text=${mensaje}`);
+          }
+        });
+
+        /* --- 1. abrir modal --- */
+        function enviarPedido(){
+
+        /* Si estoy en modo edición NO vuelvo a pedir datos */
+        if (modoEdicion){
+            if (carrito.length === 0){
+            alert("El carrito está vacío.");
+            return;
+            }
+            enviarPedidoFinal();          // guarda directamente
+            return;                       // ← importante
         }
+
+        /* Nuevo pedido: abro el modal */
+        autofillDisparado = false;      // resetea flag
+        modal.style.display = 'flex';
+        }
+
+        /* --- 2. validar y continuar --- */
+        continuarBtn.addEventListener('click', () => {
+          const email      = emailInput.value.trim().toLowerCase();
+          const nombre     = nombreInput.value.trim();
+          const telefono   = telefonoInput.value.trim();
+          const direccion  = direccionInput.value.trim();
+          const dniNuevo   = dniNuevoInput.value.trim();
+          const emailCli   = emailClienteInput.value.trim().toLowerCase();
+          const dni        = dniNuevo;
+
+          let emailFinal = email || emailCli;
+          if (!emailFinal || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailFinal)) {
+            alert("Ingresá un email válido.");
+            return;
+          }
+
+          // Si el usuario intenta continuar solo con emailClienteInput, verificar si está registrado
+          if (!email && emailCli) {
+            db.ref('clientes').orderByChild('email').equalTo(emailCli).limitToFirst(1).once('value')
+              .then(snap => {
+                if (!snap.exists()) {
+                  alert('No se encontró el email ingresado. Por favor, registrate antes de poder ingresar el pedido.');
+                  return;
+                } else {
+                  const cli = Object.values(snap.val())[0];
+                  nombreInput.value    = cli.nombre    || '';
+                  telefonoInput.value  = cli.telefono  || '';
+                  direccionInput.value = cli.direccion || '';
+                  dniNuevoInput.value  = cli.dni       || '';
+                  emailInput.value     = cli.email     || '';
+                  datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, dni: cli.dni };
+                  modal.style.display = 'none';
+                  enviarPedidoFinal();
+                }
+              });
+            return;
+          }
+
+          // Nueva regla: si el email ya está registrado, actualiza los datos existentes en la tabla clientes
+          if (email) {
+            db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
+              .then(snap => {
+                if (snap.exists()) {
+                  const key = Object.keys(snap.val())[0];
+                  db.ref('clientes/' + key).update({
+                    email: emailFinal,
+                    nombre,
+                    telefono,
+                    direccion,
+                    dni
+                  }).then(() => {
+                    modal.style.display = 'none';
+                    datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
+                    enviarPedidoFinal();
+                  });
+                  return;
+                }
+                if (!nombre) {
+                  alert("Ingresá tu nombre.");
+                  return;
+                }
+                datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
+                db.ref('clientes').push({
+                  email: emailFinal,
+                  nombre,
+                  telefono,
+                  direccion,
+                  dni
+                })
+                .then(() => {
+                  modal.style.display = 'none';
+                  enviarPedidoFinal();
+                })
+                .catch(err => { alert('Error guardando datos de cliente'); console.error(err); });
+              });
+            return;
+          }
+
+          if (!nombre) {
+            alert("Ingresá tu nombre.");
+            return;
+          }
+
+          datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
+          db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
+            .then(snap => {
+              let ref;
+              if (snap.exists()) {
+                const key = Object.keys(snap.val())[0];
+                ref = db.ref('clientes/' + key);
+              } else {
+                ref = db.ref('clientes').push();
+              }
+              return ref.set({
+                email: emailFinal,
+                nombre,
+                telefono,
+                direccion,
+                dni
+              });
+            })
+            .then(() => {
+              modal.style.display = 'none';
+              enviarPedidoFinal();
+            })
+            .catch(err => { alert('Error guardando datos de cliente'); console.error(err); });
+        });
+
+        function enviarPedidoFinal() {
+        if (pedidoEnviado) return;  // Si ya se envió, salimos
+        pedidoEnviado = true;
+        
+        if (carrito.length === 0) { alert("El carrito está vacío."); return; }
+
+        /* ------------------ NUEVO PEDIDO ------------------ */
+        if (!modoEdicion) {
+            const pedidoRef = db.ref('pedidos').push();
+            const pedidoId  = pedidoRef.key;
+
+            const pedidoObj = {
+            id:        pedidoId,
+            timestamp: Date.now(),
+            locked:    false,
+            adminViewed: false,
+
+            cliente: {
+                nombre:    datosExtraCliente.nombre    || '',
+                telefono:  datosExtraCliente.telefono  || '',
+                direccion: datosExtraCliente.direccion || '',
+                dni:       String(datosExtraCliente.dni || ''),
+                email:     datosExtraCliente.email     || ''
+            },
+
+            items: carrito.map(it => ({
+                nombre:   it.nombre,
+                cantidad: it.cantidad,
+                valorUSD: it.precio
+            }))
+            };
+
+            pedidoRef.set(pedidoObj).then(() => {
+            const msg = `Hola, este es mi pedido:%0Ahttps://www.home-point.com.ar/pedidos.html?id=${pedidoId}`;
+            window.open(`${WHATSAPP_URL}&text=${msg}`);
+            limpiarCarrito();
+            });
+            return;
+        }
+
+        /* -------------- EDITAR PEDIDO EXISTENTE -------------- */
+        const pedidoRef = db.ref('pedidos/' + pedidoEditId);
+
+        pedidoRef.once('value').then(snap => {
+            const pedido = snap.val();
+            if (!pedido || pedido.locked) { alert("Este pedido no existe o está cerrado."); return; }
+
+            // fusiono artículos
+            carrito.forEach(sel => {
+            const idx = pedido.items.findIndex(it => it.nombre === sel.nombre);
+            if (idx > -1) {
+                pedido.items[idx].cantidad += sel.cantidad;
+            } else {
+                pedido.items.push({
+                nombre:   sel.nombre,
+                cantidad: sel.cantidad,
+                valorUSD: sel.precio
+                });
+            }
+            });
+
+        pedido.cliente = {
+        nombre:    datosExtraCliente.nombre    || pedido.cliente?.nombre    || '',
+        telefono:  datosExtraCliente.telefono  || pedido.cliente?.telefono || '',
+        direccion: datosExtraCliente.direccion || pedido.cliente?.direccion || '',
+        dni:       String(
+                    datosExtraCliente.dni ||
+                    pedido.cliente?.dni    || ''
+                    ),
+        email:     datosExtraCliente.email     || pedido.cliente?.email || ''
+            };
+        return pedidoRef.update({
+        items:   pedido.items,
+        cliente: pedido.cliente,
+        adminViewed: false,
+        lastUpdated: Date.now()
+        });
+
+        })
+        .then(() => {
+            alert("Artículos agregados al pedido 👌");
+            window.location.href = `pedidos.html?id=${pedidoEditId}`;
+        })
+        .catch(err => { console.error(err); alert("Error actualizando el pedido"); });
+        }
+
         
         function limpiarCarrito() {
             carrito = [];
@@ -779,6 +1076,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('marquee-text').innerHTML = MARQUEE_TEXT;
         });
+
+    // Permitir cerrar el modal al hacer clic fuera del contenido
+    modal.addEventListener('mousedown', function(e) {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
     </script>
 
     <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 90%; margin: 20px auto; border-radius: 10px;">
