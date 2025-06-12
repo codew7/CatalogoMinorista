@@ -254,6 +254,7 @@
       </tr>`;
     let total = 0;
     const coti = getCotizacionActual();
+    const bloqueado = pedidoActual.locked;
     pedidoActual.items.forEach((it, idx) => {
       const unitPesos = Math.round((it.valorUSD || 0) * coti);
       const subtotal  = Math.round(it.cantidad * unitPesos);
@@ -277,7 +278,9 @@
       qty.min   = 1;
       qty.value = it.cantidad;
       qty.style = 'width:40px;text-align:right;font-size:1em;padding:2px 2px;';
+      qty.disabled = bloqueado; // Deshabilitar si cerrado
       qty.onchange = e => {
+        if (bloqueado) return;
         pedidoActual.items[idx].cantidad = parseInt(e.target.value, 10) || 1;
         renderItems();
       };
@@ -295,7 +298,11 @@
       const del = document.createElement('button');
       del.textContent = 'X';
       del.className = 'eliminar-articulo';
-      del.onclick = () => { pedidoActual.items.splice(idx, 1); renderItems(); };
+      del.disabled = bloqueado; // Deshabilitar si cerrado
+      del.onclick = () => {
+        if (bloqueado) return;
+        pedidoActual.items.splice(idx, 1); renderItems();
+      };
       delCell.appendChild(del);
     });
 
