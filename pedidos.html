@@ -147,8 +147,8 @@
 
     /* Unifica el tamaño de todos los botones de acción inferiores */
     .accion-btn, #accionesAdmin button {
-      min-width: 170px;
-      max-width: 170px;
+      min-width: 150px;
+      max-width: 150px;
       width: 180px;
       height: 44px;
       font-size: 1em;
@@ -462,6 +462,7 @@
     entregaDiv.style = 'margin-top:18px;text-align:right;width:100%';
     entregaDiv.innerHTML = `
       <span style=\"font-weight:bold;margin-right:10px;\">Entrega:</span>
+      <br> <!-- Separar con un salto de línea -->
       <label style=\"margin-right:5px;display:inline-flex;align-items:center;\">
         <input type=\"radio\" name=\"tipoEntrega\" value=\"Retiro en local\" checked>
         <img src=\"logo.png\" alt=\"Retiro en local\" style=\"width:80px;vertical-align:middle;\">
