@@ -664,8 +664,14 @@
             function actualizarColorBoton() {
                 const existe = carrito.find(item => item.nombre === articulo.textContent);
                 let cantidad = 0;
-                if (existe) cantidad = existe.cantidad;
-                else if (!isNaN(parseInt(cantidadSelector.value))) cantidad = parseInt(cantidadSelector.value);
+                // Si el selector está vacío o en blanco, cantidad = 0
+                if (cantidadSelector.value === '' || cantidadSelector.value === null) {
+                    cantidad = 0;
+                } else if (existe) {
+                    cantidad = existe.cantidad;
+                } else if (!isNaN(parseInt(cantidadSelector.value))) {
+                    cantidad = parseInt(cantidadSelector.value);
+                }
                 if (cantidad > 0) {
                     btnAgregar.style.background = '#ff9800';
                     btnAgregar.style.color = '#fff';

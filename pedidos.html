@@ -145,6 +145,25 @@
       color: #fff !important;
     }
 
+    /* Asegura que los contenedores de botones no excedan el ancho del body */
+    .acciones-botones, #accionesAdmin, .accion-btn-contenedor {
+      max-width: 100%;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    /* Ajusta los botones para que no se desborden */
+    .acciones-botones button, #accionesAdmin button, .accion-btn-contenedor button, .accion-btn {
+      flex: 1 1 160px;
+      max-width: 200px;
+      min-width: 120px;
+      margin: 5px;
+      box-sizing: border-box;
+    }
+
   </style>
 </head>
 <body>
