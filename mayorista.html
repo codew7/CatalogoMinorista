@@ -659,25 +659,44 @@
             btnAgregar.style.fontSize = '16px';     // Aumenta el tamaño del texto
             btnAgregar.style.height = '50px';       // Ajusta la altura
             btnAgregar.style.width = '50px';        // Ajusta el ancho
+            btnAgregar.classList.add('btn-agregar-carrito');
+            // Función para actualizar el color del botón según la cantidad
+            function actualizarColorBoton() {
+                const existe = carrito.find(item => item.nombre === articulo.textContent);
+                let cantidad = 0;
+                if (existe) cantidad = existe.cantidad;
+                else if (!isNaN(parseInt(cantidadSelector.value))) cantidad = parseInt(cantidadSelector.value);
+                if (cantidad > 0) {
+                    btnAgregar.style.background = '#ff9800';
+                    btnAgregar.style.color = '#fff';
+                    btnAgregar.style.border = '1px solid #ff9800';
+                } else {
+                    btnAgregar.style.background = '';
+                    btnAgregar.style.color = '';
+                    btnAgregar.style.border = '';
+                }
+            }
             btnAgregar.addEventListener('click', () => {
                 let cantidad = parseInt(cantidadSelector.value);
                 if (isNaN(cantidad) || cantidad <= 0) {
-                    // Si el selector está vacío o tiene un valor inválido, lo establecemos en 1
                     cantidad = 1;
                     cantidadSelector.value = '1';
                 }
-
-                const existe = carrito.find(item => item.nombre === articulo.textContent); // Usar el nombre del artículo
+                const existe = carrito.find(item => item.nombre === articulo.textContent);
                 if (existe) {
-                    // Si el artículo ya existe, actualizamos la cantidad con el valor del selector
                     existe.cantidad = cantidad;
                 } else {
-                    // Si no existe, lo agregamos al carrito
                     agregarAlCarrito(articulo.textContent, item[5], cantidad);
                 }
-
-                actualizarCarrito(); // Refrescar el carrito
+                actualizarCarrito();
+                actualizarColorBoton();
             });
+            cantidadSelector.addEventListener('change', () => {
+                actualizarColorBoton();
+            });
+            // Al cargar, si ya hay cantidad en el carrito, mostrar naranja
+            actualizarColorBoton();
+
             actionContainer.appendChild(btnAgregar);
 
             card.appendChild(actionContainer);

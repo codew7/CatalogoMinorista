@@ -104,9 +104,38 @@
     th.elim,td.elim{width:1%;min-width:28px;padding-left:0;padding-right:0;}
     .eliminar-articulo{background:#e53935 !important;color:#fff !important;font-size:0.9em;padding:2px 7px 2px 7px;margin:0;line-height:1;min-width:22px;min-height:22px;border-radius:50%;}
 
-    .lightbox{position:fixed;inset:0;display:none;justify-content:center;align-items:center;background:rgba(0,0,0,.8);z-index:4000;}
-    .lightbox img{max-width:50%;max-height:50%}
-    .lightbox .close{position:absolute;top:15px;right:20px;font-size:2rem;color:#fff;cursor:pointer}
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,.8);
+      z-index: 4000;
+      /* Centrado absoluto */
+      width: 100vw;
+      height: 100vh;
+    }
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      display: block;
+      margin: auto;
+      /* Centrado extra por si acaso */
+      position: relative;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+    .lightbox .close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
+    }
 
     button#cancelarBtn {
       background: #e53935 !important;
