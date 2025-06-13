@@ -479,24 +479,8 @@
         if (modoEdicion) {
         const aviso = document.createElement('div');
         aviso.textContent = `⚙️ Estás agregando artículos al pedido #${pedidoEditId}`;
-        aviso.id = 'aviso-edicion-pedido';
-        aviso.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          z-index: 3001;
-          background: #fff7c2;
-          padding: 10px 0;
-          text-align: center;
-          font-weight: bold;
-          font-size: 1.1em;
-          box-shadow: 0 2px 8px #0002;
-          border-bottom: 2px solid #ffe066;
-        `;
-        document.body.appendChild(aviso);
-        // Agregar margen superior al body para que no tape el header
-        document.body.style.marginTop = '54px';
+        aviso.style.cssText = 'background:#fff7c2;padding:8px;text-align:center;font-weight:bold;';
+        document.body.prepend(aviso);
         }
 
         const loadingMessage = document.getElementById('loading-message');

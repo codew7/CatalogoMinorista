@@ -69,7 +69,7 @@
       transition:background 0.2s, color 0.2s, opacity 0.2s;
     }
     button:disabled, .accion-btn:disabled{background:#9e9e9e;cursor:not-allowed;}
-    #imprimirRotuloBtn {
+    #imprimirRotuloBtn, #despachadoBtn {
       min-width:160px;
       max-width:200px;
       font-size:1em;
@@ -77,17 +77,8 @@
       text-align:center;
     }
     #imprimirRotuloBtn { background: #222 !important; }
-    #imprimirRotuloBtn[disabled] { background: #9e9e9e !important; }
-    #despachadoEntregadoBtn { background: #222 !important; }
-    #despachadoEntregadoBtn[disabled] { background: #9e9e9e !important; }
-    #accionesAdmin {
-      text-align: center;
-      margin-top: 10px;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      gap: 5px;
-    }
+    #despachadoBtn { background: #444 !important; }
+    #despachadoBtn[disabled] { background: #9e9e9e !important; }
     table{
       width:100%;
       border-collapse:collapse;
@@ -138,11 +129,10 @@
     <button id="cerrarBtn" class="accion-btn">Cerrar Pedido</button>
     <button id="reabrirBtn" class="accion-btn">Reabrir Pedido</button>
     <button id="cancelarBtn" class="accion-btn">Cancelar Pedido</button>
-    <button id="controlPedidoBtn" class="accion-btn" style="display:none;background:#888;">Control Pedido</button>
   </div>
   <div id="accionesAdmin" style="text-align:center;margin-top:10px;">
     <button id="imprimirRotuloBtn" class="accion-btn" style="display:none;background:#222;">Imprimir Rótulo</button>
-    <button id="despachadoEntregadoBtn" class="accion-btn" style="display:none;background:#666;">Despachado/Entregado</button>
+    <button id="despachadoBtn" class="accion-btn" style="display:none;background:#444;">Despachado</button>
   </div>
 
   <div id="imgLightbox" class="lightbox" onclick="cerrarLB(event)">
@@ -168,83 +158,51 @@
     }
     cotizacionCierre = pedidoActual.cotizacionCierre || null;
 
-    // === NUEVO: status por defecto ===
-    if (!pedidoActual.status) {
-      pedidoRef.update({ status: 'ABIERTO' });
-      pedidoActual.status = 'ABIERTO';
-    }
-
     // Mostrar datos del cliente, incluyendo email
     const cliente = pedidoActual.cliente || {};
     document.getElementById('nombreCliente').textContent = cliente.nombre || '';
     document.getElementById('direccionCliente').textContent = cliente.direccion || '';
     document.getElementById('dniCliente').textContent = cliente.dni ? `DNI: ${cliente.dni}` : '';
     document.getElementById('telefonoCliente').textContent = cliente.telefono ? `Teléfono: ${cliente.telefono}` : '';
-    document.getElementById('emailCliente').textContent = cliente.email ? `${cliente.email}` : 'Email no disponible';
+    document.getElementById('emailCliente').textContent = cliente.email ? `Email: ${cliente.email}` : 'Email no disponible';
 
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
       const imprimirBtn = document.getElementById('imprimirRotuloBtn');
+      const despachadoBtn = document.getElementById('despachadoBtn');
       imprimirBtn.style.display = 'inline-block';
+      despachadoBtn.style.display = 'inline-block';
       // Habilitar solo si hay dirección
       const tieneDireccion = !!pedidoActual.cliente?.direccion;
       imprimirBtn.disabled = !tieneDireccion;
       imprimirBtn.style.opacity = imprimirBtn.disabled ? '0.5' : '1';
-
-      // === Botón Control Pedido y Despachado/Entregado ===
-      const controlPedidoBtn = document.getElementById('controlPedidoBtn');
-      const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
-      controlPedidoBtn.style.display = 'inline-block';
-      despachadoEntregadoBtn.style.display = 'inline-block';
-      // Mover el botón Control Pedido antes de Imprimir Rótulo
-      const accionesAdmin = document.getElementById('accionesAdmin');
-      if (accionesAdmin && controlPedidoBtn && imprimirBtn) {
-        accionesAdmin.insertBefore(controlPedidoBtn, imprimirBtn);
+      despachadoBtn.disabled = !tieneDireccion;
+      despachadoBtn.style.opacity = despachadoBtn.disabled ? '0.5' : '1';
+      // Cambiar texto y color según estado
+      if (pedidoActual.estado === 'Despachado') {
+        despachadoBtn.textContent = 'Quitar Despachado';
+        despachadoBtn.style.background = '#888';
+      } else {
+        despachadoBtn.textContent = 'Despachado';
+        despachadoBtn.style.background = '#444';
       }
-      // Estado visual y lógica del botón Despachado/Entregado
-      function actualizarBotonDespachado() {
-        despachadoEntregadoBtn.textContent = 'Despachado/Entregado';
-        despachadoEntregadoBtn.style.background = '#666';
-        // Solo habilitado si el status NO es DESPACHADO/ENTREGADO ni CANCELADO
-        despachadoEntregadoBtn.disabled = pedidoActual.status === 'DESPACHADO/ENTREGADO' || pedidoActual.status === 'CANCELADO';
-        despachadoEntregadoBtn.style.opacity = despachadoEntregadoBtn.disabled ? '0.5' : '1';
-      }
-      actualizarBotonDespachado();
-      despachadoEntregadoBtn.onclick = null;
-      despachadoEntregadoBtn.onclick = () => {
-        if (despachadoEntregadoBtn.disabled) return;
-        despachadoEntregadoBtn.disabled = true;
-        // Solo permite marcar como DESPACHADO/ENTREGADO, nunca volver a ABIERTO
-        pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true })
-          .catch(() => alert('Error al despachar/entregar el pedido'))
-          .finally(() => { actualizarBotonDespachado(); });
-      };
     }
-    // Mostrar estado
-    if (pedidoActual.status === 'DESPACHADO/ENTREGADO') {
-      document.getElementById('estado').innerText = '📦 PEDIDO DESPACHADO/ENTREGADO';
-    } else if (pedidoActual.status === 'CANCELADO') {
-      document.getElementById('estado').innerText = '❌ PEDIDO CANCELADO';
-    } else if (pedidoActual.locked) {
-      document.getElementById('estado').innerText = '🔒 PEDIDO CERRADO';
+    // Mostrar estado despachado
+    if (pedidoActual.estado === 'Despachado') {
+      document.getElementById('estado').innerText = '📦 PEDIDO DESPACHADO';
     } else {
-      document.getElementById('estado').innerText = '📝 PEDIDO ABIERTO';
+      document.getElementById('estado').innerText =
+        pedidoActual.locked ? "🔒 PEDIDO CERRADO" : "📝 PEDIDO ABIERTO";
     }
 
     // solo pinto si ya tengo la cotización
     if (cotizacion || cotizacionCierre) renderItems();
 
-    // Bloqueo por status
-    const bloqueado = pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO';
+    const bloqueado = pedidoActual.locked || pedidoActual.estado === 'Despachado';
+
     document.getElementById('agregarItemBtn').disabled = bloqueado;
     document.getElementById('guardarBtn').disabled     = bloqueado;
     document.getElementById('cancelarBtn').disabled    = bloqueado;
-
-    // Bloquear radios de pago y entrega si bloqueado
-    const pagoRadios = document.getElementsByName('tipoPago');
-    for (let r of pagoRadios) r.disabled = bloqueado;
-    const entregaRadios = document.getElementsByName('tipoEntrega');
-    for (let r of entregaRadios) r.disabled = bloqueado;
 
     // visibilidad de botones según rol/estado
     document.getElementById('cerrarBtn').style.display   =
@@ -256,16 +214,20 @@
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
       document.getElementById('imprimirRotuloBtn').style.display = 'inline-block';
+      // Mostrar botón Despachado solo para admin
+      const despachadoBtn = document.getElementById('despachadoBtn');
+      despachadoBtn.style.display = 'inline-block';
+      // Habilitar solo si hay dirección
+      despachadoBtn.disabled = !pedidoActual.cliente?.direccion;
+      // Cambiar color si está deshabilitado
+      despachadoBtn.style.opacity = despachadoBtn.disabled ? '0.5' : '1';
     }
-    // Mostrar estado
-    if (pedidoActual.status === 'DESPACHADO/ENTREGADO') {
-      document.getElementById('estado').innerText = '📦 PEDIDO DESPACHADO/ENTREGADO';
-    } else if (pedidoActual.status === 'CANCELADO') {
-      document.getElementById('estado').innerText = '❌ PEDIDO CANCELADO';
-    } else if (pedidoActual.locked) {
-      document.getElementById('estado').innerText = '🔒 PEDIDO CERRADO';
+    // Mostrar estado despachado
+    if (pedidoActual.estado === 'Despachado') {
+      document.getElementById('estado').innerText = '📦 PEDIDO DESPACHADO';
     } else {
-      document.getElementById('estado').innerText = '📝 PEDIDO ABIERTO';
+      document.getElementById('estado').innerText =
+        pedidoActual.locked ? "🔒 PEDIDO CERRADO" : "📝 PEDIDO ABIERTO";
     }
   });
 
@@ -292,8 +254,8 @@
       </tr>`;
     let total = 0;
     const coti = getCotizacionActual();
-    // Bloquea si está cerrado, despachado o cancelado
-    const bloqueado = pedidoActual.locked || pedidoActual.estado === 'Despachado' || pedidoActual.status === 'CANCELADO';
+    // Bloquea si está cerrado o despachado
+    const bloqueado = pedidoActual.locked || pedidoActual.estado === 'Despachado';
     pedidoActual.items.forEach((it, idx) => {
       const unitPesos = Math.round((it.valorUSD || 0) * coti);
       const subtotal  = Math.round(it.cantidad * unitPesos);
@@ -347,107 +309,15 @@
 
     cont.appendChild(tbl);
 
-    /* ===== total y selector de pago (alineados a la derecha, uno debajo del otro) ===== */
-    let totalPagoWrap = document.getElementById('totalPagoWrap');
-    if (!totalPagoWrap) {
-      totalPagoWrap = document.createElement('div');
-      totalPagoWrap.id = 'totalPagoWrap';
-      totalPagoWrap.style = 'display:flex;flex-direction:column;align-items:flex-end;margin-top:15px;margin-bottom:10px;width:100%';
-      cont.appendChild(totalPagoWrap);
-    } else {
-      totalPagoWrap.style = 'display:flex;flex-direction:column;align-items:flex-end;margin-top:15px;margin-bottom:10px;width:100%';
-    }
-    // Total
+    /* ===== total ===== */
     let totalDiv = document.getElementById('total');
     if (!totalDiv) {
-      totalDiv = document.createElement('div');
-      totalDiv.id = 'total';
-      totalDiv.style = 'font-weight:bold;font-size:1.2em;text-align:right;';
-      totalPagoWrap.appendChild(totalDiv);
-    } else if (!totalPagoWrap.contains(totalDiv)) {
-      totalPagoWrap.appendChild(totalDiv);
+      totalDiv       = document.createElement('div');
+      totalDiv.id    = 'total';
+      cont.appendChild(totalDiv);
     }
-    totalDiv.style = 'font-weight:bold;font-size:1.2em;text-align:right;';
     totalDiv.textContent = `TOTAL $ ${total.toLocaleString('es-AR')}`;
-    // Selector de pago
-    let pagoDiv = document.getElementById('pagoSelector');
-    if (!pagoDiv) {
-      pagoDiv = document.createElement('div');
-      pagoDiv.id = 'pagoSelector';
-      pagoDiv.style = 'margin-top:12px;text-align:right;width:100%';
-      totalPagoWrap.appendChild(pagoDiv);
-    } else if (!totalPagoWrap.contains(pagoDiv)) {
-      totalPagoWrap.appendChild(pagoDiv);
     }
-    pagoDiv.style = 'margin-top:12px;text-align:right;width:100%';
-    pagoDiv.innerHTML = `
-      <span style=\"font-weight:bold;margin-right:10px;\">Pago:</span>
-      <label style=\"margin-right:15px;display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoPago\" value=\"Efectivo\" checked> Efectivo
-      </label>
-      <label style=\"display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoPago\" value=\"Transferencia\"> Transferencia
-      </label>
-    `;
-    // Selector de entrega (en fila separada, alineado a la derecha)
-    let entregaDiv = document.getElementById('entregaSelector');
-    if (!entregaDiv) {
-      entregaDiv = document.createElement('div');
-      entregaDiv.id = 'entregaSelector';
-      entregaDiv.style = 'margin-top:25px;text-align:right;width:100%';
-      totalPagoWrap.appendChild(entregaDiv);
-    } else if (!totalPagoWrap.contains(entregaDiv)) {
-      totalPagoWrap.appendChild(entregaDiv);
-    }
-    entregaDiv.style = 'margin-top:18px;text-align:right;width:100%';
-    entregaDiv.innerHTML = `
-      <span style=\"font-weight:bold;margin-right:10px;\">Entrega:</span>
-      <label style=\"margin-right:5px;display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoEntrega\" value=\"Retiro en local\" checked>
-        <img src=\"logo.png\" alt=\"Retiro en local\" style=\"width:80px;vertical-align:middle;\">
-      </label>
-      <label style=\"margin-right:5px;display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoEntrega\" value=\"Correo Argentino\">\n        <img src=\"logo-correo.png\" alt=\"Correo Argentino\" style=\"width:80px;vertical-align:middle;\">
-      </label>
-      <label style=\"display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoEntrega\" value=\"Via Cargo\">\n        <img src=\"logo-viacargo.png\" alt=\"Via Cargo\" style=\"width:80px;vertical-align:middle;\">
-      </label>
-    `;
-
-    // === Seleccionar radio buttons según lo guardado ===
-    setTimeout(() => {
-      // Tipo de Pago
-      const pagoRadios = document.getElementsByName('tipoPago');
-      const pagoValue = pedidoActual.tipoPago || 'Efectivo';
-      for (let r of pagoRadios) {
-        r.checked = (r.value === pagoValue);
-      }
-      // Tipo de Entrega
-      const entregaRadios = document.getElementsByName('tipoEntrega');
-      const entregaValue = pedidoActual.tipoEntrega || 'Retiro en local';
-      for (let r of entregaRadios) {
-        r.checked = (r.value === entregaValue);
-      }
-      // === Actualizar total según pago seleccionado ===
-      function actualizarTotalConRecargo() {
-        const pagoSeleccionado = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
-        let textoTotal = `TOTAL $ ${total.toLocaleString('es-AR')}`;
-        if (pagoSeleccionado === 'Transferencia') {
-          const recargo = Math.round(total * 0.02);
-          const totalConRecargo = total + recargo;
-          textoTotal = `TOTAL $ ${totalConRecargo.toLocaleString('es-AR')} <span style=\"font-weight:normal;font-size:0.80em;margin-left:6px;\">(recargo $${recargo.toLocaleString('es-AR')})</span>`;
-        }
-        totalDiv.innerHTML = textoTotal;
-      }
-      // Listener para radios de pago
-      const pagoRadiosArr = Array.from(document.getElementsByName('tipoPago'));
-      pagoRadiosArr.forEach(radio => {
-        radio.onchange = actualizarTotalConRecargo;
-      });
-      // Llamar al inicio
-      actualizarTotalConRecargo();
-    }, 0);
-  }
 
 
   /* -------- BOTÓN PARA IR AL CATÁLOGO EN MODO EDICIÓN -------- */
@@ -464,10 +334,6 @@
       return;
     }
 
-    // Obtener selección de pago y entrega
-    const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
-    const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked')?.value || 'Retiro en local';
-
     /* 2. Enviamos la actualización */
     firebase
       .database()
@@ -475,9 +341,7 @@
       .update({
         items:       pedidoActual.items, // lista modificada
         adminViewed: false,              // ← resetea el indicador
-        lastUpdated: Date.now(),         // (útil para ordenar por fecha)
-        tipoPago: tipoPago,
-        tipoEntrega: tipoEntrega
+        lastUpdated: Date.now()          // (útil para ordenar por fecha)
       })
       .then(() => alert('Pedido actualizado ✔️'))
       .catch(()  => alert('Error al guardar'));
@@ -486,8 +350,8 @@
 
   document.getElementById('cerrarBtn').onclick = () => {
     if (!confirm("¿Cerrar definitivamente el pedido?")) return;
-    // Al cerrar, guardo la cotización actual y status
-    pedidoRef.update({ locked:true, cotizacionCierre: cotizacion, status: 'CERRADO' })
+    // Al cerrar, guardo la cotización actual
+    pedidoRef.update({ locked:true, cotizacionCierre: cotizacion })
       .then(()=>alert("Pedido cerrado"));
   };
 
@@ -495,18 +359,19 @@
   if (!admin || !pedidoActual.locked) return;            // solo admin y pedido cerrado
   if (!confirm("¿Querés reabrir este pedido?")) return;
 
-  pedidoRef.update({ locked:false, status: 'ABIERTO' })
+  pedidoRef.update({ locked:false })
     .then(() => alert("Pedido reabierto"))
     .catch(() => alert("Error al reabrir"));
   };
 
   document.getElementById('cancelarBtn').onclick = () => {
-  if (pedidoActual.locked || pedidoActual.status === 'CANCELADO') return; // bloqueado si cerrado o ya cancelado
-  if (!confirm("¿Seguro que desea cancelar el pedido? Esta acción es IRREVERSIBLE y el pedido no podrá ser modificado ni reactivado.")) return;
+  if (pedidoActual.locked) return;                              // bloqueado si está cerrado
+  if (!confirm("¿Seguro querés cancelar y eliminar el pedido?")) return;
 
-  pedidoRef.update({ status: 'CANCELADO', locked: true })
+  pedidoRef.remove()
     .then(() => {
-      alert("Pedido cancelado. Ya no podrá ser modificado.");
+      alert("Pedido cancelado");
+      window.location.href = "mayorista.html";                   // o a donde quieras redirigir
     })
     .catch(() => alert("Error al cancelar"));
 };
@@ -550,8 +415,8 @@ if (!modalEditCliente) {
     <div style="background:#fff;padding:20px 30px;border-radius:8px;min-width:300px;max-width:500px;width:100%;position:relative;">
       <button id="closeEditCliente" style="position:absolute;top:10px;right:15px;font-size:1.5em;background:none;border:none;cursor:pointer;">×</button>
       <h3>Editar datos del cliente</h3>
-      <input id="editNombre" type="text" placeholder="Nombre y Apellido" style="width:100%;margin-bottom:8px;">
-      <input id="editDireccion" type="text" placeholder="Dirección Completa" style="width:100%;margin-bottom:8px;">
+      <input id="editNombre" type="text" placeholder="Nombre" style="width:100%;margin-bottom:8px;">
+      <input id="editDireccion" type="text" placeholder="Dirección" style="width:100%;margin-bottom:8px;">
       <input id="editDni" type="text" placeholder="DNI" style="width:100%;margin-bottom:8px;">
       <input id="editTelefono" type="text" placeholder="Teléfono (opcional)" style="width:100%;margin-bottom:8px;">
       <input id="editEmail" type="email" placeholder="Email" style="width:100%;margin-bottom:8px;" readonly>
@@ -722,107 +587,12 @@ document.getElementById('imprimirRotuloBtn').onclick = () => {
   win.document.close();
 };
 
-
-document.getElementById('controlPedidoBtn').onclick = () => {
-  if (!pedidoActual) return;
-  const cliente = pedidoActual.cliente || {};
-  let html = `
-    <html><head><title>Control de Pedido</title>
-    <style>
-      body { font-family: Arial, Helvetica, sans-serif; background: #fff; margin: 0; padding: 30px; }
-      h2 { color: #4CAF50; margin-bottom: 10px; }
-      .info { margin-bottom: 18px; font-size: 1.1em; }
-      table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-      th, td { border: 1px solid #bbb; padding: 8px; text-align: center; font-size: 1em; }
-      th { background: #4CAF50; color: #fff; }
-      .cant { width: 1%; white-space: nowrap; }
-      .check { width: 1%; }
-      .total { font-weight: bold; font-size: 1.1em; text-align: right; margin-top: 18px; }
-      @media print { button { display: none !important; } }
-    </style>
-    </head><body>
-    <h2>Control de Pedido</h2>
-    <div class="info"><b>Cliente:</b> ${cliente.nombre || ''} <br>
-      <b>Dirección:</b> ${cliente.direccion || ''} <br>
-      <b>DNI:</b> ${cliente.dni || ''} <br>
-      <b>Teléfono:</b> ${cliente.telefono || ''} <br>
-      <b>Email:</b> ${cliente.email || ''}
-    </div>
-    <table>
-      <tr>
-        <th>Artículo</th>
-        <th class="cant">Cantidad</th>
-        <th>Valor Unitario</th>
-        <th>Subtotal</th>
-        <th class="check">OK</th>
-      </tr>
-  `;
-  let total = 0;
-  const coti = (pedidoActual.locked && pedidoActual.cotizacionCierre) ? pedidoActual.cotizacionCierre : cotizacion;
-  pedidoActual.items.forEach(it => {
-    const unitPesos = Math.round((it.valorUSD || 0) * coti);
-    const subtotal = Math.round(it.cantidad * unitPesos);
-    total += subtotal;
-    html += `<tr>
-      <td style="text-align:left;">${it.nombre}</td>
-      <td>${it.cantidad}</td>
-      <td>$${unitPesos.toLocaleString('es-AR')}</td>
-      <td>$${subtotal.toLocaleString('es-AR')}</td>
-      <td><input type='checkbox' style='width:22px;height:22px;'></td>
-    </tr>`;
-  });
-  html += `</table>`;
-  html += `<div class="total">TOTAL $ ${total.toLocaleString('es-AR')}</div>`;
-  html += `<button onclick="window.print()" style="margin-top:18px;font-size:1.1em;">Imprimir</button>`;
-  html += `</body></html>`;
-  const win = window.open('', '_blank');
-  win.document.write(html);
-  win.document.close();
+document.getElementById('despachadoBtn').onclick = () => {
+  if (!admin || !pedidoActual.cliente?.direccion) return;
+  const nuevoEstado = pedidoActual.estado === 'Despachado' ? null : 'Despachado';
+  pedidoRef.update({ estado: nuevoEstado })
+    .then(() => alert(nuevoEstado ? 'Pedido marcado como despachado' : 'Estado despachado quitado'));
 };
-
-// Mostrar botón Control Pedido solo para admin y moverlo al bloque de acciones admin
-if (admin) {
-  const controlPedidoBtn = document.getElementById('controlPedidoBtn');
-  const imprimirRotuloBtn = document.getElementById('imprimirRotuloBtn');
-  const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
-
-  controlPedidoBtn.style.display = 'inline-block';
-  imprimirRotuloBtn.style.display = 'inline-block';
-  despachadoEntregadoBtn.style.display = 'inline-block';
-
-  // Mover el botón Control Pedido antes de Imprimir Rótulo
-  const accionesAdmin = document.getElementById('accionesAdmin');
-  if (accionesAdmin && controlPedidoBtn && imprimirRotuloBtn) {
-    accionesAdmin.insertBefore(controlPedidoBtn, imprimirRotuloBtn);
-  }
-  // El botón Despachado/Entregado queda a la derecha de Imprimir Rótulo (ya está en el HTML)
-
-  // Estado visual del botón
-  function actualizarBotonDespachado() {
-    despachadoEntregadoBtn.textContent = 'Despachado/Entregado';
-    despachadoEntregadoBtn.style.background = '#666';
-    // Solo habilitado si el status NO es DESPACHADO/ENTREGADO ni CANCELADO
-    despachadoEntregadoBtn.disabled = pedidoActual.status === 'DESPACHADO/ENTREGADO' || pedidoActual.status === 'CANCELADO';
-    despachadoEntregadoBtn.style.opacity = despachadoEntregadoBtn.disabled ? '0.5' : '1';
-  }
-  actualizarBotonDespachado();
-
-  despachadoEntregadoBtn.onclick = () => {
-    if (pedidoActual.status === 'CANCELADO') return;
-    despachadoEntregadoBtn.disabled = true;
-    if (pedidoActual.status === 'DESPACHADO/ENTREGADO') {
-      // Desbloquear y volver a ABIERTO
-      pedidoRef.update({ status: 'ABIERTO', locked: false })
-        .catch(() => alert('Error al desbloquear el pedido'))
-        .finally(() => { despachadoEntregadoBtn.disabled = false; });
-    } else {
-      // Marcar como despachado/entregado y bloquear
-      pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true })
-        .catch(() => alert('Error al despachar/entregar el pedido'))
-        .finally(() => { despachadoEntregadoBtn.disabled = false; });
-    }
-  };
-}
 </script>
 
 <div style="max-width:600px;margin:30px auto 0 auto;font-size:0.90em;color:#444;text-align:left;opacity:0.85;">

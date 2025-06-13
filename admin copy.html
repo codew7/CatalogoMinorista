@@ -31,11 +31,8 @@
     .dot{
   display:inline-block;width:10px;height:10px;border-radius:50%;
   background:#f44336;           /* rojo */
-  }
-    .cancelado-row {
-      background: #e0e0e0 !important;
-      color: #888;
-    }
+}
+
 
   </style>
 </head>
@@ -43,13 +40,6 @@
   <h1>Panel de pedidos</h1>
 
   <input id="filtro" placeholder="Filtrar por Nombre…" />
-  <select id="filtroStatus" style="margin-left:12px;padding:6px;width:180px;">
-    <option value="">Todos los estados</option>
-    <option value="ABIERTO">Abierto</option>
-    <option value="CERRADO">Cerrado</option>
-    <option value="DESPACHADO/ENTREGADO">Despachado/Entregado</option>
-    <option value="CANCELADO">Cancelado</option>
-  </select>
 
   <table id="tabla">
     <thead>
@@ -70,7 +60,6 @@
 <script>
   const tbody   = document.querySelector('#tabla tbody');
   const filtro  = document.getElementById('filtro');
-  const filtroStatus = document.getElementById('filtroStatus');
 
   let pedidos   = {};           // cache local para filtrar
 
@@ -89,34 +78,16 @@ db.ref('pedidos').on('value', snap => {
 
   // filtrado en vivo
   filtro.addEventListener('input', renderTabla);
-  filtroStatus.addEventListener('change', renderTabla);
 
   function renderTabla() {
   const q = (filtro.value || '').toLowerCase();
-  const statusSel = filtroStatus.value;
   tbody.innerHTML = '';
 
   pedidos
     .filter(p => (p.cliente?.nombre || '').toLowerCase().includes(q))
-    .filter(p => {
-      if (!statusSel) return true;
-      // Normalizo el status mostrado igual que en la tabla
-      let estado = 'ABIERTO';
-      if (p.status === 'DESPACHADO/ENTREGADO') {
-        estado = 'DESPACHADO/ENTREGADO';
-      } else if (p.status === 'CANCELADO') {
-        estado = 'CANCELADO';
-      } else if (p.status === 'CERRADO' || p.locked) {
-        estado = 'CERRADO';
-      } else if (p.status === 'ABIERTO') {
-        estado = 'ABIERTO';
-      }
-      return estado === statusSel;
-    })
     .sort((a, b) => b.timestamp - a.timestamp) // más nuevos arriba
     .forEach(p => {
       const tr = document.createElement('tr');
-      if (p.status === 'CANCELADO') tr.classList.add('cancelado-row');
 
       /* --- 1. Indicador de modificación --- */
       const indCell = tr.insertCell();
@@ -151,33 +122,32 @@ db.ref('pedidos').on('value', snap => {
       tr.insertCell().textContent = (p.items || []).length;
 
       /* --- 6. Estado --- */
-      let estado = 'ABIERTO';
-      if (p.status === 'DESPACHADO/ENTREGADO') {
-        estado = 'DESPACHADO/ENTREGADO';
-      } else if (p.status === 'CANCELADO') {
-        estado = 'CANCELADO';
-      } else if (p.status === 'CERRADO' || p.locked) {
-        estado = 'CERRADO';
-      } else if (p.status === 'ABIERTO') {
-        estado = 'ABIERTO';
-      }
-      tr.insertCell().textContent = estado;
+      tr.insertCell().textContent = p.locked ? 'CERRADO' : 'ABIERTO';
 
       /* --- 7. Acciones --- */
       const acciones = tr.insertCell();
-      const btnEliminar = document.createElement('button');
-      btnEliminar.textContent = 'Eliminar';
-      btnEliminar.style.background = '#f44336';
-      btnEliminar.style.color = '#fff';
-      btnEliminar.onclick = () => {
-        mostrarModalClave(() => {
-          if (confirm('¿Está seguro que desea eliminar este pedido? Esta acción es irreversible.')) {
-            db.ref(`pedidos/${p.id}`).remove()
-              .catch(()=>alert('Error al eliminar el pedido'));
-          }
-        });
-      };
-      acciones.appendChild(btnEliminar);
+
+      if (p.locked) {
+        // Si está cerrado, solo mostrar botón Reabrir
+        const btnReabrir = document.createElement('button');
+        btnReabrir.textContent = 'Reabrir';
+        btnReabrir.className = 'reabrir';
+        btnReabrir.onclick = () => reabrirPedido(p.id);
+        acciones.appendChild(btnReabrir);
+      } else {
+        // Si está abierto, mostrar botón Cerrar y Cancelar
+        const btnCerrar = document.createElement('button');
+        btnCerrar.textContent = 'Cerrar';
+        btnCerrar.className = 'cerrar';
+        btnCerrar.onclick = () => cerrarPedido(p.id);
+        acciones.appendChild(btnCerrar);
+
+        const btnCanc = document.createElement('button');
+        btnCanc.textContent = 'Cancelar';
+        btnCanc.className = 'cancelar';
+        btnCanc.onclick = () => cancelarPedido(p.id, p.locked);
+        acciones.appendChild(btnCanc);
+      }
 
       tbody.appendChild(tr);
     });
@@ -219,41 +189,5 @@ function cancelarPedido(id, locked){
     // Si pasa, muestra el panel
   });
 </script>
-
-<!-- Modal de autorización reutilizable -->
-<div id="modalClave" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);justify-content:center;align-items:center;z-index:9999;">
-  <div style="background:#fff;padding:18px 22px;border-radius:8px;min-width:220px;max-width:90vw;box-shadow:0 2px 12px #0003;text-align:center;">
-    <div style='font-size:1.1em;margin-bottom:10px;'>Código de autorización</div>
-    <input id="inputClave" type="password" style="width:120px;padding:6px 8px;font-size:1em;margin-bottom:12px;" maxlength="8" autocomplete="off" autofocus>
-    <br>
-    <button id="btnOkClave" style="background:#4CAF50;color:#fff;margin-right:8px;">OK</button>
-    <button id="btnCancelClave" style="background:#888;color:#fff;">Cancelar</button>
-  </div>
-</div>
-
-<script>
-function mostrarModalClave(onSuccess) {
-  const modal = document.getElementById('modalClave');
-  const input = document.getElementById('inputClave');
-  const btnOk = document.getElementById('btnOkClave');
-  const btnCancel = document.getElementById('btnCancelClave');
-  input.value = '';
-  modal.style.display = 'flex';
-  input.focus();
-  btnOk.onclick = () => {
-    if (input.value === '3469') {
-      modal.style.display = 'none';
-      onSuccess();
-    } else {
-      alert('Código incorrecto. No se eliminará el pedido.');
-      input.value = '';
-      input.focus();
-    }
-  };
-  btnCancel.onclick = () => { modal.style.display = 'none'; };
-  input.onkeydown = e => { if (e.key === 'Enter') btnOk.onclick(); };
-}
-</script>
-
 </body>
 </html>
