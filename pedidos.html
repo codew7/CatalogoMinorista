@@ -434,46 +434,51 @@
     if (!pagoDiv) {
       pagoDiv = document.createElement('div');
       pagoDiv.id = 'pagoSelector';
-      pagoDiv.style = 'margin-top:12px;text-align:right;width:100%';
+      pagoDiv.style = 'margin-top:18px;text-align:left;width:100%';
+      pagoDiv.innerHTML = `
+        <div style="font-weight:bold;margin-bottom:4px;">Pago</div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+          <label style="margin-right:15px;display:inline-flex;align-items:center;">
+            <input type="radio" name="tipoPago" value="Efectivo" checked> Efectivo
+          </label>
+          <label style="display:inline-flex;align-items:center;">
+            <input type="radio" name="tipoPago" value="Transferencia"> Transferencia
+          </label>
+        </div>
+      `;
       totalPagoWrap.appendChild(pagoDiv);
     } else if (!totalPagoWrap.contains(pagoDiv)) {
       totalPagoWrap.appendChild(pagoDiv);
     }
-    pagoDiv.style = 'margin-top:12px;text-align:right;width:100%';
-    pagoDiv.innerHTML = `
-      <span style=\"font-weight:bold;margin-right:10px;\">Pago:</span>
-      <label style=\"margin-right:15px;display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoPago\" value=\"Efectivo\" checked> Efectivo
-      </label>
-      <label style=\"display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoPago\" value=\"Transferencia\"> Transferencia
-      </label>
-    `;
-    // Selector de entrega (en fila separada, alineado a la derecha)
+    pagoDiv.style = 'margin-top:18px;text-align:left;width:100%';
+    // Selector de entrega
     let entregaDiv = document.getElementById('entregaSelector');
     if (!entregaDiv) {
       entregaDiv = document.createElement('div');
       entregaDiv.id = 'entregaSelector';
-      entregaDiv.style = 'margin-top:25px;text-align:right;width:100%';
+      entregaDiv.style = 'margin-top:18px;text-align:left;width:100%';
+      entregaDiv.innerHTML = `
+        <div style="font-weight:bold;margin-bottom:4px;">Entrega</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <label style="margin-right:5px;display:inline-flex;align-items:center;">
+            <input type="radio" name="tipoEntrega" value="Retiro en local" checked>
+            <img src="logo.png" alt="Retiro en local" style="width:80px;vertical-align:middle;">
+          </label>
+          <label style="margin-right:5px;display:inline-flex;align-items:center;">
+            <input type="radio" name="tipoEntrega" value="Correo Argentino">
+            <img src="logo-correo.png" alt="Correo Argentino" style="width:80px;vertical-align:middle;">
+          </label>
+          <label style="display:inline-flex;align-items:center;">
+            <input type="radio" name="tipoEntrega" value="Via Cargo">
+            <img src="logo-viacargo.png" alt="Via Cargo" style="width:80px;vertical-align:middle;">
+          </label>
+        </div>
+      `;
       totalPagoWrap.appendChild(entregaDiv);
     } else if (!totalPagoWrap.contains(entregaDiv)) {
       totalPagoWrap.appendChild(entregaDiv);
     }
-    entregaDiv.style = 'margin-top:18px;text-align:right;width:100%';
-    entregaDiv.innerHTML = `
-      <span style=\"font-weight:bold;margin-right:10px;\">Entrega:</span>
-      <br> <!-- Separar con un salto de línea -->
-      <label style=\"margin-right:5px;display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoEntrega\" value=\"Retiro en local\" checked>
-        <img src=\"logo.png\" alt=\"Retiro en local\" style=\"width:80px;vertical-align:middle;\">
-      </label>
-      <label style=\"margin-right:5px;display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoEntrega\" value=\"Correo Argentino\">\n        <img src=\"logo-correo.png\" alt=\"Correo Argentino\" style=\"width:80px;vertical-align:middle;\">
-      </label>
-      <label style=\"display:inline-flex;align-items:center;\">
-        <input type=\"radio\" name=\"tipoEntrega\" value=\"Via Cargo\">\n        <img src=\"logo-viacargo.png\" alt=\"Via Cargo\" style=\"width:80px;vertical-align:middle;\">
-      </label>
-    `;
+    entregaDiv.style = 'margin-top:18px;text-align:left;width:100%';
 
     // === Seleccionar radio buttons según lo guardado ===
     setTimeout(() => {
