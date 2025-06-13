@@ -1112,6 +1112,12 @@
             document.querySelectorAll('input[type="number"]').forEach(input => {
                 input.value = '';
             });
+            // Restaurar color de todos los botones de agregar al carrito
+            document.querySelectorAll('.btn-agregar-carrito').forEach(btn => {
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.style.border = '';
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {

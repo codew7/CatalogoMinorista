@@ -145,6 +145,18 @@
       color: #fff !important;
     }
 
+    /* Unifica el tamaño de todos los botones de acción inferiores */
+    .accion-btn, #accionesAdmin button {
+      min-width: 180px;
+      max-width: 180px;
+      width: 180px;
+      height: 44px;
+      font-size: 1em;
+      box-sizing: border-box;
+      margin: 5px;
+      text-align: center;
+      display: inline-block;
+    }
     /* Asegura que los contenedores de botones no excedan el ancho del body */
     .acciones-botones, #accionesAdmin, .accion-btn-contenedor {
       max-width: 100%;
@@ -190,7 +202,7 @@
   </div>
   <div id="accionesAdmin" style="text-align:center;margin-top:10px;">
     <button id="imprimirRotuloBtn" class="accion-btn" style="display:none;background:#222;">Imprimir Rótulo</button>
-    <button id="despachadoEntregadoBtn" class="accion-btn" style="display:none;background:#666;">Despachado/Entregado</button>
+    <button id="despachadoEntregadoBtn" class="accion-btn" style="display:none;background:#666;">Entregado</button>
   </div>
 
   <div id="imgLightbox" class="lightbox" onclick="cerrarLB(event)">
