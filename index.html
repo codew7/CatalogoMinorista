@@ -18,13 +18,6 @@
 
         //const ITEMPESOS = "6"; // MAYORISTA
         const ITEMPESOS = "4"; // MINORISTA
-
-        //-- Verifica Login MAYORISTA --//
-        // window.addEventListener('DOMContentLoaded', (event) => {
-        // const usuarioLogueado = localStorage.getItem('usuarioLogueado');
-        // if (!usuarioLogueado) {
-        //     window.location.href = 'index.html';  // Redirige al login si no está logueado
-        // }});
         
     </script>
 
@@ -592,29 +585,53 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // Botón para agregar el artículo al carrito
             const btnAgregar = document.createElement('button');
             btnAgregar.innerHTML = '<i class="fas fa-cart-plus"></i>';
-            btnAgregar.style.padding = '10px 10px';  // Aumenta el espacio interno
-            btnAgregar.style.fontSize = '16px';     // Aumenta el tamaño del texto
-            btnAgregar.style.height = '50px';       // Ajusta la altura
-            btnAgregar.style.width = '50px';        // Ajusta el ancho
+            btnAgregar.style.padding = '10px 10px';
+            btnAgregar.style.fontSize = '16px';
+            btnAgregar.style.height = '50px';
+            btnAgregar.style.width = '50px';
+            btnAgregar.classList.add('btn-agregar-carrito');
+            // Función para actualizar el color del botón según la cantidad
+            function actualizarColorBoton() {
+                const existe = carrito.find(item => item.nombre === articulo.textContent);
+                let cantidad = 0;
+                // Si el selector está vacío o en blanco, cantidad = 0
+                if (cantidadSelector.value === '' || cantidadSelector.value === null) {
+                    cantidad = 0;
+                } else if (existe) {
+                    cantidad = existe.cantidad;
+                } else if (!isNaN(parseInt(cantidadSelector.value))) {
+                    cantidad = parseInt(cantidadSelector.value);
+                }
+                if (cantidad > 0) {
+                    btnAgregar.style.background = '#ff9800';
+                    btnAgregar.style.color = '#fff';
+                    btnAgregar.style.border = '1px solid #ff9800';
+                } else {
+                    btnAgregar.style.background = '';
+                    btnAgregar.style.color = '';
+                    btnAgregar.style.border = '';
+                }
+            }
             btnAgregar.addEventListener('click', () => {
                 let cantidad = parseInt(cantidadSelector.value);
                 if (isNaN(cantidad) || cantidad <= 0) {
-                    // Si el selector está vacío o tiene un valor inválido, lo establecemos en 1
                     cantidad = 1;
                     cantidadSelector.value = '1';
                 }
-
-                const existe = carrito.find(item => item.nombre === articulo.textContent); // Usar el nombre del artículo
+                const existe = carrito.find(item => item.nombre === articulo.textContent);
                 if (existe) {
-                    // Si el artículo ya existe, actualizamos la cantidad con el valor del selector
                     existe.cantidad = cantidad;
                 } else {
-                    // Si no existe, lo agregamos al carrito
                     agregarAlCarrito(articulo.textContent, item[5], cantidad);
                 }
-
-                actualizarCarrito(); // Refrescar el carrito
+                actualizarCarrito();
+                actualizarColorBoton();
             });
+            cantidadSelector.addEventListener('change', () => {
+                actualizarColorBoton();
+            });
+            // Al cargar, si ya hay cantidad en el carrito, mostrar naranja
+            actualizarColorBoton();
             actionContainer.appendChild(btnAgregar);
 
             card.appendChild(actionContainer);
@@ -785,6 +802,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // Vaciar todos los inputs de cantidad
             document.querySelectorAll('input[type="number"]').forEach(input => {
                 input.value = '';
+            });
+            // Restaurar color de todos los botones de agregar al carrito
+            document.querySelectorAll('.btn-agregar-carrito').forEach(btn => {
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.style.border = '';
             });
         }
 
