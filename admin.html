@@ -28,21 +28,15 @@
     .reabrir{background:#FF9800;color:#fff} 
     .cancelar{background:#f44336;color:#fff} 
     button + button{ margin-left:6px; }
-    .dot{
-  display:inline-block;width:10px;height:10px;border-radius:50%;
-  background:#f44336;           /* rojo */
-  }
-    .cancelado-row {
-      background: #e0e0e0 !important;
-      color: #888;
-    }
+    .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#f44336;}
+    .cancelado-row {background: #e0e0e0 !important;color: #888;}
 
   </style>
 </head>
 <body>
   <h1>Panel de pedidos</h1>
 
-  <input id="filtro" placeholder="Filtrar por Nombre…" />
+  <input id="filtro" placeholder="Filtrar por Nombre…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
   <select id="filtroStatus" style="margin-left:12px;padding:6px;width:180px;">
     <option value="">Todos los estados</option>
     <option value="ABIERTO">Abierto</option>
@@ -54,7 +48,7 @@
   <table id="tabla">
     <thead>
 <tr>
-  <th></th>          <!-- nuevo indicador -->
+  <th></th>
   <th>ID</th>
   <th>Nombre</th>
   <th>Fecha</th>
@@ -75,10 +69,10 @@
   let pedidos   = {};           // cache local para filtrar
 
   // listener principal
-db.ref('pedidos').on('value', snap => {
-  pedidos = [];                        // ahora un array, no objeto
+  db.ref('pedidos').on('value', snap => {
+    pedidos = [];                        // ahora un array, no objeto
 
-  snap.forEach(child => {              // recorro cada nodo hijo
+    snap.forEach(child => {              // recorro cada nodo hijo
     const p = child.val() || {};
     p.id    = child.key;               // key garantizada
     pedidos.push(p);
