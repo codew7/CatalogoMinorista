@@ -149,7 +149,7 @@
     .accion-btn, #accionesAdmin button {
       min-width: 150px;
       max-width: 150px;
-      width: 180px;
+      width: 150px;
       height: 44px;
       font-size: 1em;
       box-sizing: border-box;
@@ -263,7 +263,7 @@
       }
       // Estado visual y lógica del botón Despachado/Entregado
       function actualizarBotonDespachado() {
-        despachadoEntregadoBtn.textContent = 'Despachado/Entregado';
+        despachadoEntregadoBtn.textContent = 'Entregado';
         despachadoEntregadoBtn.style.background = '#666';
         // Solo habilitado si el status NO es DESPACHADO/ENTREGADO ni CANCELADO
         despachadoEntregadoBtn.disabled = pedidoActual.status === 'DESPACHADO/ENTREGADO' || pedidoActual.status === 'CANCELADO';
@@ -865,7 +865,7 @@ if (admin) {
 
   // Estado visual del botón
   function actualizarBotonDespachado() {
-    despachadoEntregadoBtn.textContent = 'Despachado/Entregado';
+    despachadoEntregadoBtn.textContent = 'Entregado';
     despachadoEntregadoBtn.style.background = '#666';
     // Solo habilitado si el status NO es DESPACHADO/ENTREGADO ni CANCELADO
     despachadoEntregadoBtn.disabled = pedidoActual.status === 'DESPACHADO/ENTREGADO' || pedidoActual.status === 'CANCELADO';
@@ -893,9 +893,11 @@ if (admin) {
 
 <div style="max-width:600px;margin:30px auto 0 auto;font-size:0.90em;color:#444;text-align:left;opacity:0.85;">
   <hr style="margin:18px 0;">
-  <div style="margin-bottom:10px;">* Mientras el pedido se mantenga Abierto, los precios pueden variar minimamente debido a fluctuaciones de cotización.</div>
-  <div style="margin-bottom:10px;">* Al Cerrar el pedido, los valores quedan fijados, pero ya no será posible modifcar el pedido, siendo necesario cancelarlo y generar uno nuevo.</div>
-  <div style="margin-bottom:10px;">* Los pagos mediante transferencia cuentan con un recargo adicional del 2 % sobre el total indicado.</div>
+  <div style="margin-bottom:10px;">* El pedido permanecerá ABIERTO hasta que se acredite el pago; durante ese período los precios pueden sufrir leves ajustes por variaciones cambiarias.</div>
+  <div style="margin-bottom:10px;">* Los pagos por transferencia bancaria tienen un recargo del 2 % sobre el total.</div>
+  <div style="margin-bottom:10px;">* Despachamos habitualmente a sucursal para optimizar costos:<br>
+    • Correo Argentino: Cotización previa y pago por adelantado.<br>
+    • ViaCargo: Cotizacion por parte del expreso y pago al retirar la encomienda.</div>
 </div>
 </body>
 </html>
