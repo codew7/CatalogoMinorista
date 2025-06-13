@@ -418,9 +418,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 
     <script>
-        const API_KEY = 'AIzaSyDwiZWDc66tv4usDIA-IreiJMLFuk0236Q';
-        const SPREADSHEET_ID = '1cD50d0-oSTogEe9tYo9ABUSP1ONCy3SAV92zsYYIG84';
-        const RANGO = 'A2:G';
+        src="config.js"
         const ITEMS_PER_PAGE = 30;
 
         let productos = [];
@@ -431,7 +429,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         const loadingMessage = document.getElementById('loading-message');
 
-        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${RANGO}?key=${API_KEY}`)
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
             .then(response => {
                 if (!response.ok) throw new Error(`Error al acceder a la API: ${response.statusText}`);
                 return response.json();
