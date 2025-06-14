@@ -1041,7 +1041,7 @@
             };
 
             pedidoRef.set(pedidoObj).then(() => {
-            const msg = `Hola, este es mi pedido:%0Ahttps://www.home-point.com.ar/pedidos.html?id=${pedidoId}`;
+            const msg = `Envía éste mensaje para dejar constancia de tu pedido:%0Ahttps://www.home-point.com.ar/pedidos.html?id=${pedidoId}`;
             window.open(`${WHATSAPP_URL}&text=${msg}`);
             limpiarCarrito();
             });
