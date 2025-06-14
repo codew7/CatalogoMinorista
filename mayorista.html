@@ -946,8 +946,17 @@
             db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
               .then(snap => {
                 if (snap.exists()) {
-                  alert('El email ya está registrado. Por favor, ingresa tu correo en la sección de cliente existente.');
-                  emailInput.value = '';
+                  // Usar los datos existentes del cliente para el pedido
+                  const cli = Object.values(snap.val())[0];
+                  datosExtraCliente = {
+                    email: cli.email,
+                    nombre: cli.nombre,
+                    telefono: cli.telefono,
+                    direccion: cli.direccion,
+                    dni: cli.dni
+                  };
+                  modal.style.display = 'none';
+                  enviarPedidoFinal();
                   return;
                 }
                 if (!nombre) {
