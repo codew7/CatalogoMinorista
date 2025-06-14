@@ -493,24 +493,26 @@
       for (let r of entregaRadios) {
         r.checked = (r.value === entregaValue);
       }
+
       // === Actualizar total según pago seleccionado ===
-      function actualizarTotalConRecargo() {
-        const pagoSeleccionado = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
-        let textoTotal = `TOTAL $ ${total.toLocaleString('es-AR')}`;
-        if (pagoSeleccionado === 'Transferencia') {
-          const recargo = Math.round(total * 0.02);
-          const totalConRecargo = total + recargo;
-          textoTotal = `TOTAL $ ${totalConRecargo.toLocaleString('es-AR')} <span style=\"font-weight:normal;font-size:0.80em;margin-left:6px;\">(recargo $${recargo.toLocaleString('es-AR')})</span>`;
-        }
-        totalDiv.innerHTML = textoTotal;
-      }
+      //function actualizarTotalConRecargo() {
+      //  const pagoSeleccionado = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
+      //  let textoTotal = `TOTAL $ ${total.toLocaleString('es-AR')}`;
+      //  if (pagoSeleccionado === 'Transferencia') {
+      //    const recargo = Math.round(total * 0.02);
+      //    const totalConRecargo = total + recargo;
+      //    textoTotal = `TOTAL $ ${totalConRecargo.toLocaleString('es-AR')} <span style=\"font-weight:normal;font-size:0.80em;margin-left:6px;\">(recargo $${recargo.toLocaleString('es-AR')})</span>`;
+      //  }
+      //  totalDiv.innerHTML = textoTotal;
+      //}
       // Listener para radios de pago
-      const pagoRadiosArr = Array.from(document.getElementsByName('tipoPago'));
-      pagoRadiosArr.forEach(radio => {
-        radio.onchange = actualizarTotalConRecargo;
-      });
+      //const pagoRadiosArr = Array.from(document.getElementsByName('tipoPago'));
+      //pagoRadiosArr.forEach(radio => {
+      //  radio.onchange = actualizarTotalConRecargo;
+      //});
       // Llamar al inicio
-      actualizarTotalConRecargo();
+      //actualizarTotalConRecargo();
+
     }, 0);
   }
 
@@ -893,7 +895,7 @@ if (admin) {
 <div style="max-width:600px;margin:30px auto 0 auto;font-size:0.90em;color:#444;text-align:left;opacity:0.85;">
   <hr style="margin:18px 0;">
   <div style="margin-bottom:10px;">* El pedido permanecerá ABIERTO hasta que se acredite el pago; durante ese período los precios pueden sufrir leves ajustes por variaciones cambiarias.</div>
-  <div style="margin-bottom:10px;">* Los pagos por transferencia bancaria tienen un recargo del 2 % sobre el total.</div>
+  <!-- <div style="margin-bottom:10px;">* Los pagos por transferencia bancaria tienen un recargo del 2 % sobre el total.</div> -->
   <div style="margin-bottom:10px;">* Los envíos se despachan a sucursal para reducir costos de envío. La cotización se encuentra sujeta a la distancia, el tamaño y el peso final del pedido.</div>
 </div>
 </body>
