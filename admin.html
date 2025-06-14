@@ -36,7 +36,6 @@
 <body>
   <h1>Panel de pedidos</h1>
 
-  <input id="filtro" placeholder="Filtrar por Nombre…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="search" name="filtro-nombre" />
   <select id="filtroStatus" style="margin-left:12px;padding:6px;width:180px;">
     <option value="">Todos los estados</option>
     <option value="ABIERTO">Abierto</option>
@@ -63,7 +62,6 @@
 
 <script>
   const tbody   = document.querySelector('#tabla tbody');
-  const filtro  = document.getElementById('filtro');
   const filtroStatus = document.getElementById('filtroStatus');
 
   let pedidos   = {};           // cache local para filtrar
@@ -81,18 +79,14 @@
   renderTabla();
 });
 
-  // filtrado en vivo
-  filtro.addEventListener('input', renderTabla);
-  filtroStatus.addEventListener('change', renderTabla);
+  // filtroStatus.addEventListener('change', renderTabla);
 
   function renderTabla() {
-  const q = (filtro.value || '').toLowerCase();
   const statusSel = filtroStatus.value;
   tbody.innerHTML = '';
 
   pedidos
-    .filter(p => (p.cliente?.nombre || '').toLowerCase().includes(q))
-    .filter(p => {
+      .filter(p => {
       if (!statusSel) return true;
       // Normalizo el status mostrado igual que en la tabla
       let estado = 'ABIERTO';
