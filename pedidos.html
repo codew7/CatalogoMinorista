@@ -483,15 +483,15 @@
     setTimeout(() => {
       // Tipo de Pago
       const pagoRadios = document.getElementsByName('tipoPago');
-      const pagoValue = pedidoActual.tipoPago || 'Efectivo';
+      const pagoValue = pedidoActual.tipoPago || null;
       for (let r of pagoRadios) {
-        r.checked = (r.value === pagoValue);
+        r.checked = (pagoValue !== null && r.value === pagoValue);
       }
       // Tipo de Entrega
       const entregaRadios = document.getElementsByName('tipoEntrega');
-      const entregaValue = pedidoActual.tipoEntrega || 'Retiro en local';
+      const entregaValue = pedidoActual.tipoEntrega || null;
       for (let r of entregaRadios) {
-        r.checked = (r.value === entregaValue);
+        r.checked = (entregaValue !== null && r.value === entregaValue);
       }
 
       // === Actualizar total según pago seleccionado ===
