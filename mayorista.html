@@ -941,23 +941,13 @@
             return;
           }
 
-          // Nueva regla: si el email ya está registrado, actualiza los datos existentes en la tabla clientes
+          // Nueva regla: si el email ya está registrado, NO permitir registro nuevo, forzar uso de sección cliente existente
           if (email) {
             db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
               .then(snap => {
                 if (snap.exists()) {
-                  const key = Object.keys(snap.val())[0];
-                  db.ref('clientes/' + key).update({
-                    email: emailFinal,
-                    nombre,
-                    telefono,
-                    direccion,
-                    dni
-                  }).then(() => {
-                    modal.style.display = 'none';
-                    datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
-                    enviarPedidoFinal();
-                  });
+                  alert('El email ya está registrado. Por favor, ingresa tu correo en la sección de cliente existente.');
+                  emailInput.value = '';
                   return;
                 }
                 if (!nombre) {
@@ -971,12 +961,10 @@
                   telefono,
                   direccion,
                   dni
-                })
-                .then(() => {
+                }).then(() => {
                   modal.style.display = 'none';
                   enviarPedidoFinal();
-                })
-                .catch(err => { alert('Error guardando datos de cliente'); console.error(err); });
+                });
               });
             return;
           }
