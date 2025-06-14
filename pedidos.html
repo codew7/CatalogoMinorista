@@ -178,8 +178,8 @@
   </style>
 </head>
 <body>
-  <div id="fechaIngreso" style="text-align:center;color:#666;font-size:0.98em;margin-bottom:4px;"></div>
   <h1>Detalle del pedido</h1>
+  <div id="fechaIngreso" style="text-align:center;color:#666;font-size:0.90em;margin-bottom:4px;"></div>
   <div id="nombreCliente" style="text-align:center;font-weight:bold;font-size:1.1em"></div>
   <div id="direccionCliente" style="text-align:center;margin-bottom:4px"></div>
   <div id="dniCliente" style="text-align:center;margin-bottom:4px"></div>
@@ -250,7 +250,7 @@
       const d = new Date(Number(pedidoActual.id));
       fechaIngreso = d.toLocaleString('es-AR');
     }
-    document.getElementById('fechaIngreso').textContent = fechaIngreso ? `Fecha y hora de ingreso: ${fechaIngreso}` : '';
+    document.getElementById('fechaIngreso').textContent = fechaIngreso ? `${fechaIngreso}` : '';
 
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
@@ -827,15 +827,15 @@ document.getElementById('controlPedidoBtn').onclick = () => {
     </div>
     <table>
       <tr>
-        <th>Artículo</th>
         <th class="cant">Cantidad</th>
+        <th>Artículo</th>
         <th class="check">OK</th>
       </tr>
   `;
   pedidoActual.items.forEach(it => {
     html += `<tr>
-      <td style="text-align:left;">${it.nombre}</td>
       <td>${it.cantidad}</td>
+      <td style="text-align:left;">${it.nombre}</td>
       <td><input type='checkbox' style='width:22px;height:22px;'></td>
     </tr>`;
   });
