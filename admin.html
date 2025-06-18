@@ -105,6 +105,13 @@
     .forEach(p => {
       const tr = document.createElement('tr');
       if (p.status === 'CANCELADO') tr.classList.add('cancelado-row');
+      // Si el pedido está ABIERTO y tiene más de 7 días, marcar en naranja
+      const ahora = Date.now();
+      const sieteDiasMs = 7 * 24 * 60 * 60 * 1000;
+      if ((p.status === 'ABIERTO' || (!p.status && !p.locked)) && (ahora - p.timestamp > sieteDiasMs)) {
+        tr.style.background = '#FFA726'; // naranja
+        tr.style.color = '#fff';
+      }
 
       /* --- 1. Indicador de modificación --- */
       const indCell = tr.insertCell();
