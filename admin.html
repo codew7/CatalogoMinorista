@@ -136,7 +136,7 @@
         fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
       /* --- 5. Cant. ítems --- */
-      tr.insertCell().textContent = (p.items || []).length;
+      tr.insertCell().textContent = (p.items || []).reduce((acc, item) => acc + (item.cantidad || 0), 0);
 
       /* --- 6. Estado --- */
       let estado = 'ABIERTO';
