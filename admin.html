@@ -119,7 +119,7 @@
       link.href = `pedidos.html?id=${p.id}&admin=true`;
       link.textContent = p.id;
       link.target = '_blank';
-      // Al abrir el detalle, lo marcamos como visto
+      // Al abrir el detalle, lo marcamos como visto SIEMPRE
       link.onclick = () => {
         db.ref(`pedidos/${p.id}`).update({ adminViewed: true })
           .catch(() => console.error('No se pudo marcar adminViewed'));
