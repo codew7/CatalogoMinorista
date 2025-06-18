@@ -65,7 +65,6 @@
   const filtroStatus = document.getElementById('filtroStatus');
 
   let pedidos   = {};           // cache local para filtrar
-  let adminViewedMap = {};
 
   // listener principal
   db.ref('pedidos').on('value', snap => {
@@ -79,12 +78,6 @@
 
   renderTabla();
 });
-
-  // Escuchar los vistos
-  firebase.database().ref('pedidos_adminViewed').on('value', snap => {
-    adminViewedMap = snap.val() || {};
-    renderTabla();
-  });
 
   filtroStatus.addEventListener('change', renderTabla);
 
@@ -115,8 +108,7 @@
 
       /* --- 1. Indicador de modificación --- */
       const indCell = tr.insertCell();
-      // Solo muestra el punto si el valor es estrictamente false o undefined
-      if (adminViewedMap[p.id] !== true) {
+      if (p.adminViewed === false) {
         const dot = document.createElement('span');
         dot.className = 'dot';
         indCell.appendChild(dot);
@@ -127,10 +119,9 @@
       link.href = `pedidos.html?id=${p.id}&admin=true`;
       link.textContent = p.id;
       link.target = '_blank';
-      // Al abrir el detalle, lo marcamos como visto SIEMPRE
+      // Al abrir el detalle, lo marcamos como visto
       link.onclick = () => {
-        firebase.database().ref('pedidos_adminViewed/' + p.id).set(true)
-          .then(() => renderTabla())
+        db.ref(`pedidos/${p.id}`).update({ adminViewed: true })
           .catch(() => console.error('No se pudo marcar adminViewed'));
       };
       tr.insertCell().appendChild(link);
