@@ -115,7 +115,8 @@
 
       /* --- 1. Indicador de modificación --- */
       const indCell = tr.insertCell();
-      if (!adminViewedMap[p.id]) {
+      // Solo muestra el punto si el valor es estrictamente false o undefined
+      if (adminViewedMap[p.id] !== true) {
         const dot = document.createElement('span');
         dot.className = 'dot';
         indCell.appendChild(dot);
@@ -129,6 +130,7 @@
       // Al abrir el detalle, lo marcamos como visto SIEMPRE
       link.onclick = () => {
         firebase.database().ref('pedidos_adminViewed/' + p.id).set(true)
+          .then(() => renderTabla())
           .catch(() => console.error('No se pudo marcar adminViewed'));
       };
       tr.insertCell().appendChild(link);
