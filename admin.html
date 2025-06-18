@@ -51,7 +51,7 @@
   <th>ID</th>
   <th>Nombre</th>
   <th>Fecha</th>
-  <th>Items</th>
+  <th>Unidades</th>
   <th>Estado</th>
   <th>Acciones</th>
 </tr>
@@ -110,6 +110,11 @@
       const sieteDiasMs = 7 * 24 * 60 * 60 * 1000;
       if ((p.status === 'ABIERTO' || (!p.status && !p.locked)) && (ahora - p.timestamp > sieteDiasMs)) {
         tr.style.background = '#FFA726'; // naranja
+        tr.style.color = '#fff';
+      }
+      // Si el pedido está DESPACHADO/ENTREGADO, marcar en verde agua
+      if (p.status === 'DESPACHADO/ENTREGADO') {
+        tr.style.background = '#4dd0e1'; // verde agua
         tr.style.color = '#fff';
       }
 
