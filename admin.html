@@ -36,10 +36,10 @@
 <body>
   <h1>Panel de pedidos</h1>
 
-  <select id="filtroStatus" style="display:block;margin-left:0;margin-bottom:20px;padding:6px;width:180px;">
+  <select id="filtroStatus" multiple style="display:block;margin-left:0;margin-bottom:20px;padding:6px;width:180px;">
     <option value="">Todos los estados</option>
-    <option value="ABIERTO">Abierto</option>
-    <option value="CERRADO">Cerrado</option>
+    <option value="ABIERTO" selected>Abierto</option>
+    <option value="CERRADO" selected>Cerrado</option>
     <option value="DESPACHADO/ENTREGADO">Despachado/Entregado</option>
     <option value="CANCELADO">Cancelado</option>
   </select>
@@ -81,106 +81,111 @@
 
   filtroStatus.addEventListener('change', renderTabla);
 
+  function getSelectedStatuses() {
+    // Devuelve array de estados seleccionados (ignora "Todos los estados")
+    const selected = Array.from(filtroStatus.selectedOptions).map(opt => opt.value).filter(v => v);
+    return selected.length ? selected : null; // null = todos
+  }
+
   function renderTabla() {
-  const statusSel = filtroStatus.value;
-  tbody.innerHTML = '';
+    const statusSel = getSelectedStatuses();
+    tbody.innerHTML = '';
 
-  pedidos
+    pedidos
       .filter(p => {
-      if (!statusSel) return true;
-      // Normalizo el status mostrado igual que en la tabla
-      let estado = 'ABIERTO';
-      if (p.status === 'DESPACHADO/ENTREGADO') {
-        estado = 'DESPACHADO/ENTREGADO';
-      } else if (p.status === 'CANCELADO') {
-        estado = 'CANCELADO';
-      } else if (p.status === 'CERRADO' || p.locked) {
-        estado = 'CERRADO';
-      } else if (p.status === 'ABIERTO') {
-        estado = 'ABIERTO';
-      }
-      return estado === statusSel;
-    })
-    .sort((a, b) => b.timestamp - a.timestamp) // más nuevos arriba
-    .forEach(p => {
-      const tr = document.createElement('tr');
-      if (p.status === 'CANCELADO') tr.classList.add('cancelado-row');
-      // Si el pedido está ABIERTO y tiene más de 7 días, marcar en naranja
-      const ahora = Date.now();
-      const sieteDiasMs = 7 * 24 * 60 * 60 * 1000;
-      if ((p.status === 'ABIERTO' || (!p.status && !p.locked)) && (ahora - p.timestamp > sieteDiasMs)) {
-        tr.style.background = '#edb461'; // naranja
-        tr.style.color = '#fff';
-      }
-      // Si el pedido está DESPACHADO/ENTREGADO, marcar en verde agua
-      if (p.status === 'DESPACHADO/ENTREGADO') {
-        tr.style.background = '#bbfacb'; // verde clarito
-        tr.style.color = '#fff';
-      }
+        if (!statusSel) return true;
+        let estado = 'ABIERTO';
+        if (p.status === 'DESPACHADO/ENTREGADO') {
+          estado = 'DESPACHADO/ENTREGADO';
+        } else if (p.status === 'CANCELADO') {
+          estado = 'CANCELADO';
+        } else if (p.status === 'CERRADO' || p.locked) {
+          estado = 'CERRADO';
+        } else if (p.status === 'ABIERTO') {
+          estado = 'ABIERTO';
+        }
+        return statusSel.includes(estado);
+      })
+      .sort((a, b) => b.timestamp - a.timestamp) // más nuevos arriba
+      .forEach(p => {
+        const tr = document.createElement('tr');
+        if (p.status === 'CANCELADO') tr.classList.add('cancelado-row');
+        // Si el pedido está ABIERTO y tiene más de 7 días, marcar en naranja
+        const ahora = Date.now();
+        const sieteDiasMs = 7 * 24 * 60 * 60 * 1000;
+        if ((p.status === 'ABIERTO' || (!p.status && !p.locked)) && (ahora - p.timestamp > sieteDiasMs)) {
+          tr.style.background = '#edb461'; // naranja
+          tr.style.color = '#fff';
+        }
+        // Si el pedido está DESPACHADO/ENTREGADO, marcar en verde agua
+        if (p.status === 'DESPACHADO/ENTREGADO') {
+          tr.style.background = '#bbfacb'; // verde clarito
+          tr.style.color = '#458254';
+        }
 
-      /* --- 1. Indicador de modificación --- */
-      const indCell = tr.insertCell();
-      if (p.adminViewed === false) {
-        const dot = document.createElement('span');
-        dot.className = 'dot';
-        indCell.appendChild(dot);
-      }
+        /* --- 1. Indicador de modificación --- */
+        const indCell = tr.insertCell();
+        if (p.adminViewed === false) {
+          const dot = document.createElement('span');
+          dot.className = 'dot';
+          indCell.appendChild(dot);
+        }
 
-      /* --- 2. ID con link --- */
-      const link = document.createElement('a');
-      link.href = `pedidos.html?id=${p.id}&admin=true`;
-      link.textContent = p.id;
-      link.target = '_blank';
-      // Al abrir el detalle, lo marcamos como visto
-      link.onclick = () => {
-        db.ref(`pedidos/${p.id}`).update({ adminViewed: true })
-          .catch(() => console.error('No se pudo marcar adminViewed'));
-      };
-      tr.insertCell().appendChild(link);
+        /* --- 2. ID con link --- */
+        const link = document.createElement('a');
+        link.href = `pedidos.html?id=${p.id}&admin=true`;
+        link.textContent = p.id;
+        link.target = '_blank';
+        // Al abrir el detalle, lo marcamos como visto
+        link.onclick = () => {
+          db.ref(`pedidos/${p.id}`).update({ adminViewed: true })
+            .catch(() => console.error('No se pudo marcar adminViewed'));
+        };
+        tr.insertCell().appendChild(link);
 
-      /* --- 3. Nombre cliente --- */
-      tr.insertCell().textContent = p.cliente?.nombre || '—';
+        /* --- 3. Nombre cliente --- */
+        tr.insertCell().textContent = p.cliente?.nombre || '—';
 
-      /* --- 4. Fecha corta --- */
-      const fecha = new Date(p.timestamp);
-      tr.insertCell().textContent =
-        fecha.toLocaleDateString('es-AR') + ' ' +
-        fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        /* --- 4. Fecha corta --- */
+        const fecha = new Date(p.timestamp);
+        tr.insertCell().textContent =
+          fecha.toLocaleDateString('es-AR') + ' ' +
+          fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
-      /* --- 5. Cant. ítems --- */
-      tr.insertCell().textContent = (p.items || []).reduce((acc, item) => acc + (item.cantidad || 0), 0);
+        /* --- 5. Cant. ítems --- */
+        tr.insertCell().textContent = (p.items || []).reduce((acc, item) => acc + (item.cantidad || 0), 0);
 
-      /* --- 6. Estado --- */
-      let estado = 'ABIERTO';
-      if (p.status === 'DESPACHADO/ENTREGADO') {
-        estado = 'DESPACHADO/ENTREGADO';
-      } else if (p.status === 'CANCELADO') {
-        estado = 'CANCELADO';
-      } else if (p.status === 'CERRADO' || p.locked) {
-        estado = 'CERRADO';
-      } else if (p.status === 'ABIERTO') {
-        estado = 'ABIERTO';
-      }
-      tr.insertCell().textContent = estado;
+        /* --- 6. Estado --- */
+        let estado = 'ABIERTO';
+        if (p.status === 'DESPACHADO/ENTREGADO') {
+          estado = 'DESPACHADO/ENTREGADO';
+        } else if (p.status === 'CANCELADO') {
+          estado = 'CANCELADO';
+        } else if (p.status === 'CERRADO' || p.locked) {
+          estado = 'CERRADO';
+        } else if (p.status === 'ABIERTO') {
+          estado = 'ABIERTO';
+        }
+        tr.insertCell().textContent = estado;
 
-      /* --- 7. Acciones --- */
-      const acciones = tr.insertCell();
-      const btnEliminar = document.createElement('button');
-      btnEliminar.textContent = 'Eliminar';
-      btnEliminar.style.background = '#f44336';
-      btnEliminar.style.color = '#fff';
-      btnEliminar.onclick = () => {
-        mostrarModalClave(() => {
-          if (confirm('¿Está seguro que desea eliminar este pedido? Esta acción es irreversible.')) {
-            db.ref(`pedidos/${p.id}`).remove()
-              .catch(()=>alert('Error al eliminar el pedido'));
-          }
-        });
-      };
-      acciones.appendChild(btnEliminar);
+        /* --- 7. Acciones --- */
+        const acciones = tr.insertCell();
+        const btnEliminar = document.createElement('button');
+        btnEliminar.textContent = 'Eliminar';
+        btnEliminar.style.background = '#f44336';
+        btnEliminar.style.color = '#fff';
+        btnEliminar.onclick = () => {
+          mostrarModalClave(() => {
+            if (confirm('¿Está seguro que desea eliminar este pedido? Esta acción es irreversible.')) {
+              db.ref(`pedidos/${p.id}`).remove()
+                .catch(()=>alert('Error al eliminar el pedido'));
+            }
+          });
+        };
+        acciones.appendChild(btnEliminar);
 
-      tbody.appendChild(tr);
-    });
+        tbody.appendChild(tr);
+      });
 }
 
 
