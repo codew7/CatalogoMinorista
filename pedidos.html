@@ -808,34 +808,32 @@ document.getElementById('controlPedidoBtn').onclick = () => {
     <html><head><title>Control de Pedido</title>
     <style>
       body { font-family: Arial, Helvetica, sans-serif; background: #fff; margin: 0; padding: 30px; }
-      h2 { color: #4CAF50; margin-bottom: 10px; }
-      .info { margin-bottom: 18px; font-size: 1.3em; }
+      .info { margin-bottom: 18px; font-size: 1.25em; }
       table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-      th, td { border: 1px solid #bbb; padding: 8px; text-align: center; font-size: 1em; }
+      th, td { border: 1px solid #bbb; padding: 5px; text-align: center; font-size: 1em; }
       th { background: #4CAF50; color: #fff; }
       .cant { width: 1%; white-space: nowrap; }
       .check { width: 1%; }
       @media print { button { display: none !important; } }
     </style>
     </head><body>
-    <h2>Control de Pedido</h2>
-    <div class="info"><b>Cliente:</b> ${cliente.nombre || ''} <br>
+    <div class="info"><b>Nombre:</b> ${cliente.nombre || ''} <br>
       <b>Dirección:</b> ${cliente.direccion || ''} <br>
       <b>DNI:</b> ${cliente.dni || ''} <br>
       <b>Teléfono:</b> ${cliente.telefono || ''} <br>
-      <b>Email:</b> ${cliente.email || ''} <br>
-      <b>Tipo de envío:</b> ${pedidoActual.tipoEnvio || ''} <br>
+      <b>Envío:</b> ${pedidoActual.tipoEnvio || ''} <br>
       <br>
       <b>REMITENTE:</b><br>
-      - Javier Romero Perez<br>
-      - Sargento Cabral 1945, Florida Oeste, Buenos Aires<br>
-      - Tel. 011 2189-1006
+      Javier Romero Perez<br>
+      Sargento Cabral 1945, Florida Oeste, Buenos Aires<br>
+      Tel. 011 2189-1006
+      <br>
     </div>
     <table>
       <tr>
         <th class="cant">Cantidad</th>
         <th>Artículo</th>
-        <th class="check">OK</th>
+        <th class="check"></th>
       </tr>
   `;
   pedidoActual.items.forEach(it => {
