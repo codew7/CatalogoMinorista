@@ -756,16 +756,19 @@ document.getElementById('controlPedidoBtn').onclick = () => {
 // Mostrar botón Control Pedido solo para admin y moverlo al bloque de acciones admin
 if (admin) {
   const controlPedidoBtn = document.getElementById('controlPedidoBtn');
+  const imprimirRotuloBtn = document.getElementById('imprimirRotuloBtn');
   const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
 
   controlPedidoBtn.style.display = 'inline-block';
+  imprimirRotuloBtn.style.display = 'inline-block';
   despachadoEntregadoBtn.style.display = 'inline-block';
 
   // Mover el botón Control Pedido antes de Imprimir Rótulo
   const accionesAdmin = document.getElementById('accionesAdmin');
-  if (accionesAdmin && controlPedidoBtn) {
-    accionesAdmin.insertBefore(controlPedidoBtn, despachadoEntregadoBtn);
+  if (accionesAdmin && controlPedidoBtn && imprimirRotuloBtn) {
+    accionesAdmin.insertBefore(controlPedidoBtn, imprimirRotuloBtn);
   }
+  // El botón Despachado/Entregado queda a la derecha de Imprimir Rótulo (ya está en el HTML)
 
   // Estado visual del botón
   function actualizarBotonDespachado() {
