@@ -189,7 +189,7 @@
     <button id="cerrarBtn" class="accion-btn">Cerrar Pedido</button>
     <button id="reabrirBtn" class="accion-btn">Reabrir Pedido</button>
     <button id="cancelarBtn" class="accion-btn">Cancelar Pedido</button>
-    <button id="imprimirBtn" class="accion-btn" style="display:none;background:#888;">Imprimir</button>
+    <button id="controlPedidoBtn" class="accion-btn" style="display:none;background:#888;">Control Pedido</button>
   </div>
   <div id="accionesAdmin" style="text-align:center;margin-top:10px;">
     <button id="despachadoEntregadoBtn" class="accion-btn" style="display:none;background:#666;">Entregado</button>
@@ -245,11 +245,13 @@
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
       // === Botón Control Pedido y Despachado/Entregado ===
+      const controlPedidoBtn = document.getElementById('controlPedidoBtn');
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
+      controlPedidoBtn.style.display = 'inline-block';
       despachadoEntregadoBtn.style.display = 'inline-block';
       // Mover el botón Control Pedido antes de Imprimir Rótulo
       const accionesAdmin = document.getElementById('accionesAdmin');
-      if (accionesAdmin) {
+      if (accionesAdmin && controlPedidoBtn) {
         accionesAdmin.insertBefore(controlPedidoBtn, imprimirBtn);
       }
       // Estado visual y lógica del botón Despachado/Entregado
@@ -695,62 +697,61 @@ modalEditCliente.addEventListener('mousedown', function(e) {
 });
 
 
-  // Renombrar todas las referencias de 'controlPedidoBtn' a 'imprimirBtn'
-  const imprimirBtn = document.getElementById('imprimirBtn');
-
-document.getElementById('imprimirBtn').onclick = () => {
-    if (!pedidoActual) return;
-    const cliente = pedidoActual.cliente || {};
-    let html = `
-      <html><head><title>Control de Pedido</title>
-      <style>
-        body { font-family: Arial, Helvetica, sans-serif; background: #fff; margin: 0; padding: 30px; }
-        .info { font-size: 1.25em; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #bbb; padding: 4px; text-align: center; font-size: 0.9em; }
-        th { background: #4CAF50; color: #fff; }
-        .cant { width: 1%; white-space: nowrap; }
-        .check { width: 1%; }
-        @media print { button { display: none !important; } }
-      </style>
-      </head><body>
-      <div class="info"><b>Nombre:</b> ${cliente.nombre || ''} <br>
-        <b>Dirección:</b> ${cliente.direccion || ''} <br>
-        <b>DNI:</b> ${cliente.dni || ''} <br>
-        <b>Teléfono:</b> ${cliente.telefono || ''} <br>
-        <b>Envío:</b> ${pedidoActual.tipoEntrega || ''} <br>
-        <br>
-        <b>REMITENTE:</b><br>
-        Javier Romero Perez / Tel. 011 2189-1006<br>
-        Sargento Cabral 1945, Florida Oeste, Buenos Aires<br>
-        <br>
-      </div>
-      <table>
-        <tr>
-          <th class="cant">Cantidad</th>
-          <th>Artículo</th>
-          <th class="check"></th>
-        </tr>
-    `;
-    pedidoActual.items.forEach(it => {
-      html += `<tr>
-        <td>${it.cantidad}</td>
-        <td style="text-align:left;">${it.nombre}</td>
-        <td><input type='checkbox' style='width:22px;height:22px;'></td>
-      </tr>`;
-    });
-    html += `</table>`;
-    html += `<button onclick="window.print()" style="margin-top:18px;font-size:1.1em;">Imprimir</button>`;
-    html += `</body></html>`;
-    const win = window.open('', '_blank');
-    win.document.write(html);
-    win.document.close();
-  };
+document.getElementById('controlPedidoBtn').onclick = () => {
+  if (!pedidoActual) return;
+  const cliente = pedidoActual.cliente || {};
+  let html = `
+    <html><head><title>Control de Pedido</title>
+    <style>
+      body { font-family: Arial, Helvetica, sans-serif; background: #fff; margin: 0; padding: 30px; }
+      .info { font-size: 1.25em; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+      th, td { border: 1px solid #bbb; padding: 4px; text-align: center; font-size: 0.9em; }
+      th { background: #4CAF50; color: #fff; }
+      .cant { width: 1%; white-space: nowrap; }
+      .check { width: 1%; }
+      @media print { button { display: none !important; } }
+    </style>
+    </head><body>
+    <div class="info"><b>Nombre:</b> ${cliente.nombre || ''} <br>
+      <b>Dirección:</b> ${cliente.direccion || ''} <br>
+      <b>DNI:</b> ${cliente.dni || ''} <br>
+      <b>Teléfono:</b> ${cliente.telefono || ''} <br>
+      <b>Envío:</b> ${pedidoActual.tipoEntrega || ''} <br>
+      <br>
+      <b>REMITENTE:</b><br>
+      Javier Romero Perez / Tel. 011 2189-1006<br>
+      Sargento Cabral 1945, Florida Oeste, Buenos Aires<br>
+      <br>
+    </div>
+    <table>
+      <tr>
+        <th class="cant">Cantidad</th>
+        <th>Artículo</th>
+        <th class="check"></th>
+      </tr>
+  `;
+  pedidoActual.items.forEach(it => {
+    html += `<tr>
+      <td>${it.cantidad}</td>
+      <td style="text-align:left;">${it.nombre}</td>
+      <td><input type='checkbox' style='width:22px;height:22px;'></td>
+    </tr>`;
+  });
+  html += `</table>`;
+  html += `<button onclick="window.print()" style="margin-top:18px;font-size:1.1em;">Imprimir</button>`;
+  html += `</body></html>`;
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+};
 
 // Mostrar botón Control Pedido solo para admin y moverlo al bloque de acciones admin
 if (admin) {
+  const controlPedidoBtn = document.getElementById('controlPedidoBtn');
   const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
 
+  controlPedidoBtn.style.display = 'inline-block';
   despachadoEntregadoBtn.style.display = 'inline-block';
 
   // Mover el botón Control Pedido antes de Imprimir Rótulo
