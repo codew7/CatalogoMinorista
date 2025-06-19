@@ -248,6 +248,12 @@
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
       despachadoEntregadoBtn.style.display = 'inline-block';
 
+      // Mover el botón Control Pedido antes de Imprimir Rótulo
+      const accionesAdmin = document.getElementById('accionesAdmin');
+      if (accionesAdmin) {
+        accionesAdmin.insertBefore(imprimirBtn);
+      }
+      
       // Estado visual y lógica del botón Despachado/Entregado
       function actualizarBotonDespachado() {
         despachadoEntregadoBtn.textContent = 'Entregado';
