@@ -247,13 +247,11 @@
       // === Botón Control Pedido y Despachado/Entregado ===
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
       despachadoEntregadoBtn.style.display = 'inline-block';
-
       // Mover el botón Control Pedido antes de Imprimir Rótulo
       const accionesAdmin = document.getElementById('accionesAdmin');
       if (accionesAdmin) {
-        accionesAdmin.insertBefore(imprimirBtn);
+        accionesAdmin.insertBefore(controlPedidoBtn, imprimirBtn);
       }
-      
       // Estado visual y lógica del botón Despachado/Entregado
       function actualizarBotonDespachado() {
         despachadoEntregadoBtn.textContent = 'Entregado';
@@ -697,6 +695,7 @@ modalEditCliente.addEventListener('mousedown', function(e) {
 });
 
 
+  // Renombrar todas las referencias de 'controlPedidoBtn' a 'imprimirBtn'
   const imprimirBtn = document.getElementById('imprimirBtn');
 
 document.getElementById('imprimirBtn').onclick = () => {
@@ -753,6 +752,13 @@ if (admin) {
   const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
 
   despachadoEntregadoBtn.style.display = 'inline-block';
+
+  // Mover el botón Control Pedido antes de Imprimir Rótulo
+  const accionesAdmin = document.getElementById('accionesAdmin');
+  if (accionesAdmin && controlPedidoBtn) {
+    accionesAdmin.insertBefore(controlPedidoBtn, imprimirBtn);
+  }
+  // El botón Despachado/Entregado queda a la derecha de Imprimir Rótulo (ya está en el HTML)
 
   // Estado visual del botón
   function actualizarBotonDespachado() {
