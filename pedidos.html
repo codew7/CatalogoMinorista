@@ -69,6 +69,15 @@
       transition:background 0.2s, color 0.2s, opacity 0.2s;
     }
     button:disabled, .accion-btn:disabled{background:#9e9e9e;cursor:not-allowed;}
+    #imprimirRotuloBtn {
+      min-width:160px;
+      max-width:200px;
+      font-size:1em;
+      box-sizing:border-box;
+      text-align:center;
+    }
+    #imprimirRotuloBtn { background: #222 !important; }
+    #imprimirRotuloBtn[disabled] { background: #9e9e9e !important; }
     #despachadoEntregadoBtn { background: #222 !important; }
     #despachadoEntregadoBtn[disabled] { background: #9e9e9e !important; }
     #accionesAdmin {
@@ -192,6 +201,7 @@
     <button id="controlPedidoBtn" class="accion-btn" style="display:none;background:#888;">Control Pedido</button>
   </div>
   <div id="accionesAdmin" style="text-align:center;margin-top:10px;">
+    <button id="imprimirRotuloBtn" class="accion-btn" style="display:none;background:#222;">Imprimir Rótulo</button>
     <button id="despachadoEntregadoBtn" class="accion-btn" style="display:none;background:#666;">Entregado</button>
   </div>
 
