@@ -919,101 +919,93 @@
             return;
           }
 
-          // Verificar si ya tiene un pedido abierto
-          verificarPedidoAbierto(emailFinal).then(res => {
-            if (res) {
-              modal.style.display = 'none';
-              mostrarMensajePedidoAbierto(res.id);
-              return;
-            }
-
-            // Si el usuario intenta continuar solo con emailClienteInput, verificar si está registrado
-            if (!email && emailCli) {
-              db.ref('clientes').orderByChild('email').equalTo(emailCli).limitToFirst(1).once('value')
-                .then(snap => {
-                  if (!snap.exists()) {
-                    alert('No se encontró el email ingresado. Por favor, registrate antes de poder ingresar el pedido.');
-                    return;
-                  } else {
-                    const cli = Object.values(snap.val())[0];
-                    nombreInput.value    = cli.nombre    || '';
-                    telefonoInput.value  = cli.telefono  || '';
-                    direccionInput.value = cli.direccion || '';
-                    dniNuevoInput.value  = cli.dni       || '';
-                    emailInput.value     = cli.email     || '';
-                    datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, dni: cli.dni };
-                    modal.style.display = 'none';
-                    enviarPedidoFinal();
-                  }
-                });
-              return;
-            }
-
-            // Nueva regla: si el email ya está registrado, NO permitir registro nuevo, forzar uso de sección cliente existente
-            if (email) {
-              db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
-                .then(snap => {
-                  if (snap.exists()) {
-                    // Usar los datos existentes del cliente para el pedido
-                    const cli = Object.values(snap.val())[0];
-                    datosExtraCliente = {
-                      email: cli.email,
-                      nombre: cli.nombre,
-                      telefono: cli.telefono,
-                      direccion: cli.direccion,
-                      dni: cli.dni
-                    };
-                    modal.style.display = 'none';
-                    enviarPedidoFinal();
-                    return;
-                  }
-                  if (!nombre) {
-                    alert("Ingresá tu nombre.");
-                    return;
-                  }
-                  datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
-                  db.ref('clientes').push({
-                    email: emailFinal,
-                    nombre,
-                    telefono,
-                    direccion,
-                    dni
-                  }).then(() => {
-                    modal.style.display = 'none';
-                    enviarPedidoFinal();
-                  });
-                });
-              return;
-            }
-
-            if (!nombre) {
-              alert("Ingresá tu nombre.");
-              return;
-            }
-            datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
-            db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
+          // Si el usuario intenta continuar solo con emailClienteInput, verificar si está registrado
+          if (!email && emailCli) {
+            db.ref('clientes').orderByChild('email').equalTo(emailCli).limitToFirst(1).once('value')
               .then(snap => {
-                let ref;
-                if (snap.exists()) {
-                  const key = Object.keys(snap.val())[0];
-                  ref = db.ref('clientes/' + key);
+                if (!snap.exists()) {
+                  alert('No se encontró el email ingresado. Por favor, registrate antes de poder ingresar el pedido.');
+                  return;
                 } else {
-                  ref = db.ref('clientes').push();
+                  const cli = Object.values(snap.val())[0];
+                  nombreInput.value    = cli.nombre    || '';
+                  telefonoInput.value  = cli.telefono  || '';
+                  direccionInput.value = cli.direccion || '';
+                  dniNuevoInput.value  = cli.dni       || '';
+                  emailInput.value     = cli.email     || '';
+                  datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, dni: cli.dni };
+                  modal.style.display = 'none';
+                  enviarPedidoFinal();
                 }
-                return ref.set({
+              });
+            return;
+          }
+
+          // Nueva regla: si el email ya está registrado, NO permitir registro nuevo, forzar uso de sección cliente existente
+          if (email) {
+            db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
+              .then(snap => {
+                if (snap.exists()) {
+                  // Usar los datos existentes del cliente para el pedido
+                  const cli = Object.values(snap.val())[0];
+                  datosExtraCliente = {
+                    email: cli.email,
+                    nombre: cli.nombre,
+                    telefono: cli.telefono,
+                    direccion: cli.direccion,
+                    dni: cli.dni
+                  };
+                  modal.style.display = 'none';
+                  enviarPedidoFinal();
+                  return;
+                }
+                if (!nombre) {
+                  alert("Ingresá tu nombre.");
+                  return;
+                }
+                datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
+                db.ref('clientes').push({
                   email: emailFinal,
                   nombre,
                   telefono,
                   direccion,
                   dni
+                }).then(() => {
+                  modal.style.display = 'none';
+                  enviarPedidoFinal();
                 });
-              })
-              .then(() => {
-                modal.style.display = 'none';
-                enviarPedidoFinal();
-              })
-              .catch(err => { alert('Error guardando datos de cliente'); console.error(err); });
-          });
+              });
+            return;
+          }
+
+          if (!nombre) {
+            alert("Ingresá tu nombre.");
+            return;
+          }
+
+          datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
+          db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
+            .then(snap => {
+              let ref;
+              if (snap.exists()) {
+                const key = Object.keys(snap.val())[0];
+                ref = db.ref('clientes/' + key);
+              } else {
+                ref = db.ref('clientes').push();
+              }
+              return ref.set({
+                email: emailFinal,
+                nombre,
+                telefono,
+                direccion,
+                dni
+              });
+            })
+            .then(() => {
+              modal.style.display = 'none';
+              enviarPedidoFinal();
+            })
+            .catch(err => { alert('Error guardando datos de cliente'); console.error(err); });
         });
 
         function enviarPedidoFinal() {

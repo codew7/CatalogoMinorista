@@ -112,27 +112,7 @@
 
         @media (max-width: 600px) {
             .grid {
-                grid-template-columns: 1fr;
-            }
-            .card {
-                flex-direction: row;
-                align-items: flex-start;
-                text-align: left;
-                min-height: unset;
-                padding: 10px;
-            }
-            .card img {
-                max-width: 110px;
-                max-height: 110px;
-                margin: 0 12px 0 0;
-                flex-shrink: 0;
-            }
-            .card > *:not(img) {
-                flex: 1 1 0;
-            }
-            .card .info, .card h3, .card p {
-                margin-left: 0;
-                margin-right: 0;
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
@@ -464,7 +444,7 @@
         <input id="nombreInput"     type="text" placeholder="Nombre">
         <input id="telefonoInput"   type="tel"  placeholder="Teléfono (en caso de requerir envío)">
         <input id="direccionInput"  type="text"
-            placeholder="Dirección (en caso de requerir envío)">
+            placeholder="Localidad y Provincia (en caso de requerir envío)">
         <input id="dniNuevoInput"   type="tel"  placeholder="DNI (en caso de requerir envío)">
         <hr>
         <p><strong>Si ya sos cliente, por favor ingresa tu email:</strong></p>
@@ -1061,8 +1041,14 @@
             };
 
             pedidoRef.set(pedidoObj).then(() => {
-            const msg = `Envía éste mensaje para dejar constancia de tu pedido:%0Ahttps://www.home-point.com.ar/pedidos.html?id=${pedidoId}`;
-            window.open(`${WHATSAPP_URL}&text=${msg}`);
+            // Construir mensaje detallado para WhatsApp
+            let mensaje = "Hola! Este es mi pedido:%0A";
+            mensaje += `https://www.home-point.com.ar/pedidos.html?id=${pedidoId}%0A`;
+            mensaje += `%0ADetalle del pedido:%0A`;
+            carrito.forEach(item => {
+                mensaje += `- ${item.nombre} - Cantidad: ${item.cantidad}%0A`;
+            });
+            window.open(`${WHATSAPP_URL}&text=${mensaje}`);
             limpiarCarrito();
             });
             return;
