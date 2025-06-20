@@ -444,7 +444,7 @@
         <input id="nombreInput"     type="text" placeholder="Nombre">
         <input id="telefonoInput"   type="tel"  placeholder="Teléfono (en caso de requerir envío)">
         <input id="direccionInput"  type="text"
-            placeholder="Dirección (en caso de requerir envío)">
+            placeholder="Localidad y Provicia (en caso de requerir envío)">
         <input id="dniNuevoInput"   type="tel"  placeholder="DNI (en caso de requerir envío)">
         <hr>
         <p><strong>Si ya sos cliente, por favor ingresa tu email:</strong></p>
@@ -1041,7 +1041,12 @@
             };
 
             pedidoRef.set(pedidoObj).then(() => {
-            const msg = `Envía éste mensaje para dejar constancia de tu pedido:%0Ahttps://www.home-point.com.ar/pedidos.html?id=${pedidoId}`;
+            // Construir detalle de artículos
+            let detalleArticulos = '';
+            carrito.forEach(item => {
+                detalleArticulos += `%0A- ${item.nombre} x ${item.cantidad}`;
+            });
+            const msg = `Envía éste mensaje para dejar constancia de tu pedido:%0Ahttps://www.home-point.com.ar/pedidos.html?id=${pedidoId}${detalleArticulos}`;
             window.open(`${WHATSAPP_URL}&text=${msg}`);
             limpiarCarrito();
             });
