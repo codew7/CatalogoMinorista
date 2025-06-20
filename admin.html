@@ -55,6 +55,7 @@
   <th>Nombre</th>
   <th>Fecha</th>
   <th>Unidades</th>
+  <th>ENTREGA</th> <!-- Nueva columna ENTREGA -->
   <th>Estado</th>
   <th>FACT</th> <!-- Nueva columna FACT -->
   <th>Acciones</th>
@@ -223,7 +224,10 @@
         /* --- 5. Cant. ítems --- */
         tr.insertCell().textContent = (p.items || []).reduce((acc, item) => acc + (item.cantidad || 0), 0);
 
-        /* --- 6. Estado --- */
+        /* --- 6. ENTREGA --- */
+        tr.insertCell().textContent = p.tipoEntrega || '—';
+
+        /* --- 7. Estado --- */
         let estado = 'ABIERTO';
         if (p.status === 'DESPACHADO/ENTREGADO') {
           estado = 'DESPACHADO/ENTREGADO';
@@ -236,11 +240,11 @@
         }
         tr.insertCell().textContent = estado;
 
-        /* --- 7. FACT --- */
+        /* --- 8. FACT --- */
         const factCell = tr.insertCell();
         factCell.textContent = (p.fact === true || p.fact === 'SI' || p.facturado === true) ? 'SI' : '';
 
-        /* --- 8. Acciones --- */
+        /* --- 9. Acciones --- */
         const acciones = tr.insertCell();
         const btnEliminar = document.createElement('button');
         btnEliminar.textContent = 'Eliminar';
