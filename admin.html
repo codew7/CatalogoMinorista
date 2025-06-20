@@ -56,6 +56,7 @@
   <th>Fecha</th>
   <th>Unidades</th>
   <th>Estado</th>
+  <th>FACT</th> <!-- Nueva columna FACT -->
   <th>Acciones</th>
 </tr>
 
@@ -235,7 +236,11 @@
         }
         tr.insertCell().textContent = estado;
 
-        /* --- 7. Acciones --- */
+        /* --- 7. FACT --- */
+        const factCell = tr.insertCell();
+        factCell.textContent = (p.fact === true || p.fact === 'SI' || p.facturado === true) ? 'SI' : '';
+
+        /* --- 8. Acciones --- */
         const acciones = tr.insertCell();
         const btnEliminar = document.createElement('button');
         btnEliminar.textContent = 'Eliminar';
@@ -250,6 +255,33 @@
           });
         };
         acciones.appendChild(btnEliminar);
+
+        // Botón FACT
+        const btnFact = document.createElement('button');
+        btnFact.textContent = 'FACT';
+        btnFact.style.background = '#f44336';
+        btnFact.style.color = '#fff';
+        btnFact.disabled = !(estado === 'DESPACHADO/ENTREGADO' && !factCell.textContent);
+        if (btnFact.disabled) {
+          btnFact.style.opacity = 0.5;
+          btnFact.style.cursor = 'not-allowed';
+        }
+        btnFact.onclick = () => {
+          btnFact.disabled = true;
+          btnFact.textContent = '...';
+          db.ref(`pedidos/${p.id}`).update({ fact: 'SI', facturado: true })
+            .then(() => {
+              btnFact.textContent = 'FACT';
+              // Refrescar la tabla para mostrar el cambio
+              renderTabla();
+            })
+            .catch(() => {
+              alert('Error al marcar como facturado');
+              btnFact.disabled = false;
+              btnFact.textContent = 'FACT';
+            });
+        };
+        acciones.appendChild(btnFact);
 
         tbody.appendChild(tr);
       });
