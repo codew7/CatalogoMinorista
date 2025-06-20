@@ -444,7 +444,7 @@
         <input id="nombreInput"     type="text" placeholder="Nombre">
         <input id="telefonoInput"   type="tel"  placeholder="Teléfono (en caso de requerir envío)">
         <input id="direccionInput"  type="text"
-            placeholder="Localidad y Provicia (en caso de requerir envío)">
+            placeholder="Localidad y Provincia (en caso de requerir envío)">
         <input id="dniNuevoInput"   type="tel"  placeholder="DNI (en caso de requerir envío)">
         <hr>
         <p><strong>Si ya sos cliente, por favor ingresa tu email:</strong></p>
@@ -919,93 +919,116 @@
             return;
           }
 
-          // Si el usuario intenta continuar solo con emailClienteInput, verificar si está registrado
-          if (!email && emailCli) {
-            db.ref('clientes').orderByChild('email').equalTo(emailCli).limitToFirst(1).once('value')
-              .then(snap => {
-                if (!snap.exists()) {
-                  alert('No se encontró el email ingresado. Por favor, registrate antes de poder ingresar el pedido.');
-                  return;
-                } else {
-                  const cli = Object.values(snap.val())[0];
-                  nombreInput.value    = cli.nombre    || '';
-                  telefonoInput.value  = cli.telefono  || '';
-                  direccionInput.value = cli.direccion || '';
-                  dniNuevoInput.value  = cli.dni       || '';
-                  emailInput.value     = cli.email     || '';
-                  datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, dni: cli.dni };
-                  modal.style.display = 'none';
-                  enviarPedidoFinal();
-                }
-              });
-            return;
+          // Verifica si el usuario ya tiene un pedido abierto antes de continuar
+          function verificarPedidoAbierto(emailCliente) {
+            return db.ref('pedidos')
+                .orderByChild('cliente/email')
+                .equalTo(emailCliente)
+                .once('value')
+                .then(snap => {
+                    if (!snap.exists()) return null;
+                    // Buscar si hay algún pedido abierto
+                    let pedidoAbierto = null;
+                    snap.forEach(child => {
+                        const pedido = child.val();
+                        // Considera abierto si locked === false (ajusta si tienes otro campo de estado)
+                        if (pedido.locked === false) {
+                            pedidoAbierto = { id: child.key, ...pedido };
+                        }
+                    });
+                    return pedidoAbierto;
+                });
           }
 
-          // Nueva regla: si el email ya está registrado, NO permitir registro nuevo, forzar uso de sección cliente existente
-          if (email) {
-            db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
+          function mostrarMensajePedidoAbierto(pedidoId) {
+            // Busca o crea un contenedor para el mensaje
+            let cont = document.getElementById('mensaje-pedido-abierto');
+            if (!cont) {
+                cont = document.createElement('div');
+                cont.id = 'mensaje-pedido-abierto';
+                document.body.appendChild(cont);
+            }
+            cont.innerHTML = `
+                <div style="background:#fff3cd;border:1px solid #ffeeba;padding:20px;margin:20px auto;max-width:400px;text-align:center;">
+                    <b>Usted ya cuenta con un pedido abierto.</b><br>
+                    En caso de quererlo puede modificarlo o cancelarlo para generar uno nuevo.<br><br>
+                    <button onclick="window.location.href='pedidos.html?id=${pedidoId}'" style="padding:10px 20px;background:#4CAF50;color:#fff;border:none;border-radius:5px;cursor:pointer;">Ver Pedido</button>
+                </div>
+            `;
+          }
+
+          verificarPedidoAbierto(emailFinal).then(pedidoAbierto => {
+            if (pedidoAbierto) {
+              modal.style.display = 'none';
+              mostrarMensajePedidoAbierto(pedidoAbierto.id);
+              return;
+            }
+            // Nueva regla: si el email ya está registrado, NO permitir registro nuevo, forzar uso de sección cliente existente
+            if (email) {
+              db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
+                .then(snap => {
+                  if (snap.exists()) {
+                    // Usar los datos existentes del cliente para el pedido
+                    const cli = Object.values(snap.val())[0];
+                    datosExtraCliente = {
+                      email: cli.email,
+                      nombre: cli.nombre,
+                      telefono: cli.telefono,
+                      direccion: cli.direccion,
+                      dni: cli.dni
+                    };
+                    modal.style.display = 'none';
+                    enviarPedidoFinal();
+                    return;
+                  }
+                  if (!nombre) {
+                    alert("Ingresá tu nombre.");
+                    return;
+                  }
+                  datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
+                  db.ref('clientes').push({
+                    email: emailFinal,
+                    nombre,
+                    telefono,
+                    direccion,
+                    dni
+                  }).then(() => {
+                    modal.style.display = 'none';
+                    enviarPedidoFinal();
+                  });
+                });
+              return;
+            }
+
+            if (!nombre) {
+              alert("Ingresá tu nombre.");
+              return;
+            }
+
+            datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
+            db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
               .then(snap => {
+                let ref;
                 if (snap.exists()) {
-                  // Usar los datos existentes del cliente para el pedido
-                  const cli = Object.values(snap.val())[0];
-                  datosExtraCliente = {
-                    email: cli.email,
-                    nombre: cli.nombre,
-                    telefono: cli.telefono,
-                    direccion: cli.direccion,
-                    dni: cli.dni
-                  };
-                  modal.style.display = 'none';
-                  enviarPedidoFinal();
-                  return;
+                  const key = Object.keys(snap.val())[0];
+                  ref = db.ref('clientes/' + key);
+                } else {
+                  ref = db.ref('clientes').push();
                 }
-                if (!nombre) {
-                  alert("Ingresá tu nombre.");
-                  return;
-                }
-                datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
-                db.ref('clientes').push({
+                return ref.set({
                   email: emailFinal,
                   nombre,
                   telefono,
                   direccion,
                   dni
-                }).then(() => {
-                  modal.style.display = 'none';
-                  enviarPedidoFinal();
                 });
-              });
-            return;
-          }
-
-          if (!nombre) {
-            alert("Ingresá tu nombre.");
-            return;
-          }
-
-          datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
-          db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
-            .then(snap => {
-              let ref;
-              if (snap.exists()) {
-                const key = Object.keys(snap.val())[0];
-                ref = db.ref('clientes/' + key);
-              } else {
-                ref = db.ref('clientes').push();
-              }
-              return ref.set({
-                email: emailFinal,
-                nombre,
-                telefono,
-                direccion,
-                dni
-              });
-            })
-            .then(() => {
-              modal.style.display = 'none';
-              enviarPedidoFinal();
-            })
-            .catch(err => { alert('Error guardando datos de cliente'); console.error(err); });
+              })
+              .then(() => {
+                modal.style.display = 'none';
+                enviarPedidoFinal();
+              })
+              .catch(err => { alert('Error guardando datos de cliente'); console.error(err); });
+        });
         });
 
         function enviarPedidoFinal() {
