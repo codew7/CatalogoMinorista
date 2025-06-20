@@ -903,11 +903,32 @@
         modal.style.display = 'flex';
         }
 
-        // Mostrar mensaje y botón si ya hay pedido abierto
+        // === Validación de pedido abierto ===
+function validarPedidoAbierto(email, callback) {
+  db.ref('pedidos')
+    .orderByChild('cliente/email')
+    .equalTo(email)
+    .once('value')
+    .then(snap => {
+      let abierto = null;
+      let pedidoId = null;
+      snap.forEach(child => {
+        const pedido = child.val();
+        if ((pedido.estado === 'ABIERTO' || pedido.locked === false) && !abierto) {
+          abierto = pedido;
+          pedidoId = pedido.id || child.key;
+        }
+      });
+      callback(abierto, pedidoId);
+    })
+    .catch(err => {
+      console.error('Error validando pedido abierto', err);
+      callback(null, null);
+    });
+}
+
 function mostrarMensajePedidoAbierto(pedidoId) {
-  // Cerrar modal si está abierto
   modal.style.display = 'none';
-  // Eliminar overlay previo si existe
   let overlay = document.getElementById('pedido-abierto-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
@@ -930,20 +951,14 @@ function mostrarMensajePedidoAbierto(pedidoId) {
       <h2 style='color:#d32f2f;'>Usted ya cuenta con un pedido abierto</h2>
       <p>En caso de quererlo puede modificarlo o cancelarlo para generar uno nuevo.</p>
       <button id="verPedidoBtn" style="background:#4CAF50;color:#fff;padding:10px 30px;border:none;border-radius:6px;font-size:1.1em;cursor:pointer;">Ver Pedido</button>
-      <button id="intentarDeNuevoBtn" style="background:#888;color:#fff;padding:10px 30px;border:none;border-radius:6px;font-size:1.1em;cursor:pointer;margin-left:10px;">Intentar de nuevo</button>
     </div>
   `;
   document.getElementById('verPedidoBtn').onclick = function() {
     window.location.href = `pedidos.html?id=${pedidoId}`;
   };
-  document.getElementById('intentarDeNuevoBtn').onclick = function() {
-    // Elimina el overlay y vuelve a abrir el modal
-    overlay.remove();
-    enviarPedido();
-  };
 }
 
-// Modificar el click de continuarBtn para validar antes de crear pedido
+// --- ÚNICO manejador para continuarBtn ---
 continuarBtn.addEventListener('click', () => {
   const email      = emailInput.value.trim().toLowerCase();
   const nombre     = nombreInput.value.trim();
@@ -959,24 +974,42 @@ continuarBtn.addEventListener('click', () => {
     return;
   }
 
-  // Solo para usuarios registrados (clientes existentes)
   db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
     .then(snap => {
       if (snap.exists()) {
-        // Validar si ya tiene pedido abierto
         validarPedidoAbierto(emailFinal, (abierto, pedidoId) => {
           if (abierto) {
             mostrarMensajePedidoAbierto(pedidoId);
             return;
           }
-          // ...existing code... (aquí va el resto de la lógica original del click)
-          // Copiar aquí el código original desde la validación de cliente existente
-          // ...
-          // (El resto del código sigue igual)
+          // --- FLUJO ORIGINAL PARA CLIENTE REGISTRADO ---
+          const cli = Object.values(snap.val())[0];
+          nombreInput.value    = cli.nombre    || '';
+          telefonoInput.value  = cli.telefono  || '';
+          direccionInput.value = cli.direccion || '';
+          dniNuevoInput.value  = cli.dni       || '';
+          emailInput.value     = cli.email     || '';
+          datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, dni: cli.dni };
+          modal.style.display = 'none';
+          enviarPedidoFinal();
         });
       } else {
-        // Si no es cliente registrado, continuar lógica normal
-        // ...existing code... (el resto de la lógica original)
+        // --- FLUJO ORIGINAL PARA NUEVO CLIENTE ---
+        if (!nombre) {
+          alert("Ingresá tu nombre.");
+          return;
+        }
+        datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, dni };
+        db.ref('clientes').push({
+          email: emailFinal,
+          nombre,
+          telefono,
+          direccion,
+          dni
+        }).then(() => {
+          modal.style.display = 'none';
+          enviarPedidoFinal();
+        });
       }
     });
 });
