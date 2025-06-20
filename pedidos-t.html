@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -555,7 +553,8 @@
         adminViewed: false,              // ← resetea el indicador
         lastUpdated: Date.now(),         // (útil para ordenar por fecha)
         tipoPago: tipoPago,
-        tipoEntrega: tipoEntrega
+        tipoEntrega: tipoEntrega,
+        ultimoModificadoPor: 'cliente'   // <--- NUEVO: marca origen del cambio
       })
       .then(() => alert('Pedido actualizado ✔️'))
       .catch(()  => alert('Error al guardar'));

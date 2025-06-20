@@ -193,7 +193,7 @@
 
         /* --- 1. Indicador de modificación --- */
         const indCell = tr.insertCell();
-        if (p.adminViewed === false) {
+        if (p.ultimoModificadoPor === 'cliente' && p.adminViewed === false) {
           const dot = document.createElement('span');
           dot.className = 'dot';
           indCell.appendChild(dot);
@@ -269,7 +269,7 @@
         btnFact.onclick = () => {
           btnFact.disabled = true;
           btnFact.textContent = '...';
-          db.ref(`pedidos/${p.id}`).update({ fact: 'SI', facturado: true })
+          db.ref(`pedidos/${p.id}`).update({ fact: 'SI', facturado: true, ultimoModificadoPor: 'admin' })
             .then(() => {
               btnFact.textContent = 'FACT';
               // Refrescar la tabla para mostrar el cambio
@@ -290,13 +290,13 @@
 
   function cerrarPedido(id){
     if(!confirm(`¿Bloquear el pedido ${id}?`)) return;
-    db.ref(`pedidos/${id}`).update({ locked: true })
+    db.ref(`pedidos/${id}`).update({ locked: true, ultimoModificadoPor: 'admin' })
       .catch(()=>alert('Error al cerrar pedido'));
   }
 
   function reabrirPedido(id){
   if(!confirm(`¿Reabrir el pedido ${id}?`)) return;
-  db.ref(`pedidos/${id}`).update({ locked:false })
+  db.ref(`pedidos/${id}`).update({ locked:false, ultimoModificadoPor: 'admin' })
     .catch(()=>alert('Error al reabrir pedido'));
 }
 
