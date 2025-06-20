@@ -1041,13 +1041,14 @@
             };
 
             pedidoRef.set(pedidoObj).then(() => {
-            // Construir detalle de artículos
-            let detalleArticulos = '';
+            // Construir mensaje detallado para WhatsApp
+            let mensaje = "Hola! Este es mi pedido:%0A";
+            mensaje += `https://www.home-point.com.ar/pedidos.html?id=${pedidoId}%0A`;
+            mensaje += `%0ADetalle del pedido:%0A`;
             carrito.forEach(item => {
-                detalleArticulos += `%0A- ${item.nombre} x ${item.cantidad}`;
+                mensaje += `- ${item.nombre} - Cantidad: ${item.cantidad}%0A`;
             });
-            const msg = `Envía éste mensaje para dejar constancia de tu pedido:%0Ahttps://www.home-point.com.ar/pedidos.html?id=${pedidoId}${detalleArticulos}`;
-            window.open(`${WHATSAPP_URL}&text=${msg}`);
+            window.open(`${WHATSAPP_URL}&text=${mensaje}`);
             limpiarCarrito();
             });
             return;
