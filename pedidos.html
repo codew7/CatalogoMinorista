@@ -198,7 +198,7 @@
     <button id="cerrarBtn" class="accion-btn">Cerrar Pedido</button>
     <button id="reabrirBtn" class="accion-btn">Reabrir Pedido</button>
     <button id="cancelarBtn" class="accion-btn">Cancelar Pedido</button>
-    <button id="controlPedidoBtn" class="accion-btn" style="display:none;background:#888;">Control Pedido</button>
+    <button id="ImprimirBtn" class="accion-btn" style="display:none;background:#888;">Imprimir</button>
   </div>
   <div id="accionesAdmin" style="text-align:center;margin-top:10px;">
     <button id="despachadoEntregadoBtn" class="accion-btn" style="display:none;background:#666;">Entregado</button>
@@ -254,16 +254,18 @@
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
       // === Botón Control Pedido y Despachado/Entregado ===
-      const controlPedidoBtn = document.getElementById('controlPedidoBtn');
+      const ImprimirBtn = document.getElementById('controlPedidoBtn');
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
-      controlPedidoBtn.style.display = 'inline-block';
+      ImprimirBtn.style.display = 'inline-block';
       despachadoEntregadoBtn.style.display = 'inline-block';
-      // Mover el botón Control Pedido antes de Imprimir Rótulo
+      // Mover el botón ImprimirBtn al bloque de acciones admin
       const accionesAdmin = document.getElementById('accionesAdmin');
-      if (accionesAdmin && controlPedidoBtn) {
-        accionesAdmin.insertBefore(controlPedidoBtn, accionesAdmin.firstChild);
+      if (accionesAdmin && ImprimirBtn) {
+        accionesAdmin.insertBefore(ImprimirBtn, accionesAdmin.firstChild);
       }
-      // Estado visual y lógica del botón Despachado/Entregado
+      // El botón Despachado/Entregado queda a la derecha (ya está en el HTML)
+
+      // Estado visual del botón
       function actualizarBotonDespachado() {
         despachadoEntregadoBtn.textContent = 'Entregado';
         despachadoEntregadoBtn.style.background = '#666';
@@ -704,7 +706,7 @@ modalEditCliente.addEventListener('mousedown', function(e) {
 });
 
 
-document.getElementById('controlPedidoBtn').onclick = () => {
+document.getElementById('ImprimirBtn').onclick = () => {
   if (!pedidoActual) return;
   const cliente = pedidoActual.cliente || {};
   let html = `
@@ -755,18 +757,18 @@ document.getElementById('controlPedidoBtn').onclick = () => {
 
 // Mostrar botón Control Pedido solo para admin y moverlo al bloque de acciones admin
 if (admin) {
-  const controlPedidoBtn = document.getElementById('controlPedidoBtn');
+  const ImprimirBtn = document.getElementById('controlPedidoBtn');
   const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
 
-  controlPedidoBtn.style.display = 'inline-block';
+  ImprimirBtn.style.display = 'inline-block';
   despachadoEntregadoBtn.style.display = 'inline-block';
 
-  // Mover el botón Control Pedido antes de Imprimir Rótulo
+  // Mover el botón ImprimirBtn al bloque de acciones admin
   const accionesAdmin = document.getElementById('accionesAdmin');
-  if (accionesAdmin && controlPedidoBtn) {
-    accionesAdmin.insertBefore(controlPedidoBtn, accionesAdmin.firstChild);
+  if (accionesAdmin && ImprimirBtn) {
+    accionesAdmin.insertBefore(ImprimirBtn, accionesAdmin.firstChild);
   }
-  // El botón Despachado/Entregado queda a la derecha de Imprimir Rótulo (ya está en el HTML)
+  // El botón Despachado/Entregado queda a la derecha (ya está en el HTML)
 
   // Estado visual del botón
   function actualizarBotonDespachado() {
