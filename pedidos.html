@@ -748,7 +748,8 @@ document.getElementById('ImprimirBtn').onclick = () => {
     </tr>`;
   });
   html += `</table>`;
-  html += `<button onclick="window.print()" style="margin-top:18px;font-size:1.1em;">Imprimir</button>`;
+  // Llama a imprimir automáticamente al abrir la ventana
+  html += `<script>window.onload = function(){ window.print(); }<\/script>`;
   html += `</body></html>`;
   const win = window.open('', '_blank');
   win.document.write(html);
