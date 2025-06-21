@@ -253,8 +253,8 @@
 
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
-      // === Botón Control Pedido y Despachado/Entregado ===
-      const ImprimirBtn = document.getElementById('controlPedidoBtn');
+      // === Botón Imprimir y Despachado/Entregado ===
+      const ImprimirBtn = document.getElementById('ImprimirBtn');
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
       ImprimirBtn.style.display = 'inline-block';
       despachadoEntregadoBtn.style.display = 'inline-block';
@@ -710,7 +710,7 @@ document.getElementById('ImprimirBtn').onclick = () => {
   if (!pedidoActual) return;
   const cliente = pedidoActual.cliente || {};
   let html = `
-    <html><head><title>Control de Pedido</title>
+    <html><head><title>Impresion de Pedido</title>
     <style>
       body { font-family: Arial, Helvetica, sans-serif; background: #fff; margin: 0; padding: 30px; }
       .info { font-size: 1.25em; }
@@ -755,9 +755,9 @@ document.getElementById('ImprimirBtn').onclick = () => {
   win.document.close();
 };
 
-// Mostrar botón Control Pedido solo para admin y moverlo al bloque de acciones admin
+// Mostrar botón Imprimir solo para admin y moverlo al bloque de acciones admin
 if (admin) {
-  const ImprimirBtn = document.getElementById('controlPedidoBtn');
+  const ImprimirBtn = document.getElementById('ImprimirBtn');
   const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
 
   ImprimirBtn.style.display = 'inline-block';
