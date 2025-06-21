@@ -201,7 +201,6 @@
     <button id="controlPedidoBtn" class="accion-btn" style="display:none;background:#888;">Control Pedido</button>
   </div>
   <div id="accionesAdmin" style="text-align:center;margin-top:10px;">
-    <button id="imprimirRotuloBtn" class="accion-btn" style="display:none;background:#222;">Imprimir Rótulo</button>
     <button id="despachadoEntregadoBtn" class="accion-btn" style="display:none;background:#666;">Entregado</button>
   </div>
 
@@ -254,13 +253,6 @@
 
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
-      const imprimirBtn = document.getElementById('imprimirRotuloBtn');
-      imprimirBtn.style.display = 'inline-block';
-      // Habilitar solo si hay dirección
-      const tieneDireccion = !!pedidoActual.cliente?.direccion;
-      imprimirBtn.disabled = !tieneDireccion;
-      imprimirBtn.style.opacity = imprimirBtn.disabled ? '0.5' : '1';
-
       // === Botón Control Pedido y Despachado/Entregado ===
       const controlPedidoBtn = document.getElementById('controlPedidoBtn');
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
@@ -268,8 +260,8 @@
       despachadoEntregadoBtn.style.display = 'inline-block';
       // Mover el botón Control Pedido antes de Imprimir Rótulo
       const accionesAdmin = document.getElementById('accionesAdmin');
-      if (accionesAdmin && controlPedidoBtn && imprimirBtn) {
-        accionesAdmin.insertBefore(controlPedidoBtn, imprimirBtn);
+      if (accionesAdmin && controlPedidoBtn) {
+        accionesAdmin.insertBefore(controlPedidoBtn, accionesAdmin.firstChild);
       }
       // Estado visual y lógica del botón Despachado/Entregado
       function actualizarBotonDespachado() {
@@ -324,9 +316,7 @@
       admin &&  pedidoActual.locked ? 'inline-block' : 'none';
 
     // Mostrar botón Imprimir Rótulo solo para admin
-    if (admin) {
-      document.getElementById('imprimirRotuloBtn').style.display = 'inline-block';
-    }
+    // (eliminado)
     // Mostrar estado
     if (pedidoActual.status === 'DESPACHADO/ENTREGADO') {
       document.getElementById('estado').innerText = '📦 PEDIDO DESPACHADO/ENTREGADO';
@@ -713,92 +703,6 @@ modalEditCliente.addEventListener('mousedown', function(e) {
   }
 });
 
-document.getElementById('imprimirRotuloBtn').onclick = () => {
-  if (!pedidoActual || !pedidoActual.cliente) return;
-  const cli = pedidoActual.cliente;
-  const win = window.open('', '_blank');
-  win.document.write(`
-    <html>
-    <head>
-      <title>Destinatario</title>
-      <style>
-        @media print {
-          html, body { width: 210mm; height: 148mm; }
-          body { margin: 0; }
-        }
-        html, body {
-          width: 210mm; height: 148mm; /* A5 horizontal */
-          margin: 0; padding: 0;
-          font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-          background: #fff;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .rotulo {
-          width: 95%;
-          height: 90%;
-          max-width: 200mm;
-          max-height: 130mm;
-          border: 2px solid #222;
-          border-radius: 10px;
-          margin: auto;
-          padding: 32px 32px 24px 32px;
-          box-sizing: border-box;
-          background: #fff;
-          box-shadow: 0 2px 12px #0001;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: flex-start;
-        }
-        .rotulo h2 {
-          margin: 0 0 30px 0;
-          font-size: 3.2em;
-          color: #222;
-          letter-spacing: 1px;
-          text-align: left;
-        }
-        .rotulo .dato {
-          font-size: 2.7em;
-          margin-bottom: 22px;
-          color: #222;
-          line-height: 1.1;
-        }
-        .rotulo .etiqueta {
-          font-weight: bold;
-          margin-right: 18px;
-          color: #555;
-          font-size: 1em;
-        }
-        .rotulo .dni {
-          font-size: 2.2em;
-          color: #444;
-        }
-        .rotulo .email {
-          font-size: 1.7em;
-          color: #888;
-        }
-        .logo {
-          width: 150px;
-          margin-bottom: 28px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="rotulo">
-        <h2>Destinatario</h2>
-        <div class="dato"><span class="etiqueta">Nombre:</span> ${cli.nombre || ''}</div>
-        <div class="dato"><span class="etiqueta">Dirección:</span> ${cli.direccion || ''}</div>
-        <div class="dato"><span class="etiqueta">Teléfono:</span> ${cli.telefono || ''}</div>
-        <div class="dato dni"><span class="etiqueta">DNI:</span> ${cli.dni || ''}</div>
-        <div class="dato email"><span class="etiqueta">Email:</span> ${cli.email || ''}</div>
-      </div>
-      <script>window.print();<\/script>
-    </body>
-    </html>
-  `);
-  win.document.close();
-};
-
 
 document.getElementById('controlPedidoBtn').onclick = () => {
   if (!pedidoActual) return;
@@ -852,17 +756,15 @@ document.getElementById('controlPedidoBtn').onclick = () => {
 // Mostrar botón Control Pedido solo para admin y moverlo al bloque de acciones admin
 if (admin) {
   const controlPedidoBtn = document.getElementById('controlPedidoBtn');
-  const imprimirRotuloBtn = document.getElementById('imprimirRotuloBtn');
   const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
 
   controlPedidoBtn.style.display = 'inline-block';
-  imprimirRotuloBtn.style.display = 'inline-block';
   despachadoEntregadoBtn.style.display = 'inline-block';
 
   // Mover el botón Control Pedido antes de Imprimir Rótulo
   const accionesAdmin = document.getElementById('accionesAdmin');
-  if (accionesAdmin && controlPedidoBtn && imprimirRotuloBtn) {
-    accionesAdmin.insertBefore(controlPedidoBtn, imprimirRotuloBtn);
+  if (accionesAdmin && controlPedidoBtn) {
+    accionesAdmin.insertBefore(controlPedidoBtn, accionesAdmin.firstChild);
   }
   // El botón Despachado/Entregado queda a la derecha de Imprimir Rótulo (ya está en el HTML)
 
