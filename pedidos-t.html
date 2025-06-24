@@ -548,13 +548,16 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       lastModifiedEmail = firebase.auth().currentUser.email || '';
     }
 
+    // adminViewed: solo pasa a false si el cambio lo hace un usuario público
+    const adminViewedValue = lastModifiedBy === 'usuario' ? false : true;
+
     /* 2. Enviamos la actualización */
     firebase
       .database()
       .ref('pedidos/' + pedidoActual.id)
       .update({
         items:       pedidoActual.items, // lista modificada
-        adminViewed: false,              // ← resetea el indicador
+        adminViewed: adminViewedValue,   // ← solo false si usuario público
         lastUpdated: Date.now(),         // (útil para ordenar por fecha)
         tipoPago: tipoPago,
         tipoEntrega: tipoEntrega,
