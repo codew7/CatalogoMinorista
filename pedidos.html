@@ -234,6 +234,7 @@
       db.ref('admins/' + user.uid).once('value').then(snap => {
         window.isAdmin = snap.val() === true;
         authReady = true;
+        enableEditarBtn(); // Habilita el botón cuando ya se sabe el rol
         // Si ya se cargó el pedido, actualizar la UI
         if (typeof pedidoActual !== 'undefined' && pedidoActual) {
           renderAdminUI();
@@ -683,8 +684,13 @@ if (!modalEditCliente) {
 
 // Abrir modal con datos actuales
 const editarBtn = document.getElementById('editarClienteBtn');
-editarBtn.onclick = () => {
-  // Permitir siempre al admin editar, aunque el pedido esté cerrado
+editarBtn.disabled = true; // Deshabilitado hasta que la autenticación esté lista
+
+function enableEditarBtn() {
+  editarBtn.disabled = false;
+}
+
+function abrirModalEditCliente() {
   if (!window.isAdmin && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO')) return;
   document.getElementById('editNombre').value = pedidoActual.cliente?.nombre || '';
   document.getElementById('editDireccion').value = pedidoActual.cliente?.direccion || '';
@@ -692,6 +698,15 @@ editarBtn.onclick = () => {
   document.getElementById('editTelefono').value = pedidoActual.cliente?.telefono || '';
   document.getElementById('editEmail').value = pedidoActual.cliente?.email || '';
   modalEditCliente.style.display = 'flex';
+}
+
+editarBtn.onclick = () => {
+  if (!authReady) {
+    // Esperar a que la autenticación esté lista antes de permitir la edición
+    setTimeout(() => editarBtn.onclick(), 100);
+    return;
+  }
+  abrirModalEditCliente();
 };
 document.getElementById('closeEditCliente').onclick = () => {
   modalEditCliente.style.display = 'none';
