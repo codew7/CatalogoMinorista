@@ -303,14 +303,16 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     // Bloqueo por status
     const bloqueado = pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO';
     document.getElementById('agregarItemBtn').disabled = bloqueado;
-    document.getElementById('guardarBtn').disabled     = bloqueado;
-    document.getElementById('cancelarBtn').disabled    = bloqueado;
+    // Permitir guardar para admin autenticado aunque esté bloqueado
+    const user = firebase.auth().currentUser;
+    document.getElementById('guardarBtn').disabled = bloqueado && !(admin && user);
+    document.getElementById('cancelarBtn').disabled = bloqueado;
 
     // Bloquear radios de pago e entrega si bloqueado
     const pagoRadios = document.getElementsByName('tipoPago');
-    for (let r of pagoRadios) r.disabled = bloqueado;
+    for (let r of pagoRadios) r.disabled = bloqueado && !(admin && firebase.auth().currentUser);
     const entregaRadios = document.getElementsByName('tipoEntrega');
-    for (let r of entregaRadios) r.disabled = bloqueado;
+    for (let r of entregaRadios) r.disabled = bloqueado && !(admin && firebase.auth().currentUser);
 
     // visibilidad de botones según rol/estado
     document.getElementById('cerrarBtn').style.display   =
