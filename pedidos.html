@@ -226,16 +226,14 @@
   function checkAuth() {
     firebase.auth().onAuthStateChanged(function(user) {
       if (!user) {
-        // Redirigir a admin.html si no está logueado
         window.location.href = 'admin.html?redir=' + encodeURIComponent(window.location.pathname + window.location.search);
         return;
       }
-      // Verificar si es admin
       db.ref('admins/' + user.uid).once('value').then(snap => {
         window.isAdmin = snap.val() === true;
         authReady = true;
-        enableEditarBtn(); // Habilita el botón cuando ya se sabe el rol
-        // Si ya se cargó el pedido, actualizar la UI
+        console.log('Autenticado como:', user.email, 'Admin:', window.isAdmin); // <-- AGREGA ESTA LÍNEA
+        enableEditarBtn();
         if (typeof pedidoActual !== 'undefined' && pedidoActual) {
           renderAdminUI();
         }
