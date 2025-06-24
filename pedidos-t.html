@@ -211,6 +211,8 @@
 </div>
 
 <script>
+let admin = false; // Declarar admin al principio para evitar errores de hoisting
+
   const qs    = new URLSearchParams(location.search);
   const id    = qs.get('id');
 
@@ -802,7 +804,6 @@ if (admin) {
 
 // Lista de emails de administradores
 const adminEmails = ["distribuidorahomepoint@gmail.com"];
-let admin = false;
 
 firebase.auth().onAuthStateChanged(user => {
   if (user && adminEmails.includes(user.email)) {
