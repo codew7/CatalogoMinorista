@@ -210,6 +210,56 @@
 </div>
 
 <script>
+  // --- AUTENTICACIÓN Y DETECCIÓN DE ADMIN ---
+  window.isAdmin = false;
+  let authReady = false;
+  // Cargar el script de auth si no está
+  if (!firebase.auth) {
+    var script = document.createElement('script');
+    script.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
+    script.onload = checkAuth;
+    document.head.appendChild(script);
+  } else {
+    checkAuth();
+  }
+
+  function checkAuth() {
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user) {
+        // Redirigir a admin.html si no está logueado
+        window.location.href = 'admin.html?redir=' + encodeURIComponent(window.location.pathname + window.location.search);
+        return;
+      }
+      // Verificar si es admin
+      db.ref('admins/' + user.uid).once('value').then(snap => {
+        window.isAdmin = snap.val() === true;
+        authReady = true;
+        // Si ya se cargó el pedido, actualizar la UI
+        if (typeof pedidoActual !== 'undefined' && pedidoActual) {
+          renderAdminUI();
+        }
+      });
+    });
+  }
+
+  // --- Función para actualizar la UI de admin cuando cambia el estado ---
+  function renderAdminUI() {
+    // Mostrar botones solo si es admin
+    const ImprimirBtn = document.getElementById('ImprimirBtn');
+    const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
+    if (window.isAdmin) {
+      if (ImprimirBtn) ImprimirBtn.style.display = 'inline-block';
+      if (despachadoEntregadoBtn) despachadoEntregadoBtn.style.display = 'inline-block';
+      const accionesAdmin = document.getElementById('accionesAdmin');
+      if (accionesAdmin && ImprimirBtn) {
+        accionesAdmin.insertBefore(ImprimirBtn, accionesAdmin.firstChild);
+      }
+    } else {
+      if (ImprimirBtn) ImprimirBtn.style.display = 'none';
+      if (despachadoEntregadoBtn) despachadoEntregadoBtn.style.display = 'none';
+    }
+  }
+
   const qs    = new URLSearchParams(location.search);
   const id    = qs.get('id');
   const admin = qs.get('admin') === 'true';
@@ -635,7 +685,7 @@ if (!modalEditCliente) {
 const editarBtn = document.getElementById('editarClienteBtn');
 editarBtn.onclick = () => {
   // Permitir siempre al admin editar, aunque el pedido esté cerrado
-  if (!admin && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO')) return;
+  if (!window.isAdmin && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO')) return;
   document.getElementById('editNombre').value = pedidoActual.cliente?.nombre || '';
   document.getElementById('editDireccion').value = pedidoActual.cliente?.direccion || '';
   document.getElementById('editDni').value = pedidoActual.cliente?.dni || '';
@@ -651,7 +701,7 @@ document.getElementById('closeEditCliente').onclick = () => {
 const guardarEditBtn = document.getElementById('guardarEditCliente');
 guardarEditBtn.onclick = () => {
   // Permitir siempre al admin guardar, aunque el pedido esté cerrado
-  if (!admin && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO')) return;
+  if (!window.isAdmin && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO')) return;
   const nuevoNombre = document.getElementById('editNombre').value.trim();
   const nuevaDireccion = document.getElementById('editDireccion').value.trim();
   const nuevoDni = document.getElementById('editDni').value.trim();
