@@ -306,7 +306,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     document.getElementById('guardarBtn').disabled     = bloqueado;
     document.getElementById('cancelarBtn').disabled    = bloqueado;
 
-    // Bloquear radios de pago y entrega si bloqueado
+    // Bloquear radios de pago e entrega si bloqueado
     const pagoRadios = document.getElementsByName('tipoPago');
     for (let r of pagoRadios) r.disabled = bloqueado;
     const entregaRadios = document.getElementsByName('tipoEntrega');
@@ -540,16 +540,29 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
     const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked')?.value || 'Retiro en local';
 
+    // Determinar quién modifica
+    let lastModifiedBy = 'usuario';
+    let lastModifiedEmail = '';
+    let adminViewedValue = false;
+    const user = firebase.auth().currentUser;
+    if (admin && user) {
+      lastModifiedBy = 'admin';
+      lastModifiedEmail = user.email || '';
+      adminViewedValue = true;
+    }
+
     /* 2. Enviamos la actualización */
     firebase
       .database()
       .ref('pedidos/' + pedidoActual.id)
       .update({
         items:       pedidoActual.items, // lista modificada
-        adminViewed: false,              // ← resetea el indicador
+        adminViewed: adminViewedValue,   // ← solo true si admin
         lastUpdated: Date.now(),         // (útil para ordenar por fecha)
         tipoPago: tipoPago,
-        tipoEntrega: tipoEntrega
+        tipoEntrega: tipoEntrega,
+        lastModifiedBy: lastModifiedBy,
+        lastModifiedEmail: lastModifiedEmail
       })
       .then(() => alert('Pedido actualizado ✔️'))
       .catch(()  => alert('Error al guardar'));
@@ -558,16 +571,29 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
 
   document.getElementById('cerrarBtn').onclick = () => {
     if (!confirm("¿Cerrar definitivamente el pedido?")) return;
+    // Determinar quién modifica
+    let lastModifiedBy = 'usuario';
+    let lastModifiedEmail = '';
+    if (admin && firebase.auth().currentUser) {
+      lastModifiedBy = 'admin';
+      lastModifiedEmail = firebase.auth().currentUser.email || '';
+    }
     // Al cerrar, guardo la cotización actual y status
-    pedidoRef.update({ locked:true, cotizacionCierre: cotizacion, status: 'CERRADO' })
+    pedidoRef.update({ locked:true, cotizacionCierre: cotizacion, status: 'CERRADO', lastModifiedBy, lastModifiedEmail })
       .then(()=>alert("Pedido cerrado"));
   };
 
   document.getElementById('reabrirBtn').onclick = () => {
   if (!admin || !pedidoActual.locked) return;            // solo admin y pedido cerrado
   if (!confirm("¿Querés reabrir este pedido?")) return;
-
-  pedidoRef.update({ locked:false, status: 'ABIERTO' })
+  // Determinar quién modifica
+  let lastModifiedBy = 'usuario';
+  let lastModifiedEmail = '';
+  if (admin && firebase.auth().currentUser) {
+    lastModifiedBy = 'admin';
+    lastModifiedEmail = firebase.auth().currentUser.email || '';
+  }
+  pedidoRef.update({ locked:false, status: 'ABIERTO', lastModifiedBy, lastModifiedEmail })
     .then(() => alert("Pedido reabierto"))
     .catch(() => alert("Error al reabrir"));
   };
@@ -575,8 +601,14 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
   document.getElementById('cancelarBtn').onclick = () => {
   if (pedidoActual.locked || pedidoActual.status === 'CANCELADO') return; // bloqueado si cerrado o ya cancelado
   if (!confirm("¿Seguro que desea cancelar el pedido? Esta acción es IRREVERSIBLE y el pedido no podrá ser modificado ni reactivado.")) return;
-
-  pedidoRef.update({ status: 'CANCELADO', locked: true })
+  // Determinar quién modifica
+  let lastModifiedBy = 'usuario';
+  let lastModifiedEmail = '';
+  if (admin && firebase.auth().currentUser) {
+    lastModifiedBy = 'admin';
+    lastModifiedEmail = firebase.auth().currentUser.email || '';
+  }
+  pedidoRef.update({ status: 'CANCELADO', locked: true, lastModifiedBy, lastModifiedEmail })
     .then(() => {
       alert("Pedido cancelado. Ya no podrá ser modificado.");
     })
