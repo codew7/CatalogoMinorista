@@ -92,16 +92,8 @@
     function login() {
       const email = document.getElementById('email').value;
       const pass  = document.getElementById('pass').value;
-      const qs = new URLSearchParams(window.location.search);
-      const redirect = qs.get('redirect');
       firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(() => {
-          if (redirect) {
-            window.location.href = decodeURIComponent(redirect);
-          } else {
-            window.location.href = "admin.html";
-          }
-        })
+        .then(() => window.location.href = "admin.html")
         .catch(e => document.getElementById('msg').innerText = e.message);
     }
   </script>

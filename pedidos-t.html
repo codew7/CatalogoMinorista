@@ -7,6 +7,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
 
     <script>
@@ -212,7 +213,6 @@
 <script>
   const qs    = new URLSearchParams(location.search);
   const id    = qs.get('id');
-  const admin = qs.get('admin') === 'true';
 
   if (!id){ document.body.innerHTML = "<p>ID inválido</p>"; throw 'no-id'; }
 
@@ -631,90 +631,25 @@ if (!modalEditCliente) {
   document.body.appendChild(modalEditCliente);
 }
 
-// === INICIO: INTEGRACIÓN FIREBASE AUTH Y PERMISOS DE EDICIÓN ===
-// Agrega el script de Auth si no está en el <head>:
-if (!window.firebase || !firebase.auth) {
-  var script = document.createElement('script');
-  script.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
-  document.head.appendChild(script);
-}
+// Abrir modal con datos actuales
+const editarBtn = document.getElementById('editarClienteBtn');
+editarBtn.onclick = () => {
+  // Permitir editar datos personales si el pedido está abierto o si es admin
+  if (!admin && pedidoActual.locked) return;
+  document.getElementById('editNombre').value = pedidoActual.cliente?.nombre || '';
+  document.getElementById('editDireccion').value = pedidoActual.cliente?.direccion || '';
+  document.getElementById('editDni').value = pedidoActual.cliente?.dni || '';
+  document.getElementById('editTelefono').value = pedidoActual.cliente?.telefono || '';
+  document.getElementById('editEmail').value = pedidoActual.cliente?.email || '';
+  modalEditCliente.style.display = 'flex';
+};
+document.getElementById('closeEditCliente').onclick = () => {
+  modalEditCliente.style.display = 'none';
+};
 
-// Variables globales de permisos
-let isAdminAuth = false; // ¿Usuario autenticado como admin?
-let pedidoStatus = null; // Estado actual del pedido (ABIERTO/CERRADO)
-
-// Inicialización de Firebase Auth
-let auth = null;
-if (window.firebase && firebase.auth) {
-  auth = firebase.auth();
-} else {
-  // Espera a que cargue el script de Auth
-  script.onload = function() {
-    auth = firebase.auth();
-    checkAdminAuth();
-  };
-}
-
-// Función para verificar si el usuario es admin (autenticado)
-function checkAdminAuth() {
-  if (!auth) return Promise.resolve(false);
-  return new Promise((resolve) => {
-    auth.onAuthStateChanged(user => {
-      isAdminAuth = !!user;
-      updateEditClientePermissions();
-      resolve(isAdminAuth);
-    });
-  });
-}
-
-// Función para obtener el estado del pedido (ABIERTO/CERRADO)
-function getPedidoStatus() {
-  if (!pedidoActual || !pedidoActual.status) return 'ABIERTO'; // Por defecto
-  if (pedidoActual.status === 'CERRADO' || pedidoActual.locked) return 'CERRADO';
-  return 'ABIERTO';
-}
-
-// Función para actualizar permisos y habilitación del botón de edición
-function updateEditClientePermissions() {
-  pedidoStatus = getPedidoStatus();
-  const editarBtn = document.getElementById('editarClienteBtn');
-  if (!editarBtn) return;
-  // Lógica de permisos:
-  // - Admin autenticado: puede editar SIEMPRE (ABIERTO o CERRADO)
-  // - Usuario público: solo puede editar si el pedido está ABIERTO
-  if (isAdminAuth) {
-    editarBtn.disabled = false;
-    editarBtn.title = "Editar datos del cliente (admin)";
-    editarBtn.style.display = "inline-block";
-  } else if (pedidoStatus === 'ABIERTO') {
-    editarBtn.disabled = false;
-    editarBtn.title = "Editar tus datos personales";
-    editarBtn.style.display = "inline-block";
-  } else {
-    editarBtn.disabled = true;
-    editarBtn.title = "Solo administradores pueden editar datos con el pedido cerrado";
-    editarBtn.style.display = "inline-block";
-  }
-  updateModalInputs();
-}
-
-// Función para mostrar el modal de edición solo si está permitido
-function handleEditarClienteClick() {
-  if (isAdminAuth || pedidoStatus === 'ABIERTO') {
-    document.getElementById('editNombre').value = pedidoActual.cliente?.nombre || '';
-    document.getElementById('editDireccion').value = pedidoActual.cliente?.direccion || '';
-    document.getElementById('editDni').value = pedidoActual.cliente?.dni || '';
-    document.getElementById('editTelefono').value = pedidoActual.cliente?.telefono || '';
-    document.getElementById('editEmail').value = pedidoActual.cliente?.email || '';
-    modalEditCliente.style.display = 'flex';
-    updateModalInputs();
-  } else {
-    alert('No tienes permisos para modificar los datos personales con el pedido cerrado.');
-  }
-}
-
-// Función para guardar los cambios de datos personales
-function guardarDatosCliente() {
+// Guardar cambios en cliente
+const guardarEditBtn = document.getElementById('guardarEditCliente');
+guardarEditBtn.onclick = () => {
   const nuevoNombre = document.getElementById('editNombre').value.trim();
   const nuevaDireccion = document.getElementById('editDireccion').value.trim();
   const nuevoDni = document.getElementById('editDni').value.trim();
@@ -724,11 +659,6 @@ function guardarDatosCliente() {
     alert('Todos los campos son obligatorios excepto el teléfono.');
     return;
   }
-  // Validación de permisos antes de guardar
-  if (!(isAdminAuth || pedidoStatus === 'ABIERTO')) {
-    alert('No tienes permisos para modificar los datos personales.');
-    return;
-  }
   pedidoRef.update({
     'cliente/nombre': nuevoNombre,
     'cliente/direccion': nuevaDireccion,
@@ -736,8 +666,7 @@ function guardarDatosCliente() {
     'cliente/telefono': nuevoTelefono,
     'cliente/email': email
   }).then(() => {
-    // Si es admin, también actualiza en la base de clientes
-    if (isAdminAuth && email) {
+    if (email) {
       db.ref('clientes').orderByChild('email').equalTo(email).once('value')
         .then(snap => {
           const updates = {};
@@ -764,43 +693,20 @@ function guardarDatosCliente() {
         .then(() => {
           alert('Datos del cliente actualizados');
           modalEditCliente.style.display = 'none';
-        })
-        .catch(() => alert('Error al actualizar datos en la base de clientes'));
+        });
     } else {
       alert('Datos del cliente actualizados');
       modalEditCliente.style.display = 'none';
     }
-  }).catch(() => alert('Error al actualizar los datos del pedido'));
-}
-
-// Deshabilita los inputs del modal si no hay permisos
-function updateModalInputs() {
-  const disabled = !(isAdminAuth || pedidoStatus === 'ABIERTO');
-  ['editNombre', 'editDireccion', 'editDni', 'editTelefono', 'guardarEditCliente'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = disabled;
   });
-}
+};
+// Cerrar modal al hacer click fuera del contenido
+modalEditCliente.addEventListener('mousedown', function(e) {
+  if (e.target === modalEditCliente) {
+    modalEditCliente.style.display = 'none';
+  }
+});
 
-// Asigna el handler al botón de editar datos personales
-const editarBtn2 = document.getElementById('editarClienteBtn');
-if (editarBtn2) {
-  editarBtn2.onclick = handleEditarClienteClick;
-}
-// Asigna el handler al botón de guardar en el modal
-const guardarEditBtn2 = document.getElementById('guardarEditCliente');
-if (guardarEditBtn2) {
-  guardarEditBtn2.onclick = guardarDatosCliente;
-}
-// Actualiza permisos cada vez que cambie el usuario autenticado
-if (auth) {
-  auth.onAuthStateChanged(() => {
-    checkAdminAuth();
-  });
-}
-// Actualiza permisos cada vez que cambie el pedido
-// (ya cubierto en el listener de pedidoRef.on)
-// === FIN: INTEGRACIÓN FIREBASE AUTH Y PERMISOS DE EDICIÓN ===
 
 document.getElementById('ImprimirBtn').onclick = () => {
   if (!pedidoActual) return;
@@ -893,6 +799,22 @@ if (admin) {
     }
   };
 }
+
+// Lista de emails de administradores
+const adminEmails = ["distribuidorahomepoint@gmail.com"];
+let admin = false;
+
+firebase.auth().onAuthStateChanged(user => {
+  if (user && adminEmails.includes(user.email)) {
+    admin = true;
+    // Si la URL no tiene ?admin=true, la agrega para mantener compatibilidad
+    if (!location.search.includes('admin=true')) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('admin', 'true');
+      window.location.replace(url.toString());
+    }
+  }
+});
 </script>
 
 <div style="max-width:600px;margin:30px auto 0 auto;font-size:0.90em;color:#444;text-align:left;opacity:0.85;">
