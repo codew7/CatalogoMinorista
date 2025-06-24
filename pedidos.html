@@ -634,6 +634,8 @@ if (!modalEditCliente) {
 // Abrir modal con datos actuales
 const editarBtn = document.getElementById('editarClienteBtn');
 editarBtn.onclick = () => {
+  // Permitir siempre al admin editar, aunque el pedido esté cerrado
+  if (!admin && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO')) return;
   document.getElementById('editNombre').value = pedidoActual.cliente?.nombre || '';
   document.getElementById('editDireccion').value = pedidoActual.cliente?.direccion || '';
   document.getElementById('editDni').value = pedidoActual.cliente?.dni || '';
@@ -648,6 +650,8 @@ document.getElementById('closeEditCliente').onclick = () => {
 // Guardar cambios en cliente
 const guardarEditBtn = document.getElementById('guardarEditCliente');
 guardarEditBtn.onclick = () => {
+  // Permitir siempre al admin guardar, aunque el pedido esté cerrado
+  if (!admin && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO')) return;
   const nuevoNombre = document.getElementById('editNombre').value.trim();
   const nuevaDireccion = document.getElementById('editDireccion').value.trim();
   const nuevoDni = document.getElementById('editDni').value.trim();
