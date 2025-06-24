@@ -7,6 +7,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
 
     <script>
@@ -210,9 +211,10 @@
 </div>
 
 <script>
+let admin = false; // Declarar admin al principio para evitar errores de hoisting
+
   const qs    = new URLSearchParams(location.search);
   const id    = qs.get('id');
-  const admin = qs.get('admin') === 'true';
 
   if (!id){ document.body.innerHTML = "<p>ID inválido</p>"; throw 'no-id'; }
 
@@ -634,6 +636,8 @@ if (!modalEditCliente) {
 // Abrir modal con datos actuales
 const editarBtn = document.getElementById('editarClienteBtn');
 editarBtn.onclick = () => {
+  // Permitir editar datos personales si el pedido está abierto o si es admin
+  if (!admin && pedidoActual.locked) return;
   document.getElementById('editNombre').value = pedidoActual.cliente?.nombre || '';
   document.getElementById('editDireccion').value = pedidoActual.cliente?.direccion || '';
   document.getElementById('editDni').value = pedidoActual.cliente?.dni || '';
@@ -797,6 +801,21 @@ if (admin) {
     }
   };
 }
+
+// Lista de emails de administradores
+const adminEmails = ["distribuidorahomepoint@gmail.com"];
+
+firebase.auth().onAuthStateChanged(user => {
+  if (user && adminEmails.includes(user.email)) {
+    admin = true;
+    // Si la URL no tiene ?admin=true, la agrega para mantener compatibilidad
+    if (!location.search.includes('admin=true')) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('admin', 'true');
+      window.location.replace(url.toString());
+    }
+  }
+});
 </script>
 
 <div style="max-width:600px;margin:30px auto 0 auto;font-size:0.90em;color:#444;text-align:left;opacity:0.85;">
