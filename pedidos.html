@@ -210,57 +210,9 @@
 </div>
 
 <script>
-  // --- AUTENTICACIÓN Y DETECCIÓN DE ADMIN ---
-  window.isAdmin = false;
-  let authReady = false;
-  // Cargar el script de auth si no está
-  if (!firebase.auth) {
-    var script = document.createElement('script');
-    script.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
-    script.onload = checkAuth;
-    document.head.appendChild(script);
-  } else {
-    checkAuth();
-  }
-
-  function checkAuth() {
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (!user) {
-        window.location.href = 'admin.html?redir=' + encodeURIComponent(window.location.pathname + window.location.search);
-        return;
-      }
-      db.ref('admins/' + user.uid).once('value').then(snap => {
-        window.isAdmin = snap.val() === true;
-        authReady = true;
-        console.log('Autenticado como:', user.email, 'Admin:', window.isAdmin); // <-- AGREGA ESTA LÍNEA
-        enableEditarBtn();
-        if (typeof pedidoActual !== 'undefined' && pedidoActual) {
-          renderAdminUI();
-        }
-      });
-    });
-  }
-
-  // --- Función para actualizar la UI de admin cuando cambia el estado ---
-  function renderAdminUI() {
-    // Mostrar botones solo si es admin
-    const ImprimirBtn = document.getElementById('ImprimirBtn');
-    const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
-    if (window.isAdmin) {
-      if (ImprimirBtn) ImprimirBtn.style.display = 'inline-block';
-      if (despachadoEntregadoBtn) despachadoEntregadoBtn.style.display = 'inline-block';
-      const accionesAdmin = document.getElementById('accionesAdmin');
-      if (accionesAdmin && ImprimirBtn) {
-        accionesAdmin.insertBefore(ImprimirBtn, accionesAdmin.firstChild);
-      }
-    } else {
-      if (ImprimirBtn) ImprimirBtn.style.display = 'none';
-      if (despachadoEntregadoBtn) despachadoEntregadoBtn.style.display = 'none';
-    }
-  }
-
   const qs    = new URLSearchParams(location.search);
   const id    = qs.get('id');
+  const admin = qs.get('admin') === 'true';
 
   if (!id){ document.body.innerHTML = "<p>ID inválido</p>"; throw 'no-id'; }
 
@@ -300,7 +252,7 @@
     document.getElementById('fechaIngreso').textContent = fechaIngreso ? `${fechaIngreso}` : '';
 
     // Mostrar botón Imprimir Rótulo solo para admin
-    if (window.isAdmin) {
+    if (admin) {
       // === Botón Imprimir y Despachado/Entregado ===
       const ImprimirBtn = document.getElementById('ImprimirBtn');
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
@@ -360,10 +312,10 @@
 
     // visibilidad de botones según rol/estado
     document.getElementById('cerrarBtn').style.display   =
-      window.isAdmin && !bloqueado ? 'inline-block' : 'none';
+      admin && !bloqueado ? 'inline-block' : 'none';
 
     document.getElementById('reabrirBtn').style.display  =
-      window.isAdmin &&  pedidoActual.locked ? 'inline-block' : 'none';
+      admin &&  pedidoActual.locked ? 'inline-block' : 'none';
 
     // Mostrar botón Imprimir Rótulo solo para admin
     // (eliminado)
@@ -610,7 +562,7 @@
   };
 
   document.getElementById('reabrirBtn').onclick = () => {
-  if (!window.isAdmin || !pedidoActual.locked) return;            // solo admin y pedido cerrado
+  if (!admin || !pedidoActual.locked) return;            // solo admin y pedido cerrado
   if (!confirm("¿Querés reabrir este pedido?")) return;
 
   pedidoRef.update({ locked:false, status: 'ABIERTO' })
@@ -681,29 +633,13 @@ if (!modalEditCliente) {
 
 // Abrir modal con datos actuales
 const editarBtn = document.getElementById('editarClienteBtn');
-editarBtn.disabled = true; // Deshabilitado hasta que la autenticación esté lista
-
-function enableEditarBtn() {
-  editarBtn.disabled = false;
-}
-
-function abrirModalEditCliente() {
-  if (!window.isAdmin && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO')) return;
+editarBtn.onclick = () => {
   document.getElementById('editNombre').value = pedidoActual.cliente?.nombre || '';
   document.getElementById('editDireccion').value = pedidoActual.cliente?.direccion || '';
   document.getElementById('editDni').value = pedidoActual.cliente?.dni || '';
   document.getElementById('editTelefono').value = pedidoActual.cliente?.telefono || '';
   document.getElementById('editEmail').value = pedidoActual.cliente?.email || '';
   modalEditCliente.style.display = 'flex';
-}
-
-editarBtn.onclick = () => {
-  if (!authReady) {
-    // Esperar a que la autenticación esté lista antes de permitir la edición
-    setTimeout(() => editarBtn.onclick(), 100);
-    return;
-  }
-  abrirModalEditCliente();
 };
 document.getElementById('closeEditCliente').onclick = () => {
   modalEditCliente.style.display = 'none';
@@ -712,8 +648,6 @@ document.getElementById('closeEditCliente').onclick = () => {
 // Guardar cambios en cliente
 const guardarEditBtn = document.getElementById('guardarEditCliente');
 guardarEditBtn.onclick = () => {
-  // Permitir siempre al admin guardar, aunque el pedido esté cerrado
-  if (!window.isAdmin && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO')) return;
   const nuevoNombre = document.getElementById('editNombre').value.trim();
   const nuevaDireccion = document.getElementById('editDireccion').value.trim();
   const nuevoDni = document.getElementById('editDni').value.trim();
