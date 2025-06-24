@@ -261,7 +261,6 @@
 
   const qs    = new URLSearchParams(location.search);
   const id    = qs.get('id');
-  const admin = qs.get('admin') === 'true';
 
   if (!id){ document.body.innerHTML = "<p>ID inválido</p>"; throw 'no-id'; }
 
@@ -301,7 +300,7 @@
     document.getElementById('fechaIngreso').textContent = fechaIngreso ? `${fechaIngreso}` : '';
 
     // Mostrar botón Imprimir Rótulo solo para admin
-    if (admin) {
+    if (window.isAdmin) {
       // === Botón Imprimir y Despachado/Entregado ===
       const ImprimirBtn = document.getElementById('ImprimirBtn');
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
@@ -361,10 +360,10 @@
 
     // visibilidad de botones según rol/estado
     document.getElementById('cerrarBtn').style.display   =
-      admin && !bloqueado ? 'inline-block' : 'none';
+      window.isAdmin && !bloqueado ? 'inline-block' : 'none';
 
     document.getElementById('reabrirBtn').style.display  =
-      admin &&  pedidoActual.locked ? 'inline-block' : 'none';
+      window.isAdmin &&  pedidoActual.locked ? 'inline-block' : 'none';
 
     // Mostrar botón Imprimir Rótulo solo para admin
     // (eliminado)
@@ -611,7 +610,7 @@
   };
 
   document.getElementById('reabrirBtn').onclick = () => {
-  if (!admin || !pedidoActual.locked) return;            // solo admin y pedido cerrado
+  if (!window.isAdmin || !pedidoActual.locked) return;            // solo admin y pedido cerrado
   if (!confirm("¿Querés reabrir este pedido?")) return;
 
   pedidoRef.update({ locked:false, status: 'ABIERTO' })
