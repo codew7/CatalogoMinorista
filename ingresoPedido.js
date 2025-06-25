@@ -52,6 +52,17 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('change', function(e) {
     if (e.target.name === 'tipoCliente') {
       tipoCliente = e.target.value;
+      // Actualizar todos los valores unitarios de los artículos seleccionados
+      items.forEach((item, idx) => {
+        if (item.nombre && articulosPorNombre[item.nombre]) {
+          const art = articulosPorNombre[item.nombre];
+          // Usar columna 4 para consumidor final, columna 6 para mayorista
+          let valorRaw = tipoCliente === 'final' ? (art[4] || '0') : (art[6] || art[5] || '0');
+          // Quitar separador de mil (coma) y convertir a entero
+          valorRaw = valorRaw.replace(/,/g, '');
+          items[idx].valorU = parseInt(valorRaw) || 0;
+        }
+      });
       renderItems();
     }
   });
@@ -73,17 +84,16 @@ document.addEventListener('DOMContentLoaded', function() {
             <option value="">Seleccione artículo</option>
             ${articulosDisponibles.map(art => `<option value="${art[3]}"${item.nombre === art[3] ? ' selected' : ''}>${art[3]}</option>`).join('')}
           </select>
-          
         </td>
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
-        <td><input type="text" value="${item.valorU}" class="valorU" min="0" step="0.01" style="width:80px"></td>
+        <td><input type="text" value="${item.valorU}" class="valorU" min="0" step="1" style="width:80px"></td>
         <td class="valorTotal">${(item.cantidad * item.valorU).toLocaleString('es-AR', {maximumFractionDigits:0})}</td>
         <td><button type="button" class="remove-btn" data-idx="${idx}">Eliminar</button></td>
       `;
       itemsBody.appendChild(row);
       subtotal += item.cantidad * item.valorU;
     });
-    subtotalInput.value = subtotal.toFixed(2);
+    subtotalInput.value = subtotal.toLocaleString('es-AR', {maximumFractionDigits:0});
     calcularTotalFinal();
 
     // Eventos para autocompletar y mostrar selección
@@ -97,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
           items[idx].nombre = art[3];
           // Usar columna 4 para consumidor final, columna 6 para mayorista
           let valorRaw = tipoCliente === 'final' ? (art[4] || '0') : (art[6] || art[5] || '0');
-          valorRaw = valorRaw.replace(/\./g, '').replace(',', '.');
+          valorRaw = valorRaw.replace(/,/g, '');
           items[idx].valorU = parseInt(valorRaw) || 0;
           row.querySelector('.codigo').value = art[2];
           row.querySelector('.valorU').value = items[idx].valorU;
@@ -140,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const nombreInput = row.querySelector('.nombre-input');
     if (nombreInput) items[idx].nombre = nombreInput.value;
     items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
-    let valorUraw = row.querySelector('.valorU').value.replace(/\./g, '').replace(',', '.');
+    let valorUraw = row.querySelector('.valorU').value.replace(/,/g, '');
     items[idx].valorU = parseInt(valorUraw) || 0;
     row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
     subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
@@ -158,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
   [recargoInput, descuentoInput, envioInput].forEach(input => {
     input.addEventListener('input', function() {
       // Normalizar y formatear
-      let val = this.value.replace(/\./g, '').replace(',', '.');
+      let val = this.value.replace(/,/g, '');
       this.value = val ? parseInt(val).toLocaleString('es-AR', {maximumFractionDigits:0}) : '';
       calcularTotalFinal();
     });
