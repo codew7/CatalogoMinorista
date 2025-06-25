@@ -33,6 +33,29 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
 
+  // Insertar radios de tipo de cliente debajo de Datos del Cliente
+  const clienteSection = document.querySelector('section[aria-labelledby="datos-cliente-title"]');
+  if (clienteSection && !document.getElementById('tipoClienteRow')) {
+    const tipoClienteRow = document.createElement('div');
+    tipoClienteRow.className = 'form-row';
+    tipoClienteRow.id = 'tipoClienteRow';
+    tipoClienteRow.innerHTML = `
+      <label style="font-weight:bold;">Tipo de Cliente:</label>
+      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="final" checked> Consumidor Final</label>
+      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="mayorista"> Mayorista</label>
+    `;
+    clienteSection.appendChild(tipoClienteRow);
+  }
+
+  // Variable para el tipo de cliente
+  let tipoCliente = 'final';
+  document.addEventListener('change', function(e) {
+    if (e.target.name === 'tipoCliente') {
+      tipoCliente = e.target.value;
+      renderItems();
+    }
+  });
+
   function renderItems() {
     itemsBody.innerHTML = '';
     let subtotal = 0;
@@ -50,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <option value="">Seleccione artículo</option>
             ${articulosDisponibles.map(art => `<option value="${art[3]}"${item.nombre === art[3] ? ' selected' : ''}>${art[3]}</option>`).join('')}
           </select>
-          <span class="selected-articulo" style="display:block;font-size:0.95em;color:#333;margin-top:2px;min-height:18px;">${item.nombre ? `<b>Seleccionado:</b> ${item.nombre}` : ''}</span>
+          
         </td>
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
         <td><input type="text" value="${item.valorU}" class="valorU" min="0" step="0.01" style="width:80px"></td>
@@ -72,7 +95,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (art) {
           items[idx].codigo = art[2];
           items[idx].nombre = art[3];
-          let valorRaw = (art[6] || art[5] || '0').replace(/\./g, '').replace(',', '.');
+          // Usar columna 4 para consumidor final, columna 6 para mayorista
+          let valorRaw = tipoCliente === 'final' ? (art[4] || '0') : (art[6] || art[5] || '0');
+          valorRaw = valorRaw.replace(/\./g, '').replace(',', '.');
           items[idx].valorU = parseFloat(valorRaw) || 0;
           row.querySelector('.codigo').value = art[2];
           row.querySelector('.valorU').value = items[idx].valorU;
