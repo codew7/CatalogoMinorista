@@ -33,33 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
 
-  // Cargar jQuery y Select2 si no existen
-  function ensureJQueryAndSelect2(callback) {
-    function loadScript(src, onload) {
-      const s = document.createElement('script');
-      s.src = src;
-      s.onload = onload;
-      document.head.appendChild(s);
-    }
-    function loadCSS(href) {
-      const l = document.createElement('link');
-      l.rel = 'stylesheet';
-      l.href = href;
-      document.head.appendChild(l);
-    }
-    if (!window.jQuery) {
-      loadScript('https://code.jquery.com/jquery-3.6.0.min.js', function() {
-        loadCSS('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css');
-        loadScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', callback);
-      });
-    } else if (!window.$.fn.select2) {
-      loadCSS('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css');
-      loadScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', callback);
-    } else {
-      callback();
-    }
-  }
-
   function renderItems() {
     itemsBody.innerHTML = '';
     let subtotal = 0;
@@ -69,10 +42,11 @@ document.addEventListener('DOMContentLoaded', function() {
       articulosDisponibles.forEach(art => {
         options += `<option value="${art[3]}" data-codigo="${art[2]}" data-precio="${art[6] || art[5] || ''}">${art[3]}</option>`;
       });
+      // Reemplazo: input de texto simple con autocompletado nativo para artículo
       row.innerHTML = `
         <td><input type="text" value="${item.codigo || ''}" class="codigo" maxlength="20" style="width:80px" readonly></td>
         <td>
-          <select class="nombre-select" data-idx="${idx}" style="width:180px">${options}</select>
+          <input type="text" class="nombre-input" data-idx="${idx}" list="articulos-lista" value="${item.nombre || ''}" autocomplete="off" style="width:180px">
           <span class="selected-articulo" style="display:block;font-size:0.95em;color:#333;margin-top:2px;min-height:18px;">${item.nombre ? `<b>Seleccionado:</b> ${item.nombre}` : ''}</span>
         </td>
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
@@ -86,52 +60,51 @@ document.addEventListener('DOMContentLoaded', function() {
     subtotalInput.value = subtotal.toFixed(2);
     calcularTotalFinal();
 
-    // Inicializar Select2 y eventos SOLO cuando esté cargado
-    ensureJQueryAndSelect2(function() {
-      document.querySelectorAll('.nombre-select').forEach((select, idx) => {
-        $(select).select2({
-          dropdownParent: $(select).closest('td'),
-          width: 'style',
-          placeholder: 'Seleccione artículo',
-          allowClear: true
-        });
-        if (items[idx].nombre) $(select).val(items[idx].nombre).trigger('change');
-        $(select).off('change').on('change', function(e) {
-          const nombreSel = this.value;
-          const art = articulosPorNombre[nombreSel];
-          const row = this.closest('tr');
-          if (art) {
-            items[idx].codigo = art[2];
-            items[idx].nombre = art[3];
-            // Normalizar valorU quitando separadores de mil y cambiando coma por punto decimal si corresponde
-            let valorRaw = (art[6] || art[5] || '0').replace(/\./g, '').replace(',', '.');
-            items[idx].valorU = parseFloat(valorRaw) || 0;
-            row.querySelector('.codigo').value = art[2];
-            row.querySelector('.valorU').value = items[idx].valorU;
-            row.querySelector('.selected-articulo').innerHTML = `<b>Seleccionado:</b> ${art[3]}`;
-          } else {
-            items[idx].codigo = '';
-            items[idx].nombre = '';
-            items[idx].valorU = 0;
-            row.querySelector('.codigo').value = '';
-            row.querySelector('.valorU').value = '';
-            row.querySelector('.selected-articulo').innerHTML = '';
-          }
-          row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-          subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-          calcularTotalFinal();
-        });
+    // Renderizar datalist global solo una vez
+    if (!document.getElementById('articulos-lista')) {
+      const datalist = document.createElement('datalist');
+      datalist.id = 'articulos-lista';
+      datalist.innerHTML = articulosDisponibles.map(art => `<option value="${art[3]}">${art[3]}</option>`).join('');
+      document.body.appendChild(datalist);
+    }
+    // Eventos para autocompletar y mostrar selección
+    itemsBody.querySelectorAll('.nombre-input').forEach((input, idx) => {
+      input.addEventListener('change', function() {
+        const nombreSel = this.value;
+        const art = articulosPorNombre[nombreSel];
+        const row = this.closest('tr');
+        if (art) {
+          items[idx].codigo = art[2];
+          items[idx].nombre = art[3];
+          let valorRaw = (art[6] || art[5] || '0').replace(/\./g, '').replace(',', '.');
+          items[idx].valorU = parseFloat(valorRaw) || 0;
+          row.querySelector('.codigo').value = art[2];
+          row.querySelector('.valorU').value = items[idx].valorU;
+          row.querySelector('.selected-articulo').innerHTML = `<b>Seleccionado:</b> ${art[3]}`;
+        } else {
+          items[idx].codigo = '';
+          items[idx].nombre = '';
+          items[idx].valorU = 0;
+          row.querySelector('.codigo').value = '';
+          row.querySelector('.valorU').value = '';
+          row.querySelector('.selected-articulo').innerHTML = '';
+        }
+        row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+        subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+        calcularTotalFinal();
       });
     });
   }
 
+  // Formateo numérico para todos los campos relacionados a valores
   function calcularTotalFinal() {
-    let subtotal = parseFloat(subtotalInput.value) || 0;
-    let recargo = parseFloat(recargoInput.value) || 0;
-    let descuento = parseFloat(descuentoInput.value) || 0;
-    let envio = parseFloat(envioInput.value) || 0;
+    let subtotal = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0);
+    let recargo = parseFloat((recargoInput.value || '0').replace(/\./g, '').replace(',', '.')) || 0;
+    let descuento = parseFloat((descuentoInput.value || '0').replace(/\./g, '').replace(',', '.')) || 0;
+    let envio = parseFloat((envioInput.value || '0').replace(/\./g, '').replace(',', '.')) || 0;
     let total = subtotal + recargo + envio - descuento;
-    totalFinalInput.value = total.toFixed(2);
+    subtotalInput.value = subtotal.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    totalFinalInput.value = total.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
   }
 
   addItemBtn.addEventListener('click', function() {
@@ -145,10 +118,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const idx = Array.from(itemsBody.children).indexOf(row);
     if (idx < 0) return;
     items[idx].codigo = row.querySelector('.codigo').value;
-    const select = row.querySelector('.nombre-select');
-    if (select) items[idx].nombre = select.value;
+    const nombreInput = row.querySelector('.nombre-input');
+    if (nombreInput) items[idx].nombre = nombreInput.value;
     items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
-    // Normalizar valorU si el usuario edita manualmente
     let valorUraw = row.querySelector('.valorU').value.replace(/\./g, '').replace(',', '.');
     items[idx].valorU = parseFloat(valorUraw) || 0;
     row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -165,7 +137,12 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   [recargoInput, descuentoInput, envioInput].forEach(input => {
-    input.addEventListener('input', calcularTotalFinal);
+    input.addEventListener('input', function() {
+      // Normalizar y formatear
+      let val = this.value.replace(/\./g, '').replace(',', '.');
+      this.value = val ? parseFloat(val).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+      calcularTotalFinal();
+    });
   });
 
   form.addEventListener('reset', function() {
