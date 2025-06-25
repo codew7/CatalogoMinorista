@@ -33,21 +33,38 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
 
-  // Cargar Select2
-  const select2Script = document.createElement('script');
-  select2Script.src = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js';
-  document.head.appendChild(select2Script);
-  const select2CSS = document.createElement('link');
-  select2CSS.rel = 'stylesheet';
-  select2CSS.href = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css';
-  document.head.appendChild(select2CSS);
+  // Cargar jQuery y Select2 si no existen
+  function ensureJQueryAndSelect2(callback) {
+    function loadScript(src, onload) {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = onload;
+      document.head.appendChild(s);
+    }
+    function loadCSS(href) {
+      const l = document.createElement('link');
+      l.rel = 'stylesheet';
+      l.href = href;
+      document.head.appendChild(l);
+    }
+    if (!window.jQuery) {
+      loadScript('https://code.jquery.com/jquery-3.6.0.min.js', function() {
+        loadCSS('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css');
+        loadScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', callback);
+      });
+    } else if (!window.$.fn.select2) {
+      loadCSS('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css');
+      loadScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', callback);
+    } else {
+      callback();
+    }
+  }
 
   function renderItems() {
     itemsBody.innerHTML = '';
     let subtotal = 0;
     items.forEach((item, idx) => {
       const row = document.createElement('tr');
-      // Select2 para artículos
       let options = '<option value="">Seleccione artículo</option>';
       articulosDisponibles.forEach(art => {
         options += `<option value="${art[3]}" data-codigo="${art[2]}" data-precio="${art[6] || art[5] || ''}">${art[3]}</option>`;
@@ -68,8 +85,8 @@ document.addEventListener('DOMContentLoaded', function() {
     subtotalInput.value = subtotal.toFixed(2);
     calcularTotalFinal();
 
-    // Inicializar Select2 y eventos
-    if (window.$ && window.$.fn && window.$.fn.select2) {
+    // Inicializar Select2 y eventos SOLO cuando esté cargado
+    ensureJQueryAndSelect2(function() {
       document.querySelectorAll('.nombre-select').forEach((select, idx) => {
         $(select).select2({
           dropdownParent: $(select).closest('td'),
@@ -77,11 +94,11 @@ document.addEventListener('DOMContentLoaded', function() {
           placeholder: 'Seleccione artículo',
           allowClear: true
         });
-        // Set value
         if (items[idx].nombre) $(select).val(items[idx].nombre).trigger('change');
         $(select).off('change').on('change', function(e) {
           const nombreSel = this.value;
           const art = articulosPorNombre[nombreSel];
+          const row = this.closest('tr');
           if (art) {
             items[idx].codigo = art[2];
             items[idx].nombre = art[3];
@@ -95,12 +112,12 @@ document.addEventListener('DOMContentLoaded', function() {
             row.querySelector('.codigo').value = '';
             row.querySelector('.valorU').value = '';
           }
-          // No llamar renderItems aquí para evitar perder el foco
+          row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toFixed(2);
+          subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toFixed(2);
+          calcularTotalFinal();
         });
       });
-    } else {
-      select2Script.onload = renderItems; // Reintentar cuando cargue
-    }
+    });
   }
 
   function calcularTotalFinal() {
@@ -127,10 +144,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (select) items[idx].nombre = select.value;
     items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
     items[idx].valorU = parseFloat(row.querySelector('.valorU').value) || 0;
-    // No llamar renderItems aquí para evitar perder el foco
+    row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toFixed(2);
     subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toFixed(2);
     calcularTotalFinal();
-    row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toFixed(2);
   });
 
   itemsBody.addEventListener('click', function(e) {
