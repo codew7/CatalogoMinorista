@@ -73,10 +73,11 @@ document.addEventListener('DOMContentLoaded', function() {
         <td><input type="text" value="${item.codigo || ''}" class="codigo" maxlength="20" style="width:80px" readonly></td>
         <td>
           <select class="nombre-select" data-idx="${idx}" style="width:180px">${options}</select>
+          <span class="selected-articulo" style="display:block;font-size:0.95em;color:#333;margin-top:2px;min-height:18px;">${item.nombre ? `<b>Seleccionado:</b> ${item.nombre}` : ''}</span>
         </td>
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
-        <td><input type="number" value="${item.valorU}" class="valorU" min="0" step="0.01" style="width:80px"></td>
-        <td class="valorTotal">${(item.cantidad * item.valorU).toFixed(2)}</td>
+        <td><input type="text" value="${item.valorU}" class="valorU" min="0" step="0.01" style="width:80px"></td>
+        <td class="valorTotal">${(item.cantidad * item.valorU).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
         <td><button type="button" class="remove-btn" data-idx="${idx}">Eliminar</button></td>
       `;
       itemsBody.appendChild(row);
@@ -102,18 +103,22 @@ document.addEventListener('DOMContentLoaded', function() {
           if (art) {
             items[idx].codigo = art[2];
             items[idx].nombre = art[3];
-            items[idx].valorU = parseFloat(art[6] || art[5] || 0);
+            // Normalizar valorU quitando separadores de mil y cambiando coma por punto decimal si corresponde
+            let valorRaw = (art[6] || art[5] || '0').replace(/\./g, '').replace(',', '.');
+            items[idx].valorU = parseFloat(valorRaw) || 0;
             row.querySelector('.codigo').value = art[2];
             row.querySelector('.valorU').value = items[idx].valorU;
+            row.querySelector('.selected-articulo').innerHTML = `<b>Seleccionado:</b> ${art[3]}`;
           } else {
             items[idx].codigo = '';
             items[idx].nombre = '';
             items[idx].valorU = 0;
             row.querySelector('.codigo').value = '';
             row.querySelector('.valorU').value = '';
+            row.querySelector('.selected-articulo').innerHTML = '';
           }
-          row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toFixed(2);
-          subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toFixed(2);
+          row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+          subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
           calcularTotalFinal();
         });
       });
@@ -143,9 +148,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const select = row.querySelector('.nombre-select');
     if (select) items[idx].nombre = select.value;
     items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
-    items[idx].valorU = parseFloat(row.querySelector('.valorU').value) || 0;
-    row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toFixed(2);
-    subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toFixed(2);
+    // Normalizar valorU si el usuario edita manualmente
+    let valorUraw = row.querySelector('.valorU').value.replace(/\./g, '').replace(',', '.');
+    items[idx].valorU = parseFloat(valorUraw) || 0;
+    row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
     calcularTotalFinal();
   });
 
