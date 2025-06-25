@@ -21,18 +21,10 @@ document.addEventListener('DOMContentLoaded', function() {
   let articulosPorCodigo = {};
   let articulosPorNombre = {};
 
-  // Cargar artículos al iniciar
-  fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
-    .then(response => response.json())
-    .then(data => {
-      const items = data.values || [];
-      articulosDisponibles = items.filter(item => item[4]?.toLowerCase() !== 'no disponible');
-      articulosDisponibles.forEach(item => {
-        articulosPorCodigo[item[2]] = item;
-        articulosPorNombre[item[3]] = item;
-      });
-    });
-
+  // Deshabilitar controles hasta que termine la carga de artículos
+  addItemBtn.disabled = true;
+  // Radios de tipo de cliente
+  let radiosTipoCliente = [];
   // Insertar radios de tipo de cliente debajo de Datos del Cliente
   const clienteSection = document.querySelector('section[aria-labelledby="datos-cliente-title"]');
   if (clienteSection && !document.getElementById('tipoClienteRow')) {
@@ -45,7 +37,39 @@ document.addEventListener('DOMContentLoaded', function() {
       <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="mayorista"> Mayorista</label>
     `;
     clienteSection.appendChild(tipoClienteRow);
+    // Guardar referencia a los radios
+    radiosTipoCliente = Array.from(tipoClienteRow.querySelectorAll('input[type="radio"][name="tipoCliente"]'));
+    // Deshabilitar radios
+    radiosTipoCliente.forEach(radio => radio.disabled = true);
+  } else if (clienteSection) {
+    radiosTipoCliente = Array.from(document.querySelectorAll('input[type="radio"][name="tipoCliente"]'));
+    radiosTipoCliente.forEach(radio => radio.disabled = true);
   }
+
+  // Cargar artículos al iniciar
+  fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
+    .then(response => response.json())
+    .then(data => {
+      const items = data.values || [];
+      articulosDisponibles = items.filter(item => item[4]?.toLowerCase() !== 'no disponible');
+      articulosDisponibles.forEach(item => {
+        articulosPorCodigo[item[2]] = item;
+        articulosPorNombre[item[3]] = item;
+      });
+      // Habilitar controles después de cargar
+      addItemBtn.disabled = false;
+      radiosTipoCliente.forEach(radio => radio.disabled = false);
+      // Seleccionar por defecto consumidor final si no hay ninguno seleccionado
+      if (!radiosTipoCliente.some(r => r.checked)) {
+        const radioCF = radiosTipoCliente.find(r => r.value === 'consumidor final');
+        if (radioCF) radioCF.checked = true;
+      }
+    })
+    .catch(() => {
+      // Si falla la carga, mantener controles deshabilitados
+      addItemBtn.disabled = true;
+      radiosTipoCliente.forEach(radio => radio.disabled = true);
+    });
 
   // Variable para el tipo de cliente
     let tipoCliente = 'consumidor final';
@@ -246,6 +270,49 @@ document.addEventListener('DOMContentLoaded', function() {
         messageDiv.textContent = 'Error al guardar el pedido.';
         messageDiv.style.color = 'red';
       });
+  });
+
+  // Detectar cambio de medio de pago y aplicar recargo automático si corresponde
+  function actualizarRecargoMercadoPago() {
+    if (form.medioPago.value === 'MercadoPago') {
+      let subtotal = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0);
+      let recargo = Math.round(subtotal * 0.06);
+      recargoInput.value = recargo.toLocaleString('es-AR', {maximumFractionDigits:0});
+      recargoInput.readOnly = true;
+    }
+  }
+
+  form.medioPago.addEventListener('change', function() {
+    if (form.medioPago.value === 'MercadoPago') {
+      actualizarRecargoMercadoPago();
+      calcularTotalFinal();
+    } else {
+      recargoInput.readOnly = false;
+      recargoInput.value = '';
+      calcularTotalFinal();
+    }
+  });
+
+  // Actualizar recargo automáticamente si está MercadoPago y cambia el subtotal
+  function recalcularYActualizarRecargoSiMercadoPago() {
+    if (form.medioPago.value === 'MercadoPago') {
+      actualizarRecargoMercadoPago();
+      calcularTotalFinal();
+    }
+  }
+
+  // Llamar a la función después de cada cambio relevante
+  // Al agregar/quitar/modificar artículos
+  const originalRenderItems = renderItems;
+  renderItems = function() {
+    originalRenderItems.apply(this, arguments);
+    recalcularYActualizarRecargoSiMercadoPago();
+  };
+  // Al modificar valores manualmente
+  itemsBody.addEventListener('input', recalcularYActualizarRecargoSiMercadoPago);
+  // Al modificar descuentos/envío
+  [descuentoInput, envioInput].forEach(input => {
+    input.addEventListener('input', recalcularYActualizarRecargoSiMercadoPago);
   });
 
   // Inicializar tabla vacía
