@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (item.nombre && articulosPorNombre[item.nombre]) {
           const art = articulosPorNombre[item.nombre];
           // Usar columna 4 (índice 4) para consumidor final, columna 6 (índice 6) para mayorista
-          let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || art[5] || '0');
+          let valorRaw = tipoCliente === 'consumidor final' ? (art[5] || '0') : (art[6] || '0');
           valorRaw = valorRaw.replace(/,/g, '');
           items[idx].valorU = parseInt(valorRaw) || 0;
         }
