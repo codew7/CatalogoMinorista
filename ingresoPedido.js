@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </td>
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
         <td><input type="text" value="${item.valorU}" class="valorU" min="0" step="0.01" style="width:80px"></td>
-        <td class="valorTotal">${(item.cantidad * item.valorU).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        <td class="valorTotal">${(item.cantidad * item.valorU).toLocaleString('es-AR', {maximumFractionDigits:0})}</td>
         <td><button type="button" class="remove-btn" data-idx="${idx}">Eliminar</button></td>
       `;
       itemsBody.appendChild(row);
@@ -98,20 +98,18 @@ document.addEventListener('DOMContentLoaded', function() {
           // Usar columna 4 para consumidor final, columna 6 para mayorista
           let valorRaw = tipoCliente === 'final' ? (art[4] || '0') : (art[6] || art[5] || '0');
           valorRaw = valorRaw.replace(/\./g, '').replace(',', '.');
-          items[idx].valorU = parseFloat(valorRaw) || 0;
+          items[idx].valorU = parseInt(valorRaw) || 0;
           row.querySelector('.codigo').value = art[2];
           row.querySelector('.valorU').value = items[idx].valorU;
-          row.querySelector('.selected-articulo').innerHTML = `<b>Seleccionado:</b> ${art[3]}`;
         } else {
           items[idx].codigo = '';
           items[idx].nombre = '';
           items[idx].valorU = 0;
           row.querySelector('.codigo').value = '';
           row.querySelector('.valorU').value = '';
-          row.querySelector('.selected-articulo').innerHTML = '';
         }
-        row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-        subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+        row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
+        subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
         calcularTotalFinal();
       });
     });
@@ -120,12 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Formateo numérico para todos los campos relacionados a valores
   function calcularTotalFinal() {
     let subtotal = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0);
-    let recargo = parseFloat((recargoInput.value || '0').replace(/\./g, '').replace(',', '.')) || 0;
-    let descuento = parseFloat((descuentoInput.value || '0').replace(/\./g, '').replace(',', '.')) || 0;
-    let envio = parseFloat((envioInput.value || '0').replace(/\./g, '').replace(',', '.')) || 0;
+    let recargo = parseInt((recargoInput.value || '0').replace(/\./g, '').replace(',', '.')) || 0;
+    let descuento = parseInt((descuentoInput.value || '0').replace(/\./g, '').replace(',', '.')) || 0;
+    let envio = parseInt((envioInput.value || '0').replace(/\./g, '').replace(',', '.')) || 0;
     let total = subtotal + recargo + envio - descuento;
-    subtotalInput.value = subtotal.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-    totalFinalInput.value = total.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    subtotalInput.value = subtotal.toLocaleString('es-AR', {maximumFractionDigits:0});
+    totalFinalInput.value = total.toLocaleString('es-AR', {maximumFractionDigits:0});
   }
 
   addItemBtn.addEventListener('click', function() {
@@ -143,9 +141,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (nombreInput) items[idx].nombre = nombreInput.value;
     items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
     let valorUraw = row.querySelector('.valorU').value.replace(/\./g, '').replace(',', '.');
-    items[idx].valorU = parseFloat(valorUraw) || 0;
-    row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-    subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    items[idx].valorU = parseInt(valorUraw) || 0;
+    row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
+    subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
     calcularTotalFinal();
   });
 
@@ -161,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
     input.addEventListener('input', function() {
       // Normalizar y formatear
       let val = this.value.replace(/\./g, '').replace(',', '.');
-      this.value = val ? parseFloat(val).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+      this.value = val ? parseInt(val).toLocaleString('es-AR', {maximumFractionDigits:0}) : '';
       calcularTotalFinal();
     });
   });
