@@ -42,11 +42,14 @@ document.addEventListener('DOMContentLoaded', function() {
       articulosDisponibles.forEach(art => {
         options += `<option value="${art[3]}" data-codigo="${art[2]}" data-precio="${art[6] || art[5] || ''}">${art[3]}</option>`;
       });
-      // Reemplazo: input de texto simple con autocompletado nativo para artículo
+      // Variante: select clásico con búsqueda nativa
       row.innerHTML = `
         <td><input type="text" value="${item.codigo || ''}" class="codigo" maxlength="20" style="width:80px" readonly></td>
         <td>
-          <input type="text" class="nombre-input" data-idx="${idx}" list="articulos-lista" value="${item.nombre || ''}" autocomplete="off" style="width:180px">
+          <select class="nombre-select" data-idx="${idx}" style="width:220px">
+            <option value="">Seleccione artículo</option>
+            ${articulosDisponibles.map(art => `<option value="${art[3]}"${item.nombre === art[3] ? ' selected' : ''}>${art[3]}</option>`).join('')}
+          </select>
           <span class="selected-articulo" style="display:block;font-size:0.95em;color:#333;margin-top:2px;min-height:18px;">${item.nombre ? `<b>Seleccionado:</b> ${item.nombre}` : ''}</span>
         </td>
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
@@ -60,16 +63,9 @@ document.addEventListener('DOMContentLoaded', function() {
     subtotalInput.value = subtotal.toFixed(2);
     calcularTotalFinal();
 
-    // Renderizar datalist global solo una vez
-    if (!document.getElementById('articulos-lista')) {
-      const datalist = document.createElement('datalist');
-      datalist.id = 'articulos-lista';
-      datalist.innerHTML = articulosDisponibles.map(art => `<option value="${art[3]}">${art[3]}</option>`).join('');
-      document.body.appendChild(datalist);
-    }
     // Eventos para autocompletar y mostrar selección
-    itemsBody.querySelectorAll('.nombre-input').forEach((input, idx) => {
-      input.addEventListener('change', function() {
+    itemsBody.querySelectorAll('.nombre-select').forEach((select, idx) => {
+      select.addEventListener('change', function() {
         const nombreSel = this.value;
         const art = articulosPorNombre[nombreSel];
         const row = this.closest('tr');
