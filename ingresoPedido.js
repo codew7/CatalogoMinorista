@@ -16,14 +16,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
   let items = [];
 
+  // === CARGA DE ARTÍCULOS DESDE GOOGLE SHEETS ===
+  let articulosDisponibles = [];
+  let articulosPorCodigo = {};
+  let articulosPorNombre = {};
+
+  // Cargar artículos al iniciar
+  fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
+    .then(response => response.json())
+    .then(data => {
+      const items = data.values || [];
+      articulosDisponibles = items.filter(item => item[4]?.toLowerCase() !== 'no disponible');
+      articulosDisponibles.forEach(item => {
+        articulosPorCodigo[item[2]] = item;
+        articulosPorNombre[item[3]] = item;
+      });
+    });
+
   function renderItems() {
     itemsBody.innerHTML = '';
     let subtotal = 0;
     items.forEach((item, idx) => {
       const row = document.createElement('tr');
+      // Select con búsqueda (datalist nativo)
+      const datalistId = `articulos-list-${idx}`;
+      let options = '';
+      articulosDisponibles.forEach(art => {
+        options += `<option value="${art[3]}" data-codigo="${art[2]}" data-precio="${art[6] || art[5] || ''}">${art[3]}</option>`;
+      });
       row.innerHTML = `
-        <td><input type="text" value="${item.codigo}" class="codigo" maxlength="20" style="width:80px"></td>
-        <td><input type="text" value="${item.nombre}" class="nombre" maxlength="50"></td>
+        <td><input type="text" value="${item.codigo || ''}" class="codigo" maxlength="20" style="width:80px" readonly></td>
+        <td>
+          <input list="${datalistId}" value="${item.nombre || ''}" class="nombre" maxlength="50" autocomplete="off">
+          <datalist id="${datalistId}">${options}</datalist>
+        </td>
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
         <td><input type="number" value="${item.valorU}" class="valorU" min="0" step="0.01" style="width:80px"></td>
         <td class="valorTotal">${(item.cantidad * item.valorU).toFixed(2)}</td>
@@ -31,6 +57,22 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       itemsBody.appendChild(row);
       subtotal += item.cantidad * item.valorU;
+
+      // Evento para autocompletar código y valorU al seleccionar artículo
+      const nombreInput = row.querySelector('.nombre');
+      nombreInput.addEventListener('change', function() {
+        const nombreSel = nombreInput.value;
+        const art = articulosPorNombre[nombreSel];
+        if (art) {
+          items[idx].codigo = art[2];
+          items[idx].nombre = art[3];
+          items[idx].valorU = parseFloat(art[6] || art[5] || 0);
+          // Actualizar inputs
+          row.querySelector('.codigo').value = art[2];
+          row.querySelector('.valorU').value = items[idx].valorU;
+        }
+        renderItems();
+      });
     });
     subtotalInput.value = subtotal.toFixed(2);
     calcularTotalFinal();
@@ -99,11 +141,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const subtotal = parseFloat(form.subtotal.value) || 0;
     const totalFinal = parseFloat(form.totalFinal.value) || 0;
 
-    if (!nombre || !telefono || !direccion || !dni || !email || !medioPago) {
-      messageDiv.textContent = 'Por favor complete todos los campos obligatorios.';
-      messageDiv.style.color = 'red';
-      return;
-    }
+    //if (!nombre || !telefono || !direccion || !dni || !email || !medioPago) {
+    //  messageDiv.textContent = 'Por favor complete todos los campos obligatorios.';
+    //  messageDiv.style.color = 'red';
+    //  return;
+    //}
     if (items.length === 0) {
       messageDiv.textContent = 'Debe agregar al menos un artículo.';
       messageDiv.style.color = 'red';
