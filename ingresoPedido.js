@@ -48,23 +48,24 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Variable para el tipo de cliente
-  let tipoCliente = 'consumidor final';
-  document.addEventListener('change', function(e) {
+    let tipoCliente = 'consumidor final';
+    document.addEventListener('change', function(e) {
     if (e.target.name === 'tipoCliente') {
-      tipoCliente = e.target.value;
-      // Actualizar todos los valores unitarios de los artículos seleccionados
-      items.forEach((item, idx) => {
+        tipoCliente = e.target.value;
+        // Actualizar todos los valores unitarios de los artículos seleccionados
+        items.forEach((item, idx) => {
         if (item.nombre && articulosPorNombre[item.nombre]) {
-          const art = articulosPorNombre[item.nombre];
-          // Usar columna 4 (índice 4) para consumidor final, columna 6 (índice 6) para mayorista
-          let valorRaw = tipoCliente === 'consumidor final' ? (art[5] || '0') : (art[6] || '0');
-          valorRaw = valorRaw.replace(/,/g, '');
-          items[idx].valorU = parseInt(valorRaw) || 0;
+            const art = articulosPorNombre[item.nombre];
+            // Usar columna 4 (índice 4) para consumidor final, columna 6 (índice 6) para mayorista
+            let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
+            // Eliminar signos de $ y separadores de mil (coma o punto)
+            valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+            items[idx].valorU = parseInt(valorRaw) || 0;
         }
-      });
-      renderItems();
+        });
+        renderItems();
     }
-  });
+    });
 
   function renderItems() {
     itemsBody.innerHTML = '';
