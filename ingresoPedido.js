@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
       items.forEach((item, idx) => {
         if (item.nombre && articulosPorNombre[item.nombre]) {
           const art = articulosPorNombre[item.nombre];
-          // Usar columna 4 para consumidor final, columna 6 para mayorista
+          // Usar columna 4 (índice 4) para consumidor final, columna 6 (índice 6) para mayorista
           let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || art[5] || '0');
           valorRaw = valorRaw.replace(/,/g, '');
           items[idx].valorU = parseInt(valorRaw) || 0;
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (art) {
           items[idx].codigo = art[2];
           items[idx].nombre = art[3];
-          // Usar columna 4 para consumidor final, columna 6 para mayorista
+          // Usar columna 4 (índice 4) para consumidor final, columna 6 (índice 6) para mayorista
           let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || art[5] || '0');
           valorRaw = valorRaw.replace(/,/g, '');
           items[idx].valorU = parseInt(valorRaw) || 0;
