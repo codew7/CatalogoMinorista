@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Variable para el tipo de cliente
-  let tipoCliente = 'final';
+  let tipoCliente = 'consumidor final';
   document.addEventListener('change', function(e) {
     if (e.target.name === 'tipoCliente') {
       tipoCliente = e.target.value;
@@ -57,8 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (item.nombre && articulosPorNombre[item.nombre]) {
           const art = articulosPorNombre[item.nombre];
           // Usar columna 4 para consumidor final, columna 6 para mayorista
-          let valorRaw = tipoCliente === 'final' ? (art[4] || '0') : (art[6] || art[5] || '0');
-          // Quitar separador de mil (coma) y convertir a entero
+          let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || art[5] || '0');
           valorRaw = valorRaw.replace(/,/g, '');
           items[idx].valorU = parseInt(valorRaw) || 0;
         }
@@ -106,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
           items[idx].codigo = art[2];
           items[idx].nombre = art[3];
           // Usar columna 4 para consumidor final, columna 6 para mayorista
-          let valorRaw = tipoCliente === 'final' ? (art[4] || '0') : (art[6] || art[5] || '0');
+          let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || art[5] || '0');
           valorRaw = valorRaw.replace(/,/g, '');
           items[idx].valorU = parseInt(valorRaw) || 0;
           row.querySelector('.codigo').value = art[2];
