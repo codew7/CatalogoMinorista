@@ -33,22 +33,29 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
 
+  // Cargar Select2
+  const select2Script = document.createElement('script');
+  select2Script.src = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js';
+  document.head.appendChild(select2Script);
+  const select2CSS = document.createElement('link');
+  select2CSS.rel = 'stylesheet';
+  select2CSS.href = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css';
+  document.head.appendChild(select2CSS);
+
   function renderItems() {
     itemsBody.innerHTML = '';
     let subtotal = 0;
     items.forEach((item, idx) => {
       const row = document.createElement('tr');
-      // Select con búsqueda (datalist nativo)
-      const datalistId = `articulos-list-${idx}`;
-      let options = '';
+      // Select2 para artículos
+      let options = '<option value="">Seleccione artículo</option>';
       articulosDisponibles.forEach(art => {
         options += `<option value="${art[3]}" data-codigo="${art[2]}" data-precio="${art[6] || art[5] || ''}">${art[3]}</option>`;
       });
       row.innerHTML = `
         <td><input type="text" value="${item.codigo || ''}" class="codigo" maxlength="20" style="width:80px" readonly></td>
         <td>
-          <input list="${datalistId}" value="${item.nombre || ''}" class="nombre" maxlength="50" autocomplete="off">
-          <datalist id="${datalistId}">${options}</datalist>
+          <select class="nombre-select" data-idx="${idx}" style="width:180px">${options}</select>
         </td>
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
         <td><input type="number" value="${item.valorU}" class="valorU" min="0" step="0.01" style="width:80px"></td>
@@ -57,25 +64,43 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       itemsBody.appendChild(row);
       subtotal += item.cantidad * item.valorU;
-
-      // Evento para autocompletar código y valorU al seleccionar artículo
-      const nombreInput = row.querySelector('.nombre');
-      nombreInput.addEventListener('change', function() {
-        const nombreSel = nombreInput.value;
-        const art = articulosPorNombre[nombreSel];
-        if (art) {
-          items[idx].codigo = art[2];
-          items[idx].nombre = art[3];
-          items[idx].valorU = parseFloat(art[6] || art[5] || 0);
-          // Actualizar inputs
-          row.querySelector('.codigo').value = art[2];
-          row.querySelector('.valorU').value = items[idx].valorU;
-        }
-        renderItems();
-      });
     });
     subtotalInput.value = subtotal.toFixed(2);
     calcularTotalFinal();
+
+    // Inicializar Select2 y eventos
+    if (window.$ && window.$.fn && window.$.fn.select2) {
+      document.querySelectorAll('.nombre-select').forEach((select, idx) => {
+        $(select).select2({
+          dropdownParent: $(select).closest('td'),
+          width: 'style',
+          placeholder: 'Seleccione artículo',
+          allowClear: true
+        });
+        // Set value
+        if (items[idx].nombre) $(select).val(items[idx].nombre).trigger('change');
+        $(select).off('change').on('change', function(e) {
+          const nombreSel = this.value;
+          const art = articulosPorNombre[nombreSel];
+          if (art) {
+            items[idx].codigo = art[2];
+            items[idx].nombre = art[3];
+            items[idx].valorU = parseFloat(art[6] || art[5] || 0);
+            row.querySelector('.codigo').value = art[2];
+            row.querySelector('.valorU').value = items[idx].valorU;
+          } else {
+            items[idx].codigo = '';
+            items[idx].nombre = '';
+            items[idx].valorU = 0;
+            row.querySelector('.codigo').value = '';
+            row.querySelector('.valorU').value = '';
+          }
+          // No llamar renderItems aquí para evitar perder el foco
+        });
+      });
+    } else {
+      select2Script.onload = renderItems; // Reintentar cuando cargue
+    }
   }
 
   function calcularTotalFinal() {
@@ -98,10 +123,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const idx = Array.from(itemsBody.children).indexOf(row);
     if (idx < 0) return;
     items[idx].codigo = row.querySelector('.codigo').value;
-    items[idx].nombre = row.querySelector('.nombre').value;
+    const select = row.querySelector('.nombre-select');
+    if (select) items[idx].nombre = select.value;
     items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
     items[idx].valorU = parseFloat(row.querySelector('.valorU').value) || 0;
-    renderItems();
+    // No llamar renderItems aquí para evitar perder el foco
+    subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toFixed(2);
+    calcularTotalFinal();
+    row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toFixed(2);
   });
 
   itemsBody.addEventListener('click', function(e) {
