@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Gestión de Órdenes de Pedido</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="config.js"></script>
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+  </script>
+</head>
+<body>
+  <main class="container">
+    <form id="orderForm" autocomplete="off">
+      <!-- Datos del Cliente -->
+      <section class="section" aria-labelledby="datos-cliente-title">
+        <h2 id="datos-cliente-title">Datos del Cliente</h2>
+        <div class="form-row">
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" name="nombre" maxlength="50" autocomplete="name" required>
+        </div>
+        <div class="form-row">
+          <label for="telefono">Teléfono</label>
+          <input type="tel" id="telefono" name="telefono" maxlength="20" pattern="^[0-9+\s()-]{7,20}$" autocomplete="tel" required>
+        </div>
+        <div class="form-row">
+          <label for="direccion">Dirección Completa</label>
+          <input type="text" id="direccion" name="direccion" maxlength="100" autocomplete="street-address" required>
+        </div>
+        <div class="form-row">
+          <label for="dni">DNI</label>
+          <input type="text" id="dni" name="dni" maxlength="15" pattern="^\d{7,15}$" autocomplete="off" required>
+        </div>
+        <div class="form-row">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" maxlength="50" autocomplete="email" required>
+        </div>
+      </section>
+
+      <!-- Artículos -->
+      <section class="section" aria-labelledby="articulos-title">
+        <h2 id="articulos-title">Artículos</h2>
+        <table class="items-table" aria-label="Artículos de la Orden">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Artículo</th>
+              <th>Cantidad</th>
+              <th>Valor u</th>
+              <th>Valor Total</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody">
+            <!-- Filas dinámicas -->
+          </tbody>
+        </table>
+        <button type="button" id="addItemBtn" class="add-btn">Agregar Artículo</button>
+      </section>
+
+      <!-- Pagos -->
+      <section class="section" aria-labelledby="pagos-title">
+        <h2 id="pagos-title">Pagos</h2>
+        <div class="form-row">
+          <label for="subtotal">Subtotal</label>
+          <input type="text" id="subtotal" name="subtotal" readonly>
+        </div>
+        <div class="form-row">
+          <label for="medioPago">Medio de Pago*</label>
+          <select id="medioPago" name="medioPago" required>
+            <option value="">Seleccione</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="MercadoPago">MercadoPago</option>
+            <option value="Transferencia">Transferencia</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="recargo">Recargo</label>
+          <input type="number" id="recargo" name="recargo" min="0" step="0.01" value="0">
+        </div>
+        <div class="form-row">
+          <label for="descuento">Descuento</label>
+          <input type="number" id="descuento" name="descuento" min="0" step="0.01" value="0">
+        </div>
+        <div class="form-row">
+          <label for="envio">Costo de Envío</label>
+          <input type="number" id="envio" name="envio" min="0" step="0.01" value="0">
+        </div>
+        <div class="form-row">
+          <label for="totalFinal"><strong>Total Final</strong></label>
+          <input type="text" id="totalFinal" name="totalFinal" readonly>
+        </div>
+      </section>
+
+      <!-- Acciones -->
+      <div class="actions">
+        <button type="submit" class="primary">Ingresar Orden</button>
+        <button type="reset" class="secondary">Resetear</button>
+      </div>
+    </form>
+    <div id="message" role="alert" aria-live="polite"></div>
+  </main>
+  <script src="ingresoPedido.js"></script>
+</body>
+</html>
