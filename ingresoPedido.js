@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', function() {
       articulosDisponibles.forEach(art => {
         options += `<option value="${art[3]}" data-codigo="${art[2]}" data-precio="${art[6] || art[5] || ''}">${art[3]}</option>`;
       });
-      // Variante: select clásico con búsqueda nativa
       row.innerHTML = `
         <td><input type="text" value="${item.codigo || ''}" class="codigo" maxlength="20" style="width:80px" readonly></td>
         <td>
@@ -110,6 +109,18 @@ document.addEventListener('DOMContentLoaded', function() {
         <td><button type="button" class="remove-btn" data-idx="${idx}">Eliminar</button></td>
       `;
       itemsBody.appendChild(row);
+      // --- NUEVO: Calcular valorU automáticamente si hay artículo seleccionado ---
+      if (item.nombre && articulosPorNombre[item.nombre]) {
+        const art = articulosPorNombre[item.nombre];
+        let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
+        valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+        const valorU = parseInt(valorRaw) || 0;
+        if (item.valorU !== valorU) {
+          item.valorU = valorU;
+          row.querySelector('.valorU').value = valorU;
+          row.querySelector('.valorTotal').textContent = (item.cantidad * valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
+        }
+      }
       subtotal += item.cantidad * item.valorU;
     });
     subtotalInput.value = subtotal.toLocaleString('es-AR', {maximumFractionDigits:0});
@@ -126,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
           items[idx].nombre = art[3];
           // Usar columna 4 (índice 4) para consumidor final, columna 6 (índice 6) para mayorista
           let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
-          valorRaw = valorRaw.replace(/,/g, '');
+          valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
           items[idx].valorU = parseInt(valorRaw) || 0;
           row.querySelector('.codigo').value = art[2];
           row.querySelector('.valorU').value = items[idx].valorU;
