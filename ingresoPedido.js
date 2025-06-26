@@ -324,6 +324,23 @@ document.addEventListener('DOMContentLoaded', function() {
     input.addEventListener('input', recalcularYActualizarRecargoSiMercadoPago);
   });
 
+  // === Calcular y mostrar Costos ===
+  function calcularCostos() {
+    let costos = 0;
+    items.forEach(item => {
+      if (item.nombre && articulosPorNombre[item.nombre]) {
+        const art = articulosPorNombre[item.nombre];
+        // Columna H = índice 7
+        let costoRaw = art[7] || '0';
+        costoRaw = costoRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+        const costoUnitario = parseInt(costoRaw) || 0;
+        costos += costoUnitario * (item.cantidad || 0);
+      }
+    });
+    console.log('Costos:', costos);
+    return costos;
+  }
+
   // Inicializar tabla vacía
   renderItems();
 });
