@@ -125,6 +125,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     subtotalInput.value = subtotal.toLocaleString('es-AR', {maximumFractionDigits:0});
     calcularTotalFinal();
+    recalcularYActualizarRecargoSiMercadoPago();
+    calcularCostos();
 
     // Eventos para autocompletar y mostrar selección
     itemsBody.querySelectorAll('.nombre-select').forEach((select, idx) => {
@@ -311,12 +313,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Llamar a la función después de cada cambio relevante
   // Al agregar/quitar/modificar artículos
-  const originalRenderItems = renderItems;
-  renderItems = function() {
-    originalRenderItems.apply(this, arguments);
-    recalcularYActualizarRecargoSiMercadoPago();
-    calcularCostos();
-  };
   // Al modificar valores manualmente
   itemsBody.addEventListener('input', recalcularYActualizarRecargoSiMercadoPago);
   // Al modificar descuentos/envío
