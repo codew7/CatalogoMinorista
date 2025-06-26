@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
         <td><input type="text" value="${item.valorU}" class="valorU" min="0" step="1" style="width:80px"></td>
         <td class="valorTotal">${(item.cantidad * item.valorU).toLocaleString('es-AR', {maximumFractionDigits:0})}</td>
-        <td><button type="button" class="remove-btn" data-idx="${idx}">Eliminar</button></td>
+        <td><button type="button" class="remove-btn" data-idx="${idx}" style="background:#d32f2f;color:#fff;border:none;border-radius:4px;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Eliminar"><span style="font-weight:bold;font-size:20px;line-height:1;">&times;</span></button></td>
       `;
       itemsBody.appendChild(row);
       // --- NUEVO: Calcular valorU automáticamente si hay artículo seleccionado ---
@@ -248,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     // Construir objeto pedido
+    const costos = calcularCostos();
     const pedidoObj = {
       timestamp: Date.now(),
       locked: false,
@@ -261,7 +262,8 @@ document.addEventListener('DOMContentLoaded', function() {
         envio,
         subtotal,
         totalFinal
-      }
+      },
+      costos
     };
     // Guardar en Firebase
     db.ref('pedidos').push(pedidoObj)
@@ -313,6 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
   renderItems = function() {
     originalRenderItems.apply(this, arguments);
     recalcularYActualizarRecargoSiMercadoPago();
+    calcularCostos();
   };
   // Al modificar valores manualmente
   itemsBody.addEventListener('input', recalcularYActualizarRecargoSiMercadoPago);
