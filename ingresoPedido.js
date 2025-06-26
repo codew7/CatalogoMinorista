@@ -109,14 +109,19 @@ document.addEventListener('DOMContentLoaded', function() {
         <td><button type="button" class="remove-btn" data-idx="${idx}" style="background:#d32f2f;color:#fff;border:none;border-radius:4px;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Eliminar"><span style="font-weight:bold;font-size:20px;line-height:1;">&times;</span></button></td>
       `;
       itemsBody.appendChild(row);
-      // --- NUEVO: Calcular valorU automáticamente si hay artículo seleccionado ---
+      // --- NUEVO: Calcular valorU y valorC automáticamente si hay artículo seleccionado ---
       if (item.nombre && articulosPorNombre[item.nombre]) {
         const art = articulosPorNombre[item.nombre];
         let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
         valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
         const valorU = parseInt(valorRaw) || 0;
-        if (item.valorU !== valorU) {
+        // Nuevo: valorC desde columna H (índice 7)
+        let valorCRaw = art[7] || '0';
+        valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+        const valorC = parseInt(valorCRaw) || 0;
+        if (item.valorU !== valorU || item.valorC !== valorC) {
           item.valorU = valorU;
+          item.valorC = valorC;
           row.querySelector('.valorU').value = valorU;
           row.querySelector('.valorTotal').textContent = (item.cantidad * valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
         }
@@ -155,6 +160,13 @@ document.addEventListener('DOMContentLoaded', function() {
         calcularTotalFinal();
       });
     });
+    // Evento para eliminar fila (botón eliminar)
+    itemsBody.querySelectorAll('.remove-btn').forEach((btn, idx) => {
+      btn.addEventListener('click', function() {
+        items.splice(idx, 1);
+        renderItems();
+      });
+    });
   }
 
   // Formateo numérico para todos los campos relacionados a valores
@@ -187,14 +199,6 @@ document.addEventListener('DOMContentLoaded', function() {
     row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
     subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
     calcularTotalFinal();
-  });
-
-  itemsBody.addEventListener('click', function(e) {
-    if (e.target.classList.contains('remove-btn')) {
-      const idx = parseInt(e.target.dataset.idx);
-      items.splice(idx, 1);
-      renderItems();
-    }
   });
 
   [recargoInput, descuentoInput, envioInput].forEach(input => {
@@ -250,13 +254,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     // Construir objeto pedido
+    // Al guardar el pedido, incluir valorC en cada item
     const costos = calcularCostos();
     const pedidoObj = {
       timestamp: Date.now(),
       locked: false,
       adminViewed: false,
       cliente: { nombre, telefono, direccion, dni, email },
-      items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU })),
+      items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
       pagos: {
         medioPago,
         recargo,
