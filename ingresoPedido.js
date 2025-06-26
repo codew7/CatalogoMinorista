@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     tipoClienteRow.id = 'tipoClienteRow';
     tipoClienteRow.innerHTML = `
       <label style="font-weight:bold;">Tipo de Cliente:</label>
-      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="consumidor final"> Consumidor Final</label>
+      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="consumidor final"> Consumidor</label>
       <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="mayorista"> Mayorista</label>
     `;
     clienteSection.appendChild(tipoClienteRow);
@@ -59,11 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Habilitar controles después de cargar
       addItemBtn.disabled = false;
       radiosTipoCliente.forEach(radio => radio.disabled = false);
-      // Seleccionar por defecto consumidor final si no hay ninguno seleccionado
-      if (!radiosTipoCliente.some(r => r.checked)) {
-        const radioCF = radiosTipoCliente.find(r => r.value === 'consumidor final');
-        if (radioCF) radioCF.checked = true;
-      }
     })
     .catch(() => {
       // Si falla la carga, mantener controles deshabilitados
@@ -130,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
           items[idx].codigo = art[2];
           items[idx].nombre = art[3];
           // Usar columna 4 (índice 4) para consumidor final, columna 6 (índice 6) para mayorista
-          let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || art[5] || '0');
+          let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
           valorRaw = valorRaw.replace(/,/g, '');
           items[idx].valorU = parseInt(valorRaw) || 0;
           row.querySelector('.codigo').value = art[2];
