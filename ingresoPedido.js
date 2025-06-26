@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     tipoClienteRow.id = 'tipoClienteRow';
     tipoClienteRow.innerHTML = `
       <label style="font-weight:bold;">Tipo de Cliente:</label>
-      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="consumidor final"> Consumidor</label>
+      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="consumidor final" checked> Consumidor</label>
       <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="mayorista"> Mayorista</label>
     `;
     clienteSection.appendChild(tipoClienteRow);
