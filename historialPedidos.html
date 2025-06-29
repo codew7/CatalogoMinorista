@@ -26,13 +26,18 @@
       const tbody = document.getElementById('pedidosBody');
       tbody.innerHTML = '';
       if (!pedidos.length) {
-        tbody.innerHTML = '<tr><td colspan="4">No hay pedidos ingresados por admin.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5">No hay pedidos ingresados por admin.</td></tr>';
         return;
       }
       pedidos.forEach(p => {
         const fecha = p.timestamp ? new Date(p.timestamp).toLocaleString('es-AR', { hour12: false }) : '';
         const cliente = p.cliente || {};
         const tipoCliente = cliente.tipoCliente || '';
+        // Agregar columna de comprobante si existe
+        let comprobanteBtn = '';
+        if (p.comprobanteUrl) {
+          comprobanteBtn = `<a href='${p.comprobanteUrl}' target='_blank' style='color:#6c4eb6;text-decoration:underline;'>Comprobante</a>`;
+        }
         tbody.innerHTML += `
           <tr>
             <td>${fecha}</td>
@@ -42,6 +47,7 @@
               <button onclick="verPedido('${p.id}')">Ver</button>
               <button onclick="cancelarPedido('${p.id}')">Cancelar</button>
               <button onclick="eliminarPedido('${p.id}')">Eliminar</button>
+              ${comprobanteBtn}
             </td>
           </tr>
         `;

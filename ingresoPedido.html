@@ -8,6 +8,7 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
   <script src="config.js"></script>
   <script>
     firebase.initializeApp(firebaseConfig);
@@ -124,6 +125,10 @@
               <option value="Sabri">Sabri</option>
               <option value="Otro">Otro</option>
             </select>
+          </div>
+          <div class="form-row" id="comprobanteRow">
+            <label for="comprobante">Comprobante de transferencia</label>
+            <input type="file" id="comprobante" accept="image/*">
           </div>
         </div>
         <div class="actions" style="margin-left: 24px;">
