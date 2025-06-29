@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de Pedidos</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="config.js"></script>
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let pedidosCache = [];
+    document.addEventListener('DOMContentLoaded', function() {
+      const tbody = document.getElementById('pedidosBody');
+      db.ref('pedidos').orderByChild('createdby').equalTo('admin').on('value', snap => {
+        tbody.innerHTML = '';
+        const pedidos = snap.val() || {};
+        const keys = Object.keys(pedidos).reverse();
+        pedidosCache = keys.map(id => ({ id, ...pedidos[id] }));
+        renderPedidos(pedidosCache);
+      });
+    });
+    function renderPedidos(pedidos) {
+      const tbody = document.getElementById('pedidosBody');
+      tbody.innerHTML = '';
+      if (!pedidos.length) {
+        tbody.innerHTML = '<tr><td colspan="4">No hay pedidos ingresados por admin.</td></tr>';
+        return;
+      }
+      pedidos.forEach(p => {
+        const fecha = p.timestamp ? new Date(p.timestamp).toLocaleString('es-AR', { hour12: false }) : '';
+        const cliente = p.cliente || {};
+        const tipoCliente = cliente.tipoCliente || '';
+        tbody.innerHTML += `
+          <tr>
+            <td>${fecha}</td>
+            <td>${cliente.nombre || ''}</td>
+            <td>${tipoCliente}</td>
+            <td>
+              <button onclick="verPedido('${p.id}')">Ver</button>
+              <button onclick="cancelarPedido('${p.id}')">Cancelar</button>
+              <button onclick="eliminarPedido('${p.id}')">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+    function verPedido(id) {
+      window.open(`ingresoPedido.html?id=${id}`, '_blank');
+    }
+    function cancelarPedido(id) {
+      if (!confirm('¿Seguro que desea cancelar este pedido?')) return;
+      db.ref('pedidos/' + id).update({ status: 'CANCELADO', locked: true })
+        .then(() => alert('Pedido cancelado.'))
+        .catch(() => alert('Error al cancelar el pedido.'));
+    }
+    function eliminarPedido(id) {
+      if (!confirm('¿Seguro que desea eliminar este pedido? Esta acción es irreversible.')) return;
+      db.ref('pedidos/' + id).remove();
+    }
+    function aplicarFiltros() {
+      const nombre = document.getElementById('filtroNombre').value.trim().toLowerCase();
+      const tipo = document.getElementById('filtroTipoCliente').value;
+      const filtrados = pedidosCache.filter(p => {
+        const cliente = p.cliente || {};
+        const nombreMatch = !nombre || (cliente.nombre || '').toLowerCase().includes(nombre);
+        const tipoMatch = !tipo || (cliente.tipoCliente === tipo);
+        return nombreMatch && tipoMatch;
+      });
+      renderPedidos(filtrados);
+    }
+    function limpiarFiltros() {
+      document.getElementById('filtroNombre').value = '';
+      document.getElementById('filtroTipoCliente').value = '';
+      renderPedidos(pedidosCache);
+    }
+  </script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background: #f1f1f1; }
+    main { max-width: 900px; margin: 30px auto; background: #fff; border-radius: 8px; padding: 24px; }
+    h1 { color: #6c4eb6; text-align: left; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+    th { background: #4b2e83; color: #fff; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    button { margin: 0 2px; padding: 6px 12px; border-radius: 4px; border: none; background: #4CAF50; color: #fff; cursor: pointer; }
+    button:hover { background: #4b2e83; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Historial de Pedidos</h1>
+    <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+      <label>Nombre: <input type="text" id="filtroNombre" placeholder="Buscar por nombre"></label>
+      <label>Tipo de Cliente:
+        <select id="filtroTipoCliente">
+          <option value="">Todos</option>
+          <option value="mayorista">Mayorista</option>
+          <option value="consumidor final">Minorista</option>
+        </select>
+      </label>
+      <button onclick="aplicarFiltros()">Filtrar</button>
+      <button onclick="limpiarFiltros()">Limpiar</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Nombre</th>
+          <th>Tipo de Cliente</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="pedidosBody">
+        <tr><td colspan="4">Cargando...</td></tr>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

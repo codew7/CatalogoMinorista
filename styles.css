@@ -163,6 +163,10 @@ h2 {
   color: #388e3c;
 }
 
+input[type="radio"]:checked {
+  accent-color: #4b2e83;
+}
+
 @media (max-width: 700px) {
   .container {
     padding: 1rem;

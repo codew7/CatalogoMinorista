@@ -16,29 +16,37 @@
 </head>
 <body>
   <main class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <img src="logo.png" alt="Logo" style="width:300px;height:auto;display:block;">
+      <div style="display:flex;gap:8px;">
+        <a href="historialPedidos.html" id="historialBtn" class="secondary" style="display:inline-block;text-decoration:none;padding:7px 18px;font-size:1rem;border:none;border-radius:6px;cursor:pointer;">Historial</a>
+        <a href="ingresoPedido.html" id="nuevoBtn" class="secondary" style="display:inline-block;text-decoration:none;padding:7px 18px;font-size:1rem;border:none;border-radius:6px;cursor:pointer;">Nuevo</a>
+      </div>
+    </div>
     <form id="orderForm" autocomplete="off">
       <!-- Datos del Cliente -->
       <section class="section" aria-labelledby="datos-cliente-title">
         <h2 id="datos-cliente-title">Datos del Cliente</h2>
         <div class="form-row">
           <label for="nombre">Nombre</label>
-          <input type="text" id="nombre" name="nombre" maxlength="50" autocomplete="name" required>
+          <input type="text" id="nombre" name="nombre" maxlength="50" autocomplete="name" style="width: 220px; display:inline-block; margin-right:10px;">
+          <button type="button" id="editarClienteBtn" style="vertical-align:middle; padding:7px 18px; font-size:1rem; background:#6c4eb6; color:#fff; border:none; border-radius:6px; cursor:pointer;">Editar Cliente</button>
         </div>
         <div class="form-row">
           <label for="telefono">Teléfono</label>
-          <input type="tel" id="telefono" name="telefono" maxlength="20" pattern="^[0-9+\s()-]{7,20}$" autocomplete="tel" required>
+          <input type="tel" id="telefono" name="telefono" maxlength="20" pattern="^[0-9+\\s()\\-]{7,20}$" autocomplete="tel">
         </div>
         <div class="form-row">
           <label for="direccion">Dirección</label>
-          <input type="text" id="direccion" name="direccion" maxlength="100" autocomplete="street-address" required>
+          <input type="text" id="direccion" name="direccion" maxlength="100" autocomplete="street-address">
         </div>
         <div class="form-row">
           <label for="dni">DNI</label>
-          <input type="text" id="dni" name="dni" maxlength="15" pattern="^\d{7,15}$" autocomplete="off" required>
+          <input type="text" id="dni" name="dni" maxlength="15" pattern="^\d{7,15}$" autocomplete="off">
         </div>
         <div class="form-row">
           <label for="email">Email</label>
-          <input type="email" id="email" name="email" maxlength="50" autocomplete="email" required>
+          <input type="email" id="email" name="email" maxlength="50" autocomplete="email">
         </div>
       </section>
 
@@ -72,11 +80,12 @@
         </div>
         <div class="form-row">
           <label for="medioPago">Medio de Pago*</label>
-          <select id="medioPago" name="medioPago" required>
+          <select id="medioPago" name="medioPago">
             <option value="">Seleccione</option>
             <option value="Efectivo">Efectivo</option>
             <option value="MercadoPago">MercadoPago</option>
             <option value="Transferencia">Transferencia</option>
+            <option value="Parcial">Parcial</option>
           </select>
         </div>
         <div class="form-row">
@@ -97,13 +106,34 @@
         </div>
       </section>
 
-      <!-- Acciones -->
-      <div class="actions">
-        <button type="submit" class="primary">Ingresar Orden</button>
-        <button type="reset" class="secondary">Resetear</button>
+      <!-- Acciones y Nota -->
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-top: 1.5rem;">
+        <div style="flex: 1; max-width: 600px; display: flex; flex-direction: column;">
+          <div class="form-row">
+            <label for="nota">Nota</label>
+            <input type="text" id="nota" name="nota" maxlength="200" style="width:100%;"></input>
+          </div>
+          <div class="form-row">
+            <label for="vendedor">Vendedor</label>
+            <select id="vendedor" name="vendedor" style="width:100%;">
+              <option value="">Seleccione</option>
+              <option value="Hora">Hora</option>
+              <option value="Horacio">Horacio</option>
+              <option value="Javi">Javi</option>
+              <option value="Ale">Ale</option>
+              <option value="Sabri">Sabri</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions" style="margin-left: 24px;">
+          <button type="submit" class="primary">Ingresar Orden</button>
+          <button type="button" class="secondary" style="display:none;">Imprimir</button>
+        </div>
       </div>
     </form>
     <div id="message" role="alert" aria-live="polite"></div>
+
   </main>
   <script src="ingresoPedido.js"></script>
 </body>
