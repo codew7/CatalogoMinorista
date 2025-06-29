@@ -309,11 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const nota = form.nota ? form.nota.value.trim() : '';
     const vendedor = form.vendedor ? form.vendedor.value.trim() : '';
-    // Obtener archivo comprobante
-    const comprobanteInput = document.getElementById('comprobante');
-    const archivo = comprobanteInput && comprobanteInput.files[0];
 
-    // Validar campos obligatorios
     //if (!nombre || !medioPago || !tipoCliente) {
     //  messageDiv.textContent = 'Por favor complete todos los campos obligatorios.';
     //  messageDiv.style.color = 'red';
@@ -335,122 +331,99 @@ document.addEventListener('DOMContentLoaded', function() {
         item.valorC = 0;
       }
     }
-    // Si hay archivo, subir primero y luego continuar con fetch
-    if (archivo) {
-      const storageRef = firebase.storage().ref();
-      const comprobanteRef = storageRef.child('comprobantes/' + Date.now() + '_' + archivo.name);
-      comprobanteRef.put(archivo).then(snapshot => {
-        return snapshot.ref.getDownloadURL();
-      }).then(url => {
-        // Guardar la URL y luego continuar con fetch
-        continuarIngresoPedido(url);
-      }).catch(() => {
-        showPopup('Error al subir el comprobante.', '❌', false);
-      });
-    } else {
-      continuarIngresoPedido();
-    }
+    // Obtener cotización blue en tiempo real
+    fetch('https://api.bluelytics.com.ar/v2/latest')
+      .then(r => r.json())
+      .then(d => {
+        let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
+        // Construir objeto pedido
+        const costos = calcularCostos();
+        // Determinar tipo de entrega
+        let entrega = 'Local';
+        if (direccion && direccion.length > 3) {
+          entrega = 'Envios';
+        }
 
-    function continuarIngresoPedido(comprobanteUrl) {
-      fetch('https://api.bluelytics.com.ar/v2/latest')
-        .then(r => r.json())
-        .then(d => {
-          let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
-          const costos = calcularCostos();
-          let entrega = 'Local';
-          if (direccion && direccion.length > 3) {
-            entrega = 'Envios';
-          }
-          const pedidoObj = {
-            timestamp: Date.now(),
-            locked: false,
-            adminViewed: true,
-            cliente: { nombre, telefono, direccion, dni, email, tipoCliente },
-            items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
-            pagos: {
-              medioPago,
-              recargo,
-              descuento,
-              envio,
-              subtotal,
-              totalFinal
-            },
-            costos,
-            status: 'DESPACHADO/ENTREGADO',
-            cotizacionCierre: cotizacionCierre,
-            costoUSD: costos / cotizacionCierre,
-            createdby: 'admin',
-            entrega,
-            nota,
-            vendedor
-          };
-          if (comprobanteUrl) pedidoObj.comprobanteUrl = comprobanteUrl;
-          // ...guardarPedidoFinal como antes...
-          function guardarPedidoFinal(pedidoObj) {
-            if (pedidoId) {
-              const pass = prompt('Ingrese la contraseña para modificar el pedido:');
-              if (pass !== '3469' && pass !== '1234') {
-                messageDiv.textContent = 'Contraseña incorrecta. No se guardaron los cambios.';
-                messageDiv.style.color = 'red';
-                return;
-              }
-              db.ref('pedidos/' + pedidoId).once('value').then(snap => {
-                const pedidoAnterior = snap.val();
-                if (pedidoAnterior && pedidoAnterior.Orden) {
-                  pedidoObj.Orden = pedidoAnterior.Orden;
-                }
-                if (pass === '3469') {
-                  pedidoObj.userOrderModif = 'Admin';
-                } else if (pass === '1234') {
-                  pedidoObj.userOrderModif = 'Vendedor';
-                }
-                db.ref('pedidos/' + pedidoId).set(pedidoObj)
-                  .then(() => {
-                    messageDiv.textContent = 'Pedido modificado correctamente.';
-                    messageDiv.style.color = 'green';
-                    setTimeout(() => {
-                      window.location.href = 'ingresoPedido.html';
-                    }, 1000);
-                    form.reset();
-                    items = [];
-                    renderItems();
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    if (submitBtn) submitBtn.textContent = 'Ingresar Orden';
-                  })
-                  .catch(err => {
-                    messageDiv.textContent = 'Error al actualizar el pedido.';
-                    messageDiv.style.color = 'red';
-                  });
-              });
-            } else {
-              db.ref('pedidos').orderByChild('Orden').limitToLast(1).once('value', function(snapshot) {
-                let lastOrden = 0;
-                snapshot.forEach(function(child) {
-                  if (child.val() && child.val().Orden) {
-                    lastOrden = parseInt(child.val().Orden, 10) || 0;
-                  }
-                });
-                pedidoObj.Orden = lastOrden + 1;
-                db.ref('pedidos').push(pedidoObj)
-                  .then(() => {
-                    showPopup('Pedido ingresado', '✅', true);
-                    form.reset();
-                    items = [];
-                    renderItems();
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  })
-                  .catch(err => {
-                    showPopup('Error al guardar el pedido.', '❌', false);
-                  });
-              });
+
+        const pedidoObj = {
+          timestamp: Date.now(),
+          locked: false,
+          adminViewed: true,
+          cliente: { nombre, telefono, direccion, dni, email, tipoCliente },
+          items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
+          pagos: {
+            medioPago,
+            recargo,
+            descuento,
+            envio,
+            subtotal,
+            totalFinal
+          },
+          costos,
+          status: 'DESPACHADO/ENTREGADO',
+          cotizacionCierre: cotizacionCierre,
+          costoUSD: costos / cotizacionCierre,
+          createdby: 'admin',
+          entrega,
+          nota,
+          vendedor,
+        };
+        // Guardar en Firebase
+        if (pedidoId) {
+          db.ref('pedidos/' + pedidoId).once('value').then(snap => {
+            const pedidoAnterior = snap.val();
+            if (pedidoAnterior && pedidoAnterior.Orden) {
+              pedidoObj.Orden = pedidoAnterior.Orden;
             }
-          }
-          guardarPedidoFinal(pedidoObj);
-        })
-        .catch(() => {
-          showPopup('No se pudo obtener la cotización del dólar blue.', '❌', false);
-        });
-    }
+            // CONSERVAR lastOrderUpdate si existe
+            if (pedidoAnterior && pedidoAnterior.lastOrderUpdate) {
+              pedidoObj.lastOrderUpdate = pedidoAnterior.lastOrderUpdate;
+            }
+            db.ref('pedidos/' + pedidoId).set(pedidoObj)
+              .then(() => {
+                messageDiv.textContent = 'Pedido modificado correctamente.';
+                messageDiv.style.color = 'green';
+                setTimeout(() => {
+                  window.location.href = 'ingresoPedido.html';
+                }, 1000);
+                form.reset();
+                items = [];
+                renderItems();
+                // Restaurar el texto del botón
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.textContent = 'Ingresar Orden';
+              })
+              .catch(err => {
+                messageDiv.textContent = 'Error al actualizar el pedido.';
+                messageDiv.style.color = 'red';
+              });
+          });
+        } else {
+          db.ref('pedidos').orderByChild('Orden').limitToLast(1).once('value', function(snapshot) {
+            let lastOrden = 0;
+            snapshot.forEach(function(child) {
+              if (child.val() && child.val().Orden) {
+                lastOrden = parseInt(child.val().Orden, 10) || 0;
+              }
+            });
+            pedidoObj.Orden = lastOrden + 1;
+            db.ref('pedidos').push(pedidoObj)
+              .then(() => {
+                showPopup('Pedido ingresado', '✅', true);
+                form.reset();
+                items = [];
+                renderItems();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              })
+              .catch(err => {
+                showPopup('Error al guardar el pedido.', '❌', false);
+              });
+          });
+        }
+      })
+      .catch(() => {
+        showPopup('No se pudo obtener la cotización del dólar blue.', '❌', false);
+      });
   }
 
   // --- POPUP MODAL ---
@@ -530,6 +503,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Mostrar subtotal y total como enteros con separador de miles
       form.subtotal.value = pedido.pagos?.subtotal ? parseInt((pedido.pagos.subtotal + '').replace(/\D/g, ''), 10).toLocaleString('es-AR').replace(/,/g, '.') : '';
       form.totalFinal.value = pedido.pagos?.totalFinal ? parseInt((pedido.pagos.totalFinal + '').replace(/\D/g, ''), 10).toLocaleString('es-AR').replace(/,/g, '.') : '';
+      // Autocompletar nota y vendedor si existen
+      if (form.nota) form.nota.value = pedido.nota || '';
+      if (form.vendedor) form.vendedor.value = pedido.vendedor || '';
     });
     // Cambiar el texto del botón submit a "Modificar"
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -537,6 +513,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cambiar el submit para actualizar en vez de crear
     form.onsubmit = function(e) {
       e.preventDefault();
+      // === Solicitar contraseña antes de modificar ===
+      const contrasena = prompt('Ingrese la contraseña para modificar el pedido:');
+      if (!contrasena || (contrasena !== '3469' && contrasena !== '1234')) {
+        messageDiv.textContent = 'Modificación cancelada o contraseña incorrecta.';
+        messageDiv.style.color = 'red';
+        return;
+      }
       // Validar artículos
       for (const item of items) {
         if (!item.nombre || item.cantidad <= 0 || item.valorU < 0) {
@@ -587,8 +570,12 @@ document.addEventListener('DOMContentLoaded', function() {
             cotizacionCierre: cotizacionCierre,
             costoUSD: costos / cotizacionCierre,
             createdby: 'admin',
-            entrega
+            entrega,
+            nota,
+            vendedor,
+            lastOrderUpdate: contrasena
           };
+
           db.ref('pedidos/' + pedidoId).set(pedidoObj)
             .then(() => {
               messageDiv.textContent = 'Pedido actualizado correctamente.';
@@ -759,11 +746,11 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
         <div style="background:#fff;padding:32px 24px;border-radius:12px;box-shadow:0 4px 32px #0002;min-width:320px;max-width:90vw;">
           <h2 style='color:#6c4eb6;margin-bottom:16px;'>${esEdicion ? 'Editar cliente' : 'Registrar nuevo cliente'}</h2>
           <form id='formNuevoCliente'>
-            <div style='margin-bottom:10px;'><input type='text' name='nombre' placeholder='Nombre' required style='width:100%;padding:8px;' value="${nombrePrellenado||''}"></div>
-            <div style='margin-bottom:10px;'><input type='text' name='telefono' placeholder='Teléfono' required style='width:100%;padding:8px;' value="${telefonoPrellenado||''}"></div>
-            <div style='margin-bottom:10px;'><input type='text' name='direccion' placeholder='Dirección' required style='width:100%;padding:8px;' value="${direccionPrellenado||''}"></div>
-            <div style='margin-bottom:10px;'><input type='text' name='dni' placeholder='DNI' required style='width:100%;padding:8px;' value="${dniPrellenado||''}"></div>
-            <div style='margin-bottom:10px;'><input type='email' name='email' placeholder='Email' required style='width:100%;padding:8px;' value="${emailPrellenado||''}"></div>
+            <div style='margin-bottom:10px;'><input type='text' name='nombre' placeholder='Nombre' required style='width:95%;padding:8px;' value="${nombrePrellenado||''}"></div>
+            <div style='margin-bottom:10px;'><input type='text' name='telefono' placeholder='Teléfono' required style='width:95%;padding:8px;' value="${telefonoPrellenado||''}"></div>
+            <div style='margin-bottom:10px;'><input type='text' name='direccion' placeholder='Dirección' required style='width:95%;padding:8px;' value="${direccionPrellenado||''}"></div>
+            <div style='margin-bottom:10px;'><input type='text' name='dni' placeholder='DNI' required style='width:95%;padding:8px;' value="${dniPrellenado||''}"></div>
+            <div style='margin-bottom:10px;'><input type='email' name='email' placeholder='Email' required style='width:95%;padding:8px;' value="${emailPrellenado||''}"></div>
             <div style='margin-bottom:10px;display:flex;align-items:center;gap:10px;'>
               <label style='font-weight:bold;'>Tipo de Cliente:</label>
               <label style='margin-left:10px;'><input type='radio' name='tipoClienteModal' value='consumidor final' ${tipoClientePrellenado === 'consumidor final' ? 'checked' : ''}> Consumidor</label>
@@ -956,18 +943,6 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
     const w = window.open('', '_blank', 'width=600,height=800');
     w.document.write(reciboHtml);
     w.document.close();
-  }
-
-  // --- INICIALIZAR FIREBASE STORAGE ---
-  // Si no está ya inicializado, inicializar Storage (usando compat)
-  if (!firebase.storage) {
-    // Cargar el SDK de Storage si no está presente
-    const script = document.createElement('script');
-    script.src = 'https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js';
-    script.onload = function() {
-      // Storage cargado
-    };
-    document.head.appendChild(script);
   }
 
   // Inicializar tabla vacía
