@@ -309,9 +309,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const nota = form.nota ? form.nota.value.trim() : '';
     const vendedor = form.vendedor ? form.vendedor.value.trim() : '';
+    // Obtener archivo comprobante
     const comprobanteInput = document.getElementById('comprobante');
     const archivo = comprobanteInput && comprobanteInput.files[0];
-    // if (!nombre || !medioPago || !tipoCliente) {
+
+    // Validar campos obligatorios
+    //if (!nombre || !medioPago || !tipoCliente) {
     //  messageDiv.textContent = 'Por favor complete todos los campos obligatorios.';
     //  messageDiv.style.color = 'red';
     //  return;
@@ -332,140 +335,122 @@ document.addEventListener('DOMContentLoaded', function() {
         item.valorC = 0;
       }
     }
-    // Obtener cotización blue en tiempo real
-    fetch('https://api.bluelytics.com.ar/v2/latest')
-      .then(r => r.json())
-      .then(d => {
-        let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
-        const costos = calcularCostos();
-        let entrega = 'Local';
-        if (direccion && direccion.length > 3) {
-          entrega = 'Envios';
-        }
-        const pedidoObj = {
-          timestamp: Date.now(),
-          locked: false,
-          adminViewed: true,
-          cliente: { nombre, telefono, direccion, dni, email, tipoCliente },
-          items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
-          pagos: {
-            medioPago,
-            recargo,
-            descuento,
-            envio,
-            subtotal,
-            totalFinal
-          },
-          costos,
-          status: 'DESPACHADO/ENTREGADO',
-          cotizacionCierre: cotizacionCierre,
-          costoUSD: costos / cotizacionCierre,
-          createdby: 'admin',
-          entrega,
-          nota,
-          vendedor
-        };
-        // Subir comprobante a Google Drive si existe y está autorizado
-        function guardarPedidoFinal(pedidoObj) {
-          // Guardar en Firebase
-          if (pedidoId) {
-            const pass = prompt('Ingrese la contraseña para modificar el pedido:');
-            if (pass !== '3469' && pass !== '1234') {
-              messageDiv.textContent = 'Contraseña incorrecta. No se guardaron los cambios.';
-              messageDiv.style.color = 'red';
-              return;
-            }
-            db.ref('pedidos/' + pedidoId).once('value').then(snap => {
-              const pedidoAnterior = snap.val();
-              if (pedidoAnterior && pedidoAnterior.Orden) {
-                pedidoObj.Orden = pedidoAnterior.Orden;
-              }
-              // Guardar userOrderModif solo si la contraseña es válida
-              if (pass === '3469') {
-                pedidoObj.userOrderModif = 'Admin';
-              } else if (pass === '1234') {
-                pedidoObj.userOrderModif = 'Vendedor';
-              }
-              db.ref('pedidos/' + pedidoId).set(pedidoObj)
-                .then(() => {
-                  messageDiv.textContent = 'Pedido modificado correctamente.';
-                  messageDiv.style.color = 'green';
-                  setTimeout(() => {
-                    window.location.href = 'ingresoPedido.html';
-                  }, 1000);
-                  form.reset();
-                  items = [];
-                  renderItems();
-                  // Restaurar el texto del botón
-                  const submitBtn = form.querySelector('button[type="submit"]');
-                  if (submitBtn) submitBtn.textContent = 'Ingresar Orden';
-                })
-                .catch(err => {
-                  messageDiv.textContent = 'Error al actualizar el pedido.';
-                  messageDiv.style.color = 'red';
-                });
-            });
-          } else {
-            db.ref('pedidos').orderByChild('Orden').limitToLast(1).once('value', function(snapshot) {
-              let lastOrden = 0;
-              snapshot.forEach(function(child) {
-                if (child.val() && child.val().Orden) {
-                  lastOrden = parseInt(child.val().Orden, 10) || 0;
-                }
-              });
-              pedidoObj.Orden = lastOrden + 1;
-              db.ref('pedidos').push(pedidoObj)
-                .then(() => {
-                  showPopup('Pedido ingresado', '✅', true);
-                  form.reset();
-                  items = [];
-                  renderItems();
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                })
-                .catch(err => {
-                  showPopup('Error al guardar el pedido.', '❌', false);
-                });
-            });
-          }
-        }
-        if (archivo && isAuthorized) {
-          const fileMetadata = {
-            name: archivo.name,
-            mimeType: archivo.type
-          };
-          const formData = new FormData();
-          formData.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
-          formData.append('file', archivo);
-          fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + gapi.auth.getToken().access_token },
-            body: formData
-          })
-          .then(res => res.json())
-          .then(file => {
-            // Compartir el archivo para que sea accesible por link
-            fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/permissions`, {
-              method: 'POST',
-              headers: {
-                'Authorization': 'Bearer ' + gapi.auth.getToken().access_token,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ role: 'reader', type: 'anyone' })
-            }).then(() => {
-              pedidoObj.comprobanteUrl = `https://drive.google.com/uc?id=${file.id}`;
-              guardarPedidoFinal(pedidoObj);
-            });
-          })
-          .catch(() => {
-            showPopup('Error al subir el comprobante a Google Drive.', '❌', false);
-          });
-        } else {
-          guardarPedidoFinal(pedidoObj);
-        }
-      })
-      .catch(() => {
-        showPopup('No se pudo obtener la cotización del dólar blue.', '❌', false);
+    // Si hay archivo, subir primero y luego continuar con fetch
+    if (archivo) {
+      const storageRef = firebase.storage().ref();
+      const comprobanteRef = storageRef.child('comprobantes/' + Date.now() + '_' + archivo.name);
+      comprobanteRef.put(archivo).then(snapshot => {
+        return snapshot.ref.getDownloadURL();
+      }).then(url => {
+        // Guardar la URL y luego continuar con fetch
+        continuarIngresoPedido(url);
+      }).catch(() => {
+        showPopup('Error al subir el comprobante.', '❌', false);
       });
+    } else {
+      continuarIngresoPedido();
+    }
+
+    function continuarIngresoPedido(comprobanteUrl) {
+      fetch('https://api.bluelytics.com.ar/v2/latest')
+        .then(r => r.json())
+        .then(d => {
+          let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
+          const costos = calcularCostos();
+          let entrega = 'Local';
+          if (direccion && direccion.length > 3) {
+            entrega = 'Envios';
+          }
+          const pedidoObj = {
+            timestamp: Date.now(),
+            locked: false,
+            adminViewed: true,
+            cliente: { nombre, telefono, direccion, dni, email, tipoCliente },
+            items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
+            pagos: {
+              medioPago,
+              recargo,
+              descuento,
+              envio,
+              subtotal,
+              totalFinal
+            },
+            costos,
+            status: 'DESPACHADO/ENTREGADO',
+            cotizacionCierre: cotizacionCierre,
+            costoUSD: costos / cotizacionCierre,
+            createdby: 'admin',
+            entrega,
+            nota,
+            vendedor
+          };
+          if (comprobanteUrl) pedidoObj.comprobanteUrl = comprobanteUrl;
+          // ...guardarPedidoFinal como antes...
+          function guardarPedidoFinal(pedidoObj) {
+            if (pedidoId) {
+              const pass = prompt('Ingrese la contraseña para modificar el pedido:');
+              if (pass !== '3469' && pass !== '1234') {
+                messageDiv.textContent = 'Contraseña incorrecta. No se guardaron los cambios.';
+                messageDiv.style.color = 'red';
+                return;
+              }
+              db.ref('pedidos/' + pedidoId).once('value').then(snap => {
+                const pedidoAnterior = snap.val();
+                if (pedidoAnterior && pedidoAnterior.Orden) {
+                  pedidoObj.Orden = pedidoAnterior.Orden;
+                }
+                if (pass === '3469') {
+                  pedidoObj.userOrderModif = 'Admin';
+                } else if (pass === '1234') {
+                  pedidoObj.userOrderModif = 'Vendedor';
+                }
+                db.ref('pedidos/' + pedidoId).set(pedidoObj)
+                  .then(() => {
+                    messageDiv.textContent = 'Pedido modificado correctamente.';
+                    messageDiv.style.color = 'green';
+                    setTimeout(() => {
+                      window.location.href = 'ingresoPedido.html';
+                    }, 1000);
+                    form.reset();
+                    items = [];
+                    renderItems();
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) submitBtn.textContent = 'Ingresar Orden';
+                  })
+                  .catch(err => {
+                    messageDiv.textContent = 'Error al actualizar el pedido.';
+                    messageDiv.style.color = 'red';
+                  });
+              });
+            } else {
+              db.ref('pedidos').orderByChild('Orden').limitToLast(1).once('value', function(snapshot) {
+                let lastOrden = 0;
+                snapshot.forEach(function(child) {
+                  if (child.val() && child.val().Orden) {
+                    lastOrden = parseInt(child.val().Orden, 10) || 0;
+                  }
+                });
+                pedidoObj.Orden = lastOrden + 1;
+                db.ref('pedidos').push(pedidoObj)
+                  .then(() => {
+                    showPopup('Pedido ingresado', '✅', true);
+                    form.reset();
+                    items = [];
+                    renderItems();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  })
+                  .catch(err => {
+                    showPopup('Error al guardar el pedido.', '❌', false);
+                  });
+              });
+            }
+          }
+          guardarPedidoFinal(pedidoObj);
+        })
+        .catch(() => {
+          showPopup('No se pudo obtener la cotización del dólar blue.', '❌', false);
+        });
+    }
   }
 
   // --- POPUP MODAL ---
@@ -692,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function() {
     input.addEventListener('input', recalcularYActualizarRecargoSiMercadoPago);
   });
 
-  // === Calcular y mostrar Costos ===
+  // === Calcular Costos ===
   function calcularCostos() {
     let costos = 0;
     items.forEach(item => {
@@ -705,7 +690,6 @@ document.addEventListener('DOMContentLoaded', function() {
         costos += costoUnitario * (item.cantidad || 0);
       }
     });
-    console.log('Costos:', costos);
     return costos;
   }
 
@@ -974,73 +958,18 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
     w.document.close();
   }
 
-  // Agregar input de archivo debajo del campo Vendedor
-  const vendedorInput = form.vendedor;
-  if (vendedorInput) {
-    let comprobanteRow = document.getElementById('comprobanteRow');
-    if (!comprobanteRow) {
-      comprobanteRow = document.createElement('div');
-      comprobanteRow.className = 'form-row';
-      comprobanteRow.id = 'comprobanteRow';
-      comprobanteRow.innerHTML = `
-        <label for="comprobante" style="font-weight:bold;">Comprobante de transferencia:</label>
-        <input type="file" id="comprobante" accept="image/*">
-        <button type="button" id="googleAuthBtn" style="margin-left:10px;" disabled>Conectar</button>
-        <span id="googleAuthStatus" style="margin-left:10px;color:green;"></span>
-      `;
-      vendedorInput.parentElement.appendChild(comprobanteRow);
-    }
-  }
-
-  // === GOOGLE DRIVE API PARA SUBIR COMPROBANTE ===
-  const CLIENT_ID = '586064943366-kd2ne2jhamo2h6l3sqck1l7ndmint5gs.apps.googleusercontent.com';
-  const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-  let GoogleAuth;
-  let isAuthorized = false;
-
-  function handleClientLoad() {
-    gapi.load('client:auth2', initClient);
-  }
-
-  function initClient() {
-    gapi.client.init({
-      clientId: CLIENT_ID,
-      scope: SCOPES
-    }).then(() => {
-      GoogleAuth = gapi.auth2.getAuthInstance();
-      updateSigninStatus(GoogleAuth.isSignedIn.get());
-      // Asignar el evento después de que el botón exista
-      setTimeout(() => {
-        const btn = document.getElementById('googleAuthBtn');
-        if (btn) {
-          btn.disabled = false;
-          btn.onclick = handleAuthClick;
-        }
-      }, 200);
-    });
-    // Deshabilitar el botón hasta que esté listo
-    const btn = document.getElementById('googleAuthBtn');
-    if (btn) btn.disabled = true;
-  }
-
-  function handleAuthClick() {
-    if (GoogleAuth) {
-      GoogleAuth.signIn();
-    } else {
-      alert('La autenticación de Google no está lista. Verifica la configuración de seguridad del servidor (CSP) y recarga la página.');
-    }
-  }
-
-  function updateSigninStatus(isSignedIn) {
-    isAuthorized = isSignedIn;
-    const status = document.getElementById('googleAuthStatus');
-    if (status) status.textContent = isSignedIn ? 'Conectado' : 'No conectado';
-  }
-
-  (function() {
+  // --- INICIALIZAR FIREBASE STORAGE ---
+  // Si no está ya inicializado, inicializar Storage (usando compat)
+  if (!firebase.storage) {
+    // Cargar el SDK de Storage si no está presente
     const script = document.createElement('script');
-    script.src = "https://apis.google.com/js/api.js";
-    script.onload = handleClientLoad;
+    script.src = 'https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js';
+    script.onload = function() {
+      // Storage cargado
+    };
     document.head.appendChild(script);
-  })();
+  }
+
+  // Inicializar tabla vacía
+  renderItems();
 });
