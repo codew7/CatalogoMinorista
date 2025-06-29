@@ -974,8 +974,25 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
     w.document.close();
   }
 
+  // Agregar input de archivo debajo del campo Vendedor
+  const vendedorInput = form.vendedor;
+  if (vendedorInput) {
+    let comprobanteRow = document.getElementById('comprobanteRow');
+    if (!comprobanteRow) {
+      comprobanteRow = document.createElement('div');
+      comprobanteRow.className = 'form-row';
+      comprobanteRow.id = 'comprobanteRow';
+      comprobanteRow.innerHTML = `
+        <label for="comprobante" style="font-weight:bold;">Comprobante de transferencia:</label>
+        <input type="file" id="comprobante" accept="image/*">
+        <button type="button" id="googleAuthBtn" style="margin-left:10px;" disabled>Conectar</button>
+        <span id="googleAuthStatus" style="margin-left:10px;color:green;"></span>
+      `;
+      vendedorInput.parentElement.appendChild(comprobanteRow);
+    }
+  }
+
   // === GOOGLE DRIVE API PARA SUBIR COMPROBANTE ===
-  // Reemplaza este CLIENT_ID por el tuyo de Google Cloud Console
   const CLIENT_ID = '586064943366-kd2ne2jhamo2h6l3sqck1l7ndmint5gs.apps.googleusercontent.com';
   const SCOPES = 'https://www.googleapis.com/auth/drive.file';
   let GoogleAuth;
@@ -995,18 +1012,27 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
       // Asignar el evento después de que el botón exista
       setTimeout(() => {
         const btn = document.getElementById('googleAuthBtn');
-        if (btn) btn.onclick = handleAuthClick;
+        if (btn) {
+          btn.disabled = false;
+          btn.onclick = handleAuthClick;
+        }
       }, 200);
     });
+    // Deshabilitar el botón hasta que esté listo
+    const btn = document.getElementById('googleAuthBtn');
+    if (btn) btn.disabled = true;
   }
 
   function handleAuthClick() {
-    GoogleAuth.signIn();
+    if (GoogleAuth) {
+      GoogleAuth.signIn();
+    }
   }
 
   function updateSigninStatus(isSignedIn) {
     isAuthorized = isSignedIn;
-    document.getElementById('googleAuthStatus').textContent = isSignedIn ? 'Conectado' : 'No conectado';
+    const status = document.getElementById('googleAuthStatus');
+    if (status) status.textContent = isSignedIn ? 'Conectado' : 'No conectado';
   }
 
   (function() {
@@ -1015,28 +1041,4 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
     script.onload = handleClientLoad;
     document.head.appendChild(script);
   })();
-
-  // Agregar input de archivo debajo del campo Vendedor
-  const vendedorInput = form.vendedor;
-  if (vendedorInput) {
-    let comprobanteRow = document.getElementById('comprobanteRow');
-    if (!comprobanteRow) {
-      comprobanteRow = document.createElement('div');
-      comprobanteRow.className = 'form-row';
-      comprobanteRow.id = 'comprobanteRow';
-      comprobanteRow.innerHTML = `
-        <label for="comprobante" style="font-weight:bold;">Comprobante de transferencia:</label>
-        <input type="file" id="comprobante" accept="image/*">
-        <button type="button" id="googleAuthBtn" style="margin-left:10px;">Conectar</button>
-        <span id="googleAuthStatus" style="margin-left:10px;color:green;"></span>
-      `;
-      vendedorInput.parentElement.appendChild(comprobanteRow);
-      // Asignar el evento al botón recién creado
-      setTimeout(() => {
-        const btn = document.getElementById('googleAuthBtn');
-        if (btn) btn.onclick = handleAuthClick;
-      }, 200);
-    }
-  }
-  // ...existing code...
 });
