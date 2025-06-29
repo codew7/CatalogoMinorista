@@ -1026,6 +1026,8 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
   function handleAuthClick() {
     if (GoogleAuth) {
       GoogleAuth.signIn();
+    } else {
+      alert('La autenticación de Google no está lista. Verifica la configuración de seguridad del servidor (CSP) y recarga la página.');
     }
   }
 
