@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     subtotalInput.value = subtotal.toLocaleString('es-AR', {maximumFractionDigits:0});
     calcularTotalFinal();
-    recalcularYActualizarRecargoSiMercadoPago();
+    recalcularYActualizarRecargoSiMedioPago();
     calcularCostos();
 
     // Eventos para autocompletar y mostrar selección
@@ -344,6 +344,12 @@ document.addEventListener('DOMContentLoaded', function() {
           entrega = 'Envios';
         }
 
+        // Obtener fecha de creación solo al crear el pedido
+        function getFechaActual() {
+          const now = new Date();
+          const pad = n => n.toString().padStart(2, '0');
+          return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        }
 
         const pedidoObj = {
           timestamp: Date.now(),
@@ -407,6 +413,8 @@ document.addEventListener('DOMContentLoaded', function() {
               }
             });
             pedidoObj.Orden = lastOrden + 1;
+            // Agregar campo fecha solo al crear el pedido
+            pedidoObj.fecha = getFechaActual();
             db.ref('pedidos').push(pedidoObj)
               .then(() => {
                 showPopup('Pedido ingresado', '✅', true);
@@ -627,30 +635,32 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Detectar cambio de medio de pago y aplicar recargo automático si corresponde
-  function actualizarRecargoMercadoPago() {
+  function actualizarRecargoAutomatico() {
     if (form.medioPago.value === 'MercadoPago') {
       let subtotal = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0);
       let recargo = Math.round(subtotal * 0.06);
       recargoInput.value = recargo.toLocaleString('es-AR', {maximumFractionDigits:0});
-      recargoInput.readOnly = true;
+      // recargoInput.readOnly = true; // Ahora siempre editable
+    } else if (form.medioPago.value === 'Transferencia') {
+      let subtotal = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0);
+      let recargo = Math.round(subtotal * 0.02);
+      recargoInput.value = recargo.toLocaleString('es-AR', {maximumFractionDigits:0});
+      // recargoInput.readOnly = true; // Ahora siempre editable
+    } else {
+      // recargoInput.readOnly = false; // Siempre editable
+      recargoInput.value = '';
     }
   }
 
   form.medioPago.addEventListener('change', function() {
-    if (form.medioPago.value === 'MercadoPago') {
-      actualizarRecargoMercadoPago();
-      calcularTotalFinal();
-    } else {
-      recargoInput.readOnly = false;
-      recargoInput.value = '';
-      calcularTotalFinal();
-    }
+    actualizarRecargoAutomatico();
+    calcularTotalFinal();
   });
 
-  // Actualizar recargo automáticamente si está MercadoPago y cambia el subtotal
-  function recalcularYActualizarRecargoSiMercadoPago() {
-    if (form.medioPago.value === 'MercadoPago') {
-      actualizarRecargoMercadoPago();
+  // Actualizar recargo automáticamente si está MercadoPago o Transferencia y cambia el subtotal
+  function recalcularYActualizarRecargoSiMedioPago() {
+    if (form.medioPago.value === 'MercadoPago' || form.medioPago.value === 'Transferencia') {
+      actualizarRecargoAutomatico();
       calcularTotalFinal();
     }
   }
@@ -658,10 +668,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Llamar a la función después de cada cambio relevante
   // Al agregar/quitar/modificar artículos
   // Al modificar valores manualmente
-  itemsBody.addEventListener('input', recalcularYActualizarRecargoSiMercadoPago);
+  itemsBody.addEventListener('input', recalcularYActualizarRecargoSiMedioPago);
   // Al modificar descuentos/envío
   [descuentoInput, envioInput].forEach(input => {
-    input.addEventListener('input', recalcularYActualizarRecargoSiMercadoPago);
+    input.addEventListener('input', recalcularYActualizarRecargoSiMedioPago);
   });
 
   // === Calcular Costos ===
@@ -736,7 +746,7 @@ form.nombre.addEventListener('blur', function() {
 });
 
 // Modal vistoso para registrar o editar cliente
-function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado = '', direccionPrellenado = '', dniPrellenado = '', emailPrellenado = '', tipoClientePrellenado = 'consumidor final', esEdicion = false) {
+function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, direccionPrellenado, dniPrellenado, emailPrellenado, tipoClientePrellenado = 'consumidor final', esEdicion = false) {
   let modal = document.getElementById('modalRegistroCliente');
   if (!modal) {
     modal = document.createElement('div');
@@ -747,10 +757,10 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
           <h2 style='color:#6c4eb6;margin-bottom:16px;'>${esEdicion ? 'Editar cliente' : 'Registrar nuevo cliente'}</h2>
           <form id='formNuevoCliente'>
             <div style='margin-bottom:10px;'><input type='text' name='nombre' placeholder='Nombre' required style='width:95%;padding:8px;' value="${nombrePrellenado||''}"></div>
-            <div style='margin-bottom:10px;'><input type='text' name='telefono' placeholder='Teléfono' required style='width:95%;padding:8px;' value="${telefonoPrellenado||''}"></div>
-            <div style='margin-bottom:10px;'><input type='text' name='direccion' placeholder='Dirección' required style='width:95%;padding:8px;' value="${direccionPrellenado||''}"></div>
-            <div style='margin-bottom:10px;'><input type='text' name='dni' placeholder='DNI' required style='width:95%;padding:8px;' value="${dniPrellenado||''}"></div>
-            <div style='margin-bottom:10px;'><input type='email' name='email' placeholder='Email' required style='width:95%;padding:8px;' value="${emailPrellenado||''}"></div>
+            <div style='margin-bottom:10px;'><input type='text' name='telefono' placeholder='Teléfono' style='width:95%;padding:8px;' value="${telefonoPrellenado||''}"></div>
+            <div style='margin-bottom:10px;'><input type='text' name='direccion' placeholder='Dirección' style='width:95%;padding:8px;' value="${direccionPrellenado||''}"></div>
+            <div style='margin-bottom:10px;'><input type='text' name='dni' placeholder='DNI' style='width:95%;padding:8px;' value="${dniPrellenado||''}"></div>
+            <div style='margin-bottom:10px;'><input type='email' name='email' placeholder='Email' style='width:95%;padding:8px;' value="${emailPrellenado||''}"></div>
             <div style='margin-bottom:10px;display:flex;align-items:center;gap:10px;'>
               <label style='font-weight:bold;'>Tipo de Cliente:</label>
               <label style='margin-left:10px;'><input type='radio' name='tipoClienteModal' value='consumidor final' ${tipoClientePrellenado === 'consumidor final' ? 'checked' : ''}> Consumidor</label>
@@ -768,10 +778,10 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
   } else {
     modal.style.display = 'flex';
     modal.querySelector('input[name="nombre"]').value = nombrePrellenado||'';
-    modal.querySelector('input[name="telefono"]').value = telefonoPrellenado||'';
-    modal.querySelector('input[name="direccion"]').value = direccionPrellenado||'';
-    modal.querySelector('input[name="dni"]').value = dniPrellenado||'';
-    modal.querySelector('input[name="email"]').value = emailPrellenado||'';
+    if (typeof telefonoPrellenado !== 'undefined') modal.querySelector('input[name="telefono"]').value = telefonoPrellenado||'';
+    if (typeof direccionPrellenado !== 'undefined') modal.querySelector('input[name="direccion"]').value = direccionPrellenado||'';
+    if (typeof dniPrellenado !== 'undefined') modal.querySelector('input[name="dni"]').value = dniPrellenado||'';
+    if (typeof emailPrellenado !== 'undefined') modal.querySelector('input[name="email"]').value = emailPrellenado||'';
     const tipoClienteRadio = modal.querySelectorAll('input[name="tipoClienteModal"]');
     tipoClienteRadio.forEach(radio => {
       radio.checked = (radio.value === tipoClientePrellenado);
@@ -788,14 +798,10 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
   modal.querySelector('#formNuevoCliente').onsubmit = function(e) {
     e.preventDefault();
     const nombre = this.nombre.value.trim();
-    const telefono = this.telefono.value.trim();
-    const direccion = this.direccion.value.trim();
-    const dni = this.dni.value.trim();
-    const email = this.email.value.trim();
     let tipoCliente = 'consumidor final';
     const tipoRadio = this.querySelector('input[name="tipoClienteModal"]:checked');
     if (tipoRadio) tipoCliente = tipoRadio.value;
-    if (!nombre || !telefono || !direccion || !dni || !email) return;
+    if (!nombre || !tipoCliente) return;
     // Si es edición, actualiza el cliente en Firebase si existe
     if (esEdicion) {
       // Buscar el cliente por nombre (case-insensitive)
@@ -812,14 +818,14 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
           }
         });
         if (clienteId) {
-          db.ref('clientes/' + clienteId).update({ nombre, telefono, direccion, dni, email, tipoCliente })
+          db.ref('clientes/' + clienteId).update({ nombre, telefono: this.telefono.value.trim(), direccion: this.direccion.value.trim(), dni: this.dni.value.trim(), email: this.email.value.trim(), tipoCliente })
             .then(() => {
               cargarClientes();
               form.nombre.value = nombre;
-              form.telefono.value = telefono;
-              form.direccion.value = direccion;
-              form.dni.value = dni;
-              form.email.value = email;
+              form.telefono.value = this.telefono.value.trim();
+              form.direccion.value = this.direccion.value.trim();
+              form.dni.value = this.dni.value.trim();
+              form.email.value = this.email.value.trim();
               if (tipoCliente) {
                 const radio = document.querySelector(`input[name="tipoCliente"][value="${tipoCliente}"]`);
                 if (radio) radio.checked = true;
@@ -829,10 +835,10 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
         } else {
           // Si no existe, solo actualiza el formulario
           form.nombre.value = nombre;
-          form.telefono.value = telefono;
-          form.direccion.value = direccion;
-          form.dni.value = dni;
-          form.email.value = email;
+          form.telefono.value = this.telefono.value.trim();
+          form.direccion.value = this.direccion.value.trim();
+          form.dni.value = this.dni.value.trim();
+          form.email.value = this.email.value.trim();
           if (tipoCliente) {
             const radio = document.querySelector(`input[name="tipoCliente"][value="${tipoCliente}"]`);
             if (radio) radio.checked = true;
@@ -843,14 +849,14 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado =
       return;
     }
     // Guardar en Firebase
-    db.ref('clientes').push({ nombre, telefono, direccion, dni, email, tipoCliente })
+    db.ref('clientes').push({ nombre, telefono: this.telefono.value.trim(), direccion: this.direccion.value.trim(), dni: this.dni.value.trim(), email: this.email.value.trim(), tipoCliente })
       .then(() => {
         cargarClientes();
         form.nombre.value = nombre;
-        form.telefono.value = telefono;
-        form.direccion.value = direccion;
-        form.dni.value = dni;
-        form.email.value = email;
+        form.telefono.value = this.telefono.value.trim();
+        form.direccion.value = this.direccion.value.trim();
+        form.dni.value = this.dni.value.trim();
+        form.email.value = this.email.value.trim();
         if (tipoCliente) {
           const radio = document.querySelector(`input[name="tipoCliente"][value="${tipoCliente}"]`);
           if (radio) radio.checked = true;
