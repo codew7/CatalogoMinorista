@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Panel de Control</title>
+    <!-- Google Fonts para tipografía profesional -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Paleta de colores moderna */
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --accent: #f59e42;
+            --bg: #f4f6fb;
+            --white: #fff;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --glass: rgba(255,255,255,0.6);
+            --border: rgba(40, 60, 90, 0.08);
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', Arial, sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fb 100%);
+            min-height: 100vh;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            animation: fadeInDown 1s cubic-bezier(.4,0,.2,1);
+        }
+        .logo {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 4px 16px rgba(37,99,235,0.10));
+            border-radius: 24px;
+            background: var(--glass);
+            backdrop-filter: blur(4px);
+            box-shadow: var(--shadow);
+        }
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            letter-spacing: 0.01em;
+            margin: 0;
+            text-shadow: 0 2px 8px rgba(37,99,235,0.07);
+        }
+        .navigation-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            min-height: 50vh;
+        }
+        .buttons-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2.2rem;
+            align-items: center;
+            justify-content: center;
+        }
+        .button-row {
+            display: flex;
+            flex-direction: row;
+            gap: 2.2rem;
+            justify-content: center;
+        }
+        .nav-btn {
+            min-width: 210px;
+            min-height: 90px;
+            padding: 1.2rem 2.2rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            background: linear-gradient(135deg, var(--white) 60%, var(--bg) 100%);
+            border: 2.5px solid var(--border);
+            border-radius: 2.5rem;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: 
+                transform 0.18s cubic-bezier(.4,0,.2,1),
+                box-shadow 0.18s cubic-bezier(.4,0,.2,1),
+                background 0.25s cubic-bezier(.4,0,.2,1),
+                color 0.18s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.7rem;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .nav-btn span.emoji {
+            font-size: 1.7em;
+            margin-right: 0.2em;
+            filter: drop-shadow(0 2px 4px rgba(37,99,235,0.10));
+        }
+        .nav-btn:hover, .nav-btn:focus {
+            background: linear-gradient(135deg, var(--primary) 60%, var(--accent) 100%);
+            color: var(--white);
+            transform: translateY(-4px) scale(1.04);
+            box-shadow: 0 12px 36px 0 rgba(37,99,235,0.18);
+        }
+        .nav-btn:active {
+            background: linear-gradient(135deg, var(--primary-dark) 60%, var(--accent) 100%);
+            color: var(--white);
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px 0 rgba(37,99,235,0.10);
+        }
+        .nav-btn::after {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; right: 0; bottom: 0;
+            background: linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(245,158,66,0.10) 100%);
+            opacity: 0;
+            transition: opacity 0.25s;
+            z-index: 0;
+        }
+        .nav-btn:hover::after, .nav-btn:focus::after {
+            opacity: 1;
+        }
+        /* Micro-animación de entrada */
+        .nav-btn {
+            opacity: 0;
+            transform: translateY(30px) scale(0.98);
+            animation: btnFadeIn 0.7s cubic-bezier(.4,0,.2,1) forwards;
+        }
+        .button-row .nav-btn:nth-child(1) { animation-delay: 0.1s; }
+        .button-row .nav-btn:nth-child(2) { animation-delay: 0.2s; }
+        .button-row .nav-btn:nth-child(3) { animation-delay: 0.3s; }
+        .buttons-grid .button-row:nth-child(2) .nav-btn:nth-child(1) { animation-delay: 0.4s; }
+        .buttons-grid .button-row:nth-child(2) .nav-btn:nth-child(2) { animation-delay: 0.5s; }
+        @keyframes btnFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Glassmorphism opcional para fondo de botones */
+        .nav-btn {
+            backdrop-filter: blur(6px);
+            background: linear-gradient(135deg, var(--white) 70%, var(--bg) 100%);
+        }
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .nav-btn {
+                min-width: 160px;
+                min-height: 70px;
+                font-size: 1.1rem;
+                padding: 1rem 1.2rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+        @media (max-width: 600px) {
+            .buttons-grid {
+                gap: 1.2rem;
+            }
+            .button-row {
+                gap: 1.2rem;
+            }
+            .nav-btn {
+                min-width: 120px;
+                min-height: 54px;
+                font-size: 1rem;
+                padding: 0.7rem 0.7rem;
+            }
+            .logo {
+                width: 60px;
+                height: 60px;
+            }
+        }
+        @media (max-width: 480px) {
+            .buttons-grid {
+                gap: 0.7rem;
+            }
+            .button-row {
+                flex-direction: column;
+                gap: 0.7rem;
+            }
+            .navigation-container {
+                min-height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="logo.png" alt="Logo" class="logo">
+        <h1>Panel de Control</h1>
+    </header>
+    <main class="navigation-container">
+        <div class="buttons-grid">
+            <div class="button-row">
+                <a href="ingresoPedido.html" class="nav-btn" tabindex="1">
+                    <span class="emoji">📝</span> Ingreso de Pedido
+                </a>
+                <a href="historialPedidos.html" class="nav-btn" tabindex="2">
+                    <span class="emoji">📋</span> Historial
+                </a>
+                <a href="admin.html" class="nav-btn" tabindex="3">
+                    <span class="emoji">🖥️</span> Pedidos Web
+                </a>
+            </div>
+            <div class="button-row">
+                <a href="index.html" class="nav-btn" tabindex="4">
+                    <span class="emoji">🛍️</span> Catálogo Minorista
+                </a>
+                <a href="mayorista.html" class="nav-btn" tabindex="5">
+                    <span class="emoji">📦</span> Catálogo Mayorista
+                </a>
+            </div>
+        </div>
+    </main>
+    <script>
+        // Micro-animación de entrada para el header
+        document.addEventListener('DOMContentLoaded', () => {
+            const header = document.querySelector('header');
+            header.style.opacity = 0;
+            header.style.transform = 'translateY(-40px)';
+            setTimeout(() => {
+                header.style.transition = 'opacity 0.7s cubic-bezier(.4,0,.2,1), transform 0.7s cubic-bezier(.4,0,.2,1)';
+                header.style.opacity = 1;
+                header.style.transform = 'translateY(0)';
+            }, 100);
+        });
+        // Efecto ripple al hacer click en los botones
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const circle = document.createElement('span');
+                circle.classList.add('ripple');
+                const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+                circle.style.width = circle.style.height = `${diameter}px`;
+                circle.style.left = `${e.clientX - btn.getBoundingClientRect().left - diameter/2}px`;
+                circle.style.top = `${e.clientY - btn.getBoundingClientRect().top - diameter/2}px`;
+                circle.style.position = 'absolute';
+                circle.style.background = 'rgba(37,99,235,0.13)';
+                circle.style.borderRadius = '50%';
+                circle.style.pointerEvents = 'none';
+                circle.style.transform = 'scale(0)';
+                circle.style.opacity = '0.7';
+                circle.style.transition = 'transform 0.4s, opacity 0.7s';
+                btn.appendChild(circle);
+                setTimeout(() => {
+                    circle.style.transform = 'scale(2.2)';
+                    circle.style.opacity = '0';
+                }, 10);
+                setTimeout(() => {
+                    circle.remove();
+                }, 600);
+            });
+        });
+    </script>
+    <!--
+        Decisiones de diseño:
+        - Se usó flex y grid para centrar y distribuir los botones de forma responsiva.
+        - Paleta azul y naranja para profesionalismo y modernidad.
+        - Glassmorphism y sombras para profundidad y elegancia.
+        - Micro-animaciones y ripple para dinamismo y feedback visual.
+        - Tipografía Inter para máxima legibilidad y jerarquía visual.
+        - Todo el código está integrado en un solo archivo para fácil despliegue.
+    -->
+</body>
+</html>
