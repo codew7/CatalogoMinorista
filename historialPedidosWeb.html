@@ -4,8 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pedidos | Panel Admin</title>
+  <link rel="icon" href="faviconnegro.png" type="image/png">
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <!-- Firebase Auth Check -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="config.js"></script>
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user) {
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+      }
+    });
+  </script>
+  <!-- Fin Firebase Auth Check -->
+
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
@@ -312,20 +326,6 @@ function cancelarPedido(id, locked){
     .catch(()=>alert('Error al cancelar'));
 }
 
-  // Lista de emails de administradores
-  const adminEmails = ["distribuidorahomepoint@gmail.com"]; // <-- pon aquí los emails autorizados
-
-  firebase.auth().onAuthStateChanged(user => {
-    if (!user) {
-      // No autenticado, redirige al login
-      window.location.href = "login.html";
-    } else if (!adminEmails.includes(user.email)) {
-      alert("Acceso solo para administradores.");
-      firebase.auth().signOut();
-      window.location.href = "login.html";
-    }
-    // Si pasa, muestra el panel
-  });
 </script>
 
 <!-- Modal de autorización reutilizable -->
