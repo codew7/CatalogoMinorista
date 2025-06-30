@@ -30,7 +30,7 @@
         return;
       }
       pedidos.forEach(p => {
-        const fecha = p.timestamp ? new Date(p.timestamp).toLocaleString('es-AR', { hour12: false }) : '';
+        const fecha = p.fecha || '';
         const cliente = p.cliente || {};
         const tipoCliente = cliente.tipoCliente || '';
         tbody.innerHTML += `
