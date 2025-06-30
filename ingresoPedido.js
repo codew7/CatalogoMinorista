@@ -385,6 +385,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (pedidoAnterior && pedidoAnterior.lastOrderUpdate) {
               pedidoObj.lastOrderUpdate = pedidoAnterior.lastOrderUpdate;
             }
+            // CONSERVAR fecha original si existe
+            if (pedidoAnterior && pedidoAnterior.fecha) {
+              pedidoObj.fecha = pedidoAnterior.fecha;
+            }
             db.ref('pedidos/' + pedidoId).set(pedidoObj)
               .then(() => {
                 messageDiv.textContent = 'Pedido modificado correctamente.';
@@ -514,6 +518,31 @@ document.addEventListener('DOMContentLoaded', function() {
       // Autocompletar nota y vendedor si existen
       if (form.nota) form.nota.value = pedido.nota || '';
       if (form.vendedor) form.vendedor.value = pedido.vendedor || '';
+
+      // --- SOLO LECTURA SI locked: true ---
+      if (pedido.locked === true) {
+        // Deshabilitar todos los campos del formulario
+        Array.from(form.elements).forEach(el => {
+          el.disabled = true;
+        });
+        // Deshabilitar selects y radios fuera del form (por si acaso)
+        document.querySelectorAll('input[type="radio"], select').forEach(el => {
+          el.disabled = true;
+        });
+        // Deshabilitar botones de acción
+        document.querySelectorAll('button, input[type="button"]').forEach(btn => {
+          btn.disabled = true;
+        });
+        // Mostrar mensaje de solo lectura
+        let lockedMsg = document.getElementById('lockedMsg');
+        if (!lockedMsg) {
+          lockedMsg = document.createElement('div');
+          lockedMsg.id = 'lockedMsg';
+          lockedMsg.textContent = 'Este pedido está cancelado y no puede modificarse.';
+          lockedMsg.style = 'background:#ffe0e0;color:#b00;padding:10px 18px;margin-bottom:12px;border-radius:6px;font-weight:bold;text-align:center;';
+          form.parentNode.insertBefore(lockedMsg, form);
+        }
+      }
     });
     // Cambiar el texto del botón submit a "Modificar"
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -521,93 +550,92 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cambiar el submit para actualizar en vez de crear
     form.onsubmit = function(e) {
       e.preventDefault();
-      // === Solicitar contraseña antes de modificar ===
-      const contrasena = prompt('Ingrese la contraseña para modificar el pedido:');
-      if (!contrasena || (contrasena !== '3469' && contrasena !== '1234')) {
-        messageDiv.textContent = 'Modificación cancelada o contraseña incorrecta.';
-        messageDiv.style.color = 'red';
-        return;
-      }
-      // Validar artículos
-      for (const item of items) {
-        if (!item.nombre || item.cantidad <= 0 || item.valorU < 0) {
-          messageDiv.textContent = 'Complete correctamente los datos de los artículos.';
-          messageDiv.style.color = 'red';
-          return;
-        }
-        if (typeof item.valorC === 'undefined' || item.valorC === null) {
-          item.valorC = 0;
-        }
-      }
-      // Procesar y guardar subtotal y total como enteros (solo dígitos)
-      function onlyDigits(str) {
-        return (str + '').replace(/\D/g, '');
-      }
-      const subtotal = parseInt(onlyDigits(form.subtotal.value), 10) || 0;
-      const totalFinal = parseInt(onlyDigits(form.totalFinal.value), 10) || 0;
-      const recargo = parseInt(onlyDigits(form.recargo.value), 10) || 0;
-      const descuento = parseInt(onlyDigits(form.descuento.value), 10) || 0;
-      const envio = parseInt(onlyDigits(form.envio.value), 10) || 0;
-      // Obtener cotización blue en tiempo real
-      fetch('https://api.bluelytics.com.ar/v2/latest')
-        .then(r => r.json())
-        .then(d => {
-          let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
-          const costos = calcularCostos();
-          // Determinar tipo de entrega
-          let entrega = 'Local';
-          if (form.direccion.value.trim() && form.direccion.value.trim().length > 7) {
-            entrega = 'Envios';
+      mostrarModalPasswordEdicion(function(contrasena) {
+        // Validar artículos
+        for (const item of items) {
+          if (!item.nombre || item.cantidad <= 0 || item.valorU < 0) {
+            messageDiv.textContent = 'Complete correctamente los datos de los artículos.';
+            messageDiv.style.color = 'red';
+            return;
           }
-          const pedidoObj = {
-            timestamp: Date.now(),
-            locked: false,
-            adminViewed: true,
-            cliente: { nombre: form.nombre.value.trim(), telefono: form.telefono.value.trim(), direccion: form.direccion.value.trim(), dni: form.dni.value.trim(), email: form.email.value.trim().toLowerCase(), tipoCliente: document.querySelector('input[name="tipoCliente"]:checked')?.value || '' },
-            items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
-            pagos: {
-              medioPago: form.medioPago.value,
-              recargo,
-              descuento,
-              envio,
-              subtotal,
-              totalFinal
-            },
-            costos,
-            status: 'DESPACHADO/ENTREGADO',
-            cotizacionCierre: cotizacionCierre,
-            costoUSD: costos / cotizacionCierre,
-            createdby: 'admin',
-            entrega,
-            nota,
-            vendedor,
-            lastOrderUpdate: contrasena
-          };
+          if (typeof item.valorC === 'undefined' || item.valorC === null) {
+            item.valorC = 0;
+          }
+        }
+        // Procesar y guardar subtotal y total como enteros (solo dígitos)
+        function onlyDigits(str) {
+          return (str + '').replace(/\D/g, '');
+        }
+        const subtotal = parseInt(onlyDigits(form.subtotal.value), 10) || 0;
+        const totalFinal = parseInt(onlyDigits(form.totalFinal.value), 10) || 0;
+        const recargo = parseInt(onlyDigits(form.recargo.value), 10) || 0;
+        const descuento = parseInt(onlyDigits(form.descuento.value), 10) || 0;
+        const envio = parseInt(onlyDigits(form.envio.value), 10) || 0;
+        // Obtener cotización blue en tiempo real
+        fetch('https://api.bluelytics.com.ar/v2/latest')
+          .then(r => r.json())
+          .then(d => {
+            let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
+            const costos = calcularCostos();
+            // Determinar tipo de entrega
+            let entrega = 'Local';
+            if (form.direccion.value.trim() && form.direccion.value.trim().length > 7) {
+              entrega = 'Envios';
+            }
+            const pedidoObj = {
+              timestamp: Date.now(),
+              locked: false,
+              adminViewed: true,
+              cliente: { nombre: form.nombre.value.trim(), telefono: form.telefono.value.trim(), direccion: form.direccion.value.trim(), dni: form.dni.value.trim(), email: form.email.value.trim().toLowerCase(), tipoCliente: document.querySelector('input[name="tipoCliente"]:checked')?.value || '' },
+              items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
+              pagos: {
+                medioPago: form.medioPago.value,
+                recargo,
+                descuento,
+                envio,
+                subtotal,
+                totalFinal
+              },
+              costos,
+              status: 'DESPACHADO/ENTREGADO',
+              cotizacionCierre: cotizacionCierre,
+              costoUSD: costos / cotizacionCierre,
+              createdby: 'admin',
+              entrega,
+              nota,
+              vendedor,
+              lastOrderUpdate: contrasena
+            };
+            // CONSERVAR fecha original si existe
+            if (pedido && pedido.fecha) {
+              pedidoObj.fecha = pedido.fecha;
+            }
 
-          db.ref('pedidos/' + pedidoId).set(pedidoObj)
-            .then(() => {
-              messageDiv.textContent = 'Pedido actualizado correctamente.';
-              messageDiv.style.color = 'green';
-              setTimeout(() => {
-                // Si la ventana fue abierta como popup/edición, cerrarla y recargar la principal
-                if (window.opener && !window.opener.closed) {
-                  window.opener.location.reload();
-                  window.close();
-                } else {
-                  // Si no es popup, redirigir a ingresoPedido.html limpio
-                  window.location.href = 'ingresoPedido.html';
-                }
-              }, 1200);
-            })
-            .catch(err => {
-              messageDiv.textContent = 'Error al actualizar el pedido.';
-              messageDiv.style.color = 'red';
-            });
-        })
-        .catch(() => {
-          messageDiv.textContent = 'No se pudo obtener la cotización del dólar blue.';
-          messageDiv.style.color = 'red';
-        });
+            db.ref('pedidos/' + pedidoId).set(pedidoObj)
+              .then(() => {
+                messageDiv.textContent = 'Pedido actualizado correctamente.';
+                messageDiv.style.color = 'green';
+                setTimeout(() => {
+                  // Si la ventana fue abierta como popup/edición, cerrarla y recargar la principal
+                  if (window.opener && !window.opener.closed) {
+                    window.opener.location.reload();
+                    window.close();
+                  } else {
+                    // Si no es popup, redirigir a ingresoPedido.html limpio
+                    window.location.href = 'ingresoPedido.html';
+                  }
+                }, 1200);
+              })
+              .catch(err => {
+                messageDiv.textContent = 'Error al actualizar el pedido.';
+                messageDiv.style.color = 'red';
+              });
+          })
+          .catch(() => {
+            messageDiv.textContent = 'No se pudo obtener la cotización del dólar blue.';
+            messageDiv.style.color = 'red';
+          });
+      });
     };
   }
 
@@ -953,4 +981,62 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
 
   // Inicializar tabla vacía
   renderItems();
+
+  // Mostrar/ocultar comprobante de transferencia según medio de pago
+  function actualizarVisibilidadComprobanteTransferencia() {
+    const comprobanteRow = document.getElementById('comprobanteRow');
+    if (!comprobanteRow) return;
+    if (form.medioPago.value === 'Transferencia') {
+      comprobanteRow.style.display = '';
+    } else {
+      comprobanteRow.style.display = 'none';
+    }
+  }
+  // Ejecutar al cargar
+  actualizarVisibilidadComprobanteTransferencia();
+  // Ejecutar al cambiar medio de pago
+  form.medioPago.addEventListener('change', actualizarVisibilidadComprobanteTransferencia);
+
+  // === MODAL CONTRASEÑA PARA MODIFICAR PEDIDO ===
+  function mostrarModalPasswordEdicion(onConfirm) {
+    let modal = document.getElementById('modalPasswordEdicion');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modalPasswordEdicion';
+      modal.innerHTML = `
+        <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:10000;">
+          <div style="background:#fff;border-radius:8px;padding:24px;min-width:300px;box-shadow:0 2px 16px #0002;display:flex;flex-direction:column;align-items:center;">
+            <h3 style="color:#4b2e83;margin-bottom:16px;">Confirmar modificación</h3>
+            <p style="margin-bottom:12px;color:#333;">Ingrese la contraseña para modificar el pedido:</p>
+            <input id="inputPasswordEdicion" type="password" placeholder="Contraseña" style="padding:8px;border-radius:4px;border:1px solid #ccc;margin-bottom:16px;width:100%;">
+            <div style="display:flex;gap:10px;">
+              <button id="btnConfirmarEdicion" style="background:#4b2e83;color:#fff;">Confirmar</button>
+              <button id="btnCancelarEdicion" style="background:#888;color:#fff;">Cancelar</button>
+            </div>
+            <span id="msgPasswordErrorEdicion" style="color:#f44336;margin-top:10px;display:none;">Contraseña incorrecta</span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    } else {
+      modal.style.display = 'flex';
+      modal.querySelector('#inputPasswordEdicion').value = '';
+      modal.querySelector('#msgPasswordErrorEdicion').style.display = 'none';
+    }
+    modal.style.display = 'flex';
+    const input = modal.querySelector('#inputPasswordEdicion');
+    input.focus();
+    modal.querySelector('#btnConfirmarEdicion').onclick = function() {
+      const pass = input.value;
+      if (pass !== '3469' && pass !== '1234') {
+        modal.querySelector('#msgPasswordErrorEdicion').style.display = 'block';
+        return;
+      }
+      modal.style.display = 'none';
+      onConfirm(pass);
+    };
+    modal.querySelector('#btnCancelarEdicion').onclick = function() {
+      modal.style.display = 'none';
+    };
+  }
 });
