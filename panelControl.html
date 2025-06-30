@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - HomePoint</title>
+    <link rel="icon" href="faviconnegro.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6c4eb6;
+            --primary-light: #8b6bc7;
+            --primary-dark: #5a3ea3;
+            --secondary: #4a90e2;
+            --background: #f8fafc;
+            --white: #ffffff;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(135deg, var(--background) 0%, var(--gray-100) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            line-height: 1.6;
+            color: var(--gray-800);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3rem;
+        }
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo-container {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .logo:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            font-weight: 400;
+            margin-bottom: 2rem;
+        }
+
+        /* Navigation Grid */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 2rem;
+        }
+
+        .nav-grid .row-2 {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* Navigation Cards */
+        .nav-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 160px;
+            justify-content: center;
+        }
+
+        .nav-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary);
+        }
+
+        .nav-card:hover:before {
+            transform: scaleX(1);
+        }
+
+        .nav-card:active {
+            transform: translateY(-2px);
+        }
+
+        .nav-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .nav-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .nav-card-description {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            font-weight: 400;
+        }
+
+        /* Color variations for cards */
+        .nav-card.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: var(--white);
+            border: none;
+        }
+
+        .nav-card.primary .nav-card-title,
+        .nav-card.primary .nav-card-description {
+            color: var(--white);
+        }
+
+        .nav-card.secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, #5ba3f5 100%);
+            color: var(--white);
+            border: none;
+        }
+
+        .nav-card.secondary .nav-card-title,
+        .nav-card.secondary .nav-card-description {
+            color: var(--white);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .footer-text {
+            margin-bottom: 0.5rem;
+        }
+
+        .version {
+            color: var(--gray-500);
+            font-size: 0.75rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                gap: 2rem;
+                padding: 0 1rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                max-width: 400px;
+            }
+
+            .nav-grid .row-2 {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .nav-card {
+                padding: 1.5rem 1rem;
+                min-height: 140px;
+            }
+
+            .nav-card-icon {
+                font-size: 2rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .nav-card-title {
+                font-size: 1rem;
+            }
+
+            .nav-card-description {
+                font-size: 0.8rem;
+            }
+
+            .logo {
+                width: 100px;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .nav-card {
+                min-height: 120px;
+                padding: 1.25rem 0.75rem;
+            }
+
+            .nav-card-icon {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* Loading Animation */
+        .nav-card {
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .nav-card:nth-child(1) { animation-delay: 0.1s; }
+        .nav-card:nth-child(2) { animation-delay: 0.2s; }
+        .nav-card:nth-child(3) { animation-delay: 0.3s; }
+        .nav-card:nth-child(4) { animation-delay: 0.4s; }
+        .nav-card:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Accessibility */
+        .nav-card:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .nav-card {
+                animation: none;
+                opacity: 1;
+                transform: none;
+            }
+            
+            .nav-card,
+            .logo {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="logo-container">
+                <img src="logo.png" alt="HomePoint Logo" class="logo">
+            </div>
+            <h1 class="title">Panel de Control</h1>
+            <p class="subtitle">Centro de administración y gestión empresarial</p>
+        </header>
+
+        <!-- Navigation Grid -->
+        <nav class="nav-grid">
+            <!-- Primera fila - 3 botones -->
+            <a href="ingresoPedido.html" class="nav-card primary" tabindex="0">
+                <span class="nav-card-icon">📝</span>
+                <h2 class="nav-card-title">Ingreso de Pedido</h2>
+                <p class="nav-card-description">Crear nuevos pedidos</p>
+            </a>
+
+            <a href="historialPedidos.html" class="nav-card" tabindex="0">
+                <span class="nav-card-icon">📋</span>
+                <h2 class="nav-card-title">Historial</h2>
+                <p class="nav-card-description">Consultar pedidos anteriores</p>
+            </a>
+
+            <a href="admin.html" class="nav-card secondary" tabindex="0">
+                <span class="nav-card-icon">🖥️</span>
+                <h2 class="nav-card-title">Pedidos Web</h2>
+                <p class="nav-card-description">Gestión administrativa</p>
+            </a>
+
+            <!-- Segunda fila - 2 botones centrados -->
+            <div class="row-2">
+                <a href="index.html" class="nav-card" tabindex="0">
+                    <span class="nav-card-icon">🛍️</span>
+                    <h2 class="nav-card-title">Catálogo Minorista</h2>
+                    <p class="nav-card-description">Productos para retail</p>
+                </a>
+
+                <a href="mayorista.html" class="nav-card" tabindex="0">
+                    <span class="nav-card-icon">📦</span>
+                    <h2 class="nav-card-title">Catálogo Mayorista</h2>
+                    <p class="nav-card-description">Venta al por mayor</p>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-text">Sistema de Gestión HomePoint</p>
+            <p class="version">v2.0.1 - Panel Unificado</p>
+        </footer>
+    </div>
+
+    <script>
+        // Add keyboard navigation support
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const focused = document.activeElement;
+                if (focused.classList.contains('nav-card')) {
+                    e.preventDefault();
+                    focused.click();
+                }
+            }
+        });
+
+        // Add click analytics (optional)
+        document.querySelectorAll('.nav-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Optional: Add analytics tracking here
+                console.log('Navegando a:', this.href);
+            });
+        });
+
+        // Add loading animation trigger
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '1';
+        });
+
+        // Add ripple effect on click
+        document.querySelectorAll('.nav-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: rgba(255, 255, 255, 0.3);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple 0.6s linear;
+                    pointer-events: none;
+                `;
+                
+                this.style.position = 'relative';
+                this.style.overflow = 'hidden';
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+
+        // Add ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
