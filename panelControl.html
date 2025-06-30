@@ -327,6 +327,21 @@
     </style>
 </head>
 <body>
+    <!-- Firebase Auth Check -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+        firebase.initializeApp(firebaseConfig);
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (!user) {
+                // Redirige a login.html con parámetro de redirección
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+            }
+        });
+    </script>
+    <!-- Fin Firebase Auth Check -->
+
     <div class="container">
         <!-- Header Section -->
         <header class="header">

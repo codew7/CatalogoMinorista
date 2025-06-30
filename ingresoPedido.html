@@ -16,6 +16,20 @@
   </script>
 </head>
 <body>
+  <!-- Firebase Auth Check -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="config.js"></script>
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user) {
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+      }
+    });
+  </script>
+  <!-- Fin Firebase Auth Check -->
+
   <main class="container">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
       <img src="logo.png" alt="Logo" style="width:300px;height:auto;display:block;">
