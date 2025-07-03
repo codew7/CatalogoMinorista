@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Stock - Inventario</title>
+    <style>
+        :root {
+            --primary: #ffe066;
+            --secondary: #fff9db;
+            --accent: #ffd43b;
+            --pastel1: #f8edeb;
+            --pastel2: #e0d6d4;
+            --pastel3: #fae697;
+            --success: #38b000;
+            --danger: #e63946;
+            --text: #333;
+            --border: #ffe066;
+            --shadow: 0 2px 8px rgba(255, 213, 59, 0.267);
+            --primary-blue: #2563eb;
+            --primary-dark: #1e40af;
+            --gray: #f3f4f6;
+            --gray-dark: #6b7280;
+            --warning: #f59e42;
+            --white: #fff;
+        }
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+            background: var(--secondary);
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: linear-gradient(90deg, var(--primary), var(--pastel1));
+            padding: 1.5rem 1rem 1.5rem 1rem;
+            box-shadow: #5c5866 0px 2px 8px 0px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            color: #b68900;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        header h2 {
+            margin: 0;
+            margin-top: 0.3em;
+            font-size: 1.25rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #b68900;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+            padding: 2rem 1rem;
+        }
+
+        .search-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .search-bar input {
+            width: 100%;
+            max-width: 350px;
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px 0 0 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .search-bar button {
+            padding: 0.7rem 1.2rem;
+            border: none;
+            background: var(--primary);
+            color: var(--white);
+            font-size: 1rem;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .search-bar button:hover {
+            background: var(--primary-dark);
+        }
+
+        table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+            background: var(--white);
+        }
+        th, td {
+            padding: 0.9rem 0.7rem;
+            text-align: left;
+        }
+        th {
+            background: var(--primary);
+            color: var(--white);
+            font-weight: 600;
+        }
+        tr {
+            border-bottom: 1px solid var(--border);
+        }
+        tr:last-child {
+            border-bottom: none;
+        }
+        .stock-low {
+            background: var(--warning);
+            color: #fff;
+            font-weight: bold;
+        }
+        .stock-zero {
+            background: var(--danger);
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 120px;
+        }
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 51px;
+            height: 51px;
+            margin: 6px;
+            border: 6px solid var(--primary);
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: var(--primary) transparent transparent transparent;
+        }
+        .lds-ring div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+        .lds-ring div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+        .lds-ring div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+        @keyframes lds-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            color: var(--danger);
+            text-align: center;
+            margin: 1rem 0;
+            font-weight: bold;
+        }
+        @media (max-width: 700px) {
+            .container {
+                padding: 1rem 0.2rem;
+            }
+            th, td {
+                padding: 0.7rem 0.3rem;
+                font-size: 0.97rem;
+            }
+            .export-btn {
+                width: 100%;
+                float: none;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📋 Consulta de Stock 🔎</h1>
+        <h2 id="goInventario" style="margin:0;margin-top:0.3em;font-size:1.25rem;font-weight:500;cursor:pointer;color:#b68900;">👉 Gestión de Inventario</h2>
+    </header>
+    <!-- Modal para contraseña de acceso a Gestión de Inventario -->
+    <div id="modalPassword" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:1000; align-items:center; justify-content:center;">
+      <div style="background:#fff; border-radius:8px; padding:24px; min-width:300px; box-shadow:0 2px 16px #0002; display:flex; flex-direction:column; align-items:center;">
+        <h3 style="color:#b68900; margin-bottom:16px;">Acceso restringido</h3>
+        <p style="margin-bottom:12px; color:#333;">Ingrese la contraseña para acceder a Gestión de Inventario:</p>
+        <input id="inputPassword" type="password" placeholder="Contraseña" style="padding:8px; border-radius:4px; border:1.5px solid #ffe066; margin-bottom:16px; width:100%;">
+        <div style="display:flex; gap:10px;">
+          <button id="btnConfirmarAcceso" style="background:#ffe066; color:#b68900; font-weight:bold; border:none; border-radius:5px; padding:7px 18px; cursor:pointer;">Acceder</button>
+          <button type="button" onclick="cerrarModalPassword()" style="background:#888; color:#fff; border:none; border-radius:5px; padding:7px 18px; cursor:pointer;">Cancelar</button>
+        </div>
+        <span id="msgPasswordError" style="color:#e63946; margin-top:10px; display:none;">Contraseña incorrecta</span>
+      </div>
+    </div>
+    <div class="container">
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Buscar por código o nombre...">
+            <button id="clearBtn" title="Limpiar búsqueda">✕</button>
+        </div>
+        <div class="table-responsive">
+            <table id="stockTable">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Stock Actual</th>
+                        <th>Valor Unitario</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Filas generadas dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+        <div class="spinner" id="spinner" style="display:none;">
+            <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+        </div>
+        <div class="error" id="errorMsg" style="display:none;"></div>
+    </div>
+    <script src="./config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        // Inicializar Firebase solo si no está inicializado
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        // Modal de contraseña para Gestión de Inventario
+        const goInventario = document.getElementById('goInventario');
+        const modalPassword = document.getElementById('modalPassword');
+        const inputPassword = document.getElementById('inputPassword');
+        const btnConfirmarAcceso = document.getElementById('btnConfirmarAcceso');
+        const msgPasswordError = document.getElementById('msgPasswordError');
+        goInventario.onclick = function() {
+            inputPassword.value = '';
+            msgPasswordError.style.display = 'none';
+            modalPassword.style.display = 'flex';
+            setTimeout(() => inputPassword.focus(), 100);
+        };
+        btnConfirmarAcceso.onclick = function() {
+            if (inputPassword.value === '3469') {
+                window.location.href = 'inventario.html';
+            } else {
+                msgPasswordError.style.display = 'block';
+            }
+        };
+        inputPassword.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') btnConfirmarAcceso.click();
+        });
+        function cerrarModalPassword() {
+            modalPassword.style.display = 'none';
+        }
+        // Elementos DOM
+        const tableBody = document.getElementById('tableBody');
+        const spinner = document.getElementById('spinner');
+        const errorMsg = document.getElementById('errorMsg');
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        let stockData = [];
+        let filteredData = [];
+        function showSpinner(show) {
+            spinner.style.display = show ? 'flex' : 'none';
+        }
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+            showSpinner(false);
+        }
+        function clearError() {
+            errorMsg.textContent = '';
+            errorMsg.style.display = 'none';
+        }
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-dark);">Sin resultados</td></tr>';
+                return;
+            }
+            data.forEach(item => {
+                let stockClass = '';
+                if (item.stock <= 0) stockClass = 'stock-zero';
+                else if (item.stock <= 5) stockClass = 'stock-low';
+                // Validar valor numérico
+                let valorUnitario = (typeof item.valor === 'number' && !isNaN(item.valor)) ? item.valor : 0;
+                tableBody.innerHTML += `
+                    <tr class="${stockClass}">
+                        <td>${item.codigo || ''}</td>
+                        <td>${item.nombre || ''}</td>
+                        <td>${typeof item.stock === 'number' ? item.stock : 0}</td>
+                        <td>$${valorUnitario.toLocaleString('es-AR', {minimumFractionDigits:2})}</td>
+                    </tr>
+                `;
+            });
+        }
+        function filterData() {
+            const q = searchInput.value.trim().toLowerCase();
+            if (!q) {
+                filteredData = [...stockData];
+            } else {
+                filteredData = stockData.filter(item => {
+                    const codigo = (item.codigo || '').toString().toLowerCase();
+                    const nombre = (item.nombre || '').toString().toLowerCase();
+                    return codigo.includes(q) || nombre.includes(q);
+                });
+            }
+            renderTable(filteredData);
+        }
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            filterData();
+            searchInput.focus();
+        });
+        searchInput.addEventListener('input', filterData);
+        function listenStock() {
+            showSpinner(true);
+            clearError();
+            firebase.database().ref('movimientos').on('value', (snapshot) => {
+                showSpinner(false);
+                if (!snapshot.exists()) {
+                    stockData = [];
+                    filterData();
+                    return;
+                }
+                const movimientos = snapshot.val();
+                const stockMap = {};
+                Object.values(movimientos).forEach(mov => {
+                    if (!stockMap[mov.codigo]) {
+                        stockMap[mov.codigo] = {
+                            codigo: mov.codigo,
+                            nombre: mov.nombre,
+                            valor: mov.valor,
+                            stock: 0
+                        };
+                    }
+                    if (mov.tipo === 'ENTRADA') {
+                        stockMap[mov.codigo].stock += Number(mov.cantidad);
+                    } else if (mov.tipo === 'SALIDA') {
+                        stockMap[mov.codigo].stock -= Number(mov.cantidad);
+                    }
+                });
+                stockData = Object.values(stockMap).sort((a,b) => a.nombre.localeCompare(b.nombre));
+                filterData();
+            }, (error) => {
+                showError('Error al leer datos de inventario: ' + error.message);
+            });
+        }
+        listenStock();
+    </script>
+</body>
+</html>

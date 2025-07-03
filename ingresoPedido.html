@@ -3,31 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Gestión de Órdenes de Pedido</title>
+  <title>Ingreso de Pedido</title>
   <link rel="icon" href="faviconnegro.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+  <!-- Firebase SDKs (solo una vez, última versión) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="config.js"></script>
   <script>
-    firebase.initializeApp(firebaseConfig);
+    // Inicializar Firebase solo una vez
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.database();
-  </script>
-</head>
-<body>
-  <!-- Firebase Auth Check -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script>
-    firebase.initializeApp(firebaseConfig);
     firebase.auth().onAuthStateChanged(function(user) {
       if (!user) {
         window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
       }
     });
   </script>
+</head>
+<body>
+  <!-- Firebase Auth Check -->
   <!-- Fin Firebase Auth Check -->
 
   <main class="container">

@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 0);
   });
 
-  // Modal de confirmación para imprimir
+  // --- MODAL DE CONFIRMACIÓN PARA IMPRIMIR ---
   function mostrarModalImprimirOrden(onSi, onNo) {
     // Eliminar modal previo si existe
     const old = document.getElementById('modalImprimirOrden');
@@ -264,17 +264,35 @@ document.addEventListener('DOMContentLoaded', function() {
     overlay.appendChild(box);
     document.body.appendChild(overlay);
     // Eventos
+    function keyHandler(e) {
+      if (overlay.style.display !== 'flex') return;
+      if (e.key === 'Enter') {
+        box.querySelector('#btnImprimirSi').click();
+        e.preventDefault();
+      } else if (e.key === 'Escape') {
+        box.querySelector('#btnImprimirNo').click();
+        e.preventDefault();
+      }
+    }
+    document.addEventListener('keydown', keyHandler);
+    function cleanup() {
+      document.removeEventListener('keydown', keyHandler);
+    }
     box.querySelector('#btnImprimirSi').onclick = () => {
       overlay.remove();
+      cleanup();
       onSi();
     };
     box.querySelector('#btnImprimirNo').onclick = () => {
       overlay.remove();
+      cleanup();
       onNo();
     };
   }
 
+  // --- SUBMIT GLOBAL SOLO PARA ALTAS ---
   form.addEventListener('submit', function(e) {
+    if (pedidoId) return; // Si es edición, no ejecutar alta
     e.preventDefault();
     mostrarModalImprimirOrden(
       function() {
@@ -309,12 +327,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const nota = form.nota ? form.nota.value.trim() : '';
     const vendedor = form.vendedor ? form.vendedor.value.trim() : '';
-
-    //if (!nombre || !medioPago || !tipoCliente) {
-    //  messageDiv.textContent = 'Por favor complete todos los campos obligatorios.';
-    //  messageDiv.style.color = 'red';
-    //  return;
-    //}
 
     if (items.length === 0) {
       showPopup('Debe agregar al menos un artículo.', '❗', false);
@@ -391,17 +403,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             db.ref('pedidos/' + pedidoId).set(pedidoObj)
               .then(() => {
-                messageDiv.textContent = 'Pedido modificado correctamente.';
+                // Registrar movimientos de inventario también en edición
+                registrarMovimientosInventario(items, pedidoObj.cotizacionCierre, pedidoId);
+                messageDiv.textContent = 'Pedido actualizado correctamente.';
                 messageDiv.style.color = 'green';
                 setTimeout(() => {
-                  window.location.href = 'ingresoPedido.html';
-                }, 1000);
-                form.reset();
-                items = [];
-                renderItems();
-                // Restaurar el texto del botón
-                const submitBtn = form.querySelector('button[type="submit"]');
-                if (submitBtn) submitBtn.textContent = 'Ingresar Orden';
+                  if (window.opener && !window.opener.closed) {
+                    window.opener.location.reload();
+                    window.close();
+                  } else {
+                    window.location.href = 'ingresoPedido.html';
+                  }
+                }, 1200);
               })
               .catch(err => {
                 messageDiv.textContent = 'Error al actualizar el pedido.';
@@ -419,8 +432,12 @@ document.addEventListener('DOMContentLoaded', function() {
             pedidoObj.Orden = lastOrden + 1;
             // Agregar campo fecha solo al crear el pedido
             pedidoObj.fecha = getFechaActual();
-            db.ref('pedidos').push(pedidoObj)
+            // Usar push para obtener el id generado
+            const pedidoRef = db.ref('pedidos').push();
+            pedidoRef.set(pedidoObj)
               .then(() => {
+                // Registrar movimientos de inventario usando el id generado
+                registrarMovimientosInventario(items, pedidoObj.cotizacionCierre, pedidoRef.key);
                 showPopup('Pedido ingresado', '✅', true);
                 form.reset();
                 items = [];
@@ -477,6 +494,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (overlay.parentNode) overlay.remove();
       }, 2500);
     }
+    // Soporte Enter/Escape
+    function keyHandler(e) {
+      if (overlay.style.display !== 'flex') return;
+      if (e.key === 'Enter' || e.key === 'Escape') {
+        overlay.remove();
+        cleanup();
+        e.preventDefault();
+      }
+    }
+    function cleanup() {
+      document.removeEventListener('keydown', keyHandler);
+    }
+    document.addEventListener('keydown', keyHandler);
   }
 
   // === SOPORTE EDICIÓN DE PEDIDOS ===
@@ -521,6 +551,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // --- SOLO LECTURA SI locked: true ---
       if (pedido.locked === true) {
+        // Eliminar movimientos de inventario asociados a este pedido cancelado
+        if (pedidoId) {
+          db.ref('movimientos').orderByChild('pedidoId').equalTo(pedidoId).once('value', function(snapshot) {
+            const updates = {};
+            snapshot.forEach(child => {
+              updates[child.key] = null;
+            });
+            if (Object.keys(updates).length > 0) {
+              db.ref('movimientos').update(updates).catch(err => {
+                console.error('Error eliminando movimientos por cancelación:', err, updates);
+              });
+            }
+          });
+        }
         // Deshabilitar todos los campos del formulario
         Array.from(form.elements).forEach(el => {
           el.disabled = true;
@@ -551,77 +595,95 @@ document.addEventListener('DOMContentLoaded', function() {
     form.onsubmit = function(e) {
       e.preventDefault();
       mostrarModalPasswordEdicion(function(contrasena) {
-        // Validar artículos
-        for (const item of items) {
-          if (!item.nombre || item.cantidad <= 0 || item.valorU < 0) {
-            messageDiv.textContent = 'Complete correctamente los datos de los artículos.';
-            messageDiv.style.color = 'red';
-            return;
+        if (!contrasena) return; // Si se cancela, no continuar
+        mostrarModalImprimirOrden(
+          function() { // Sí imprimir
+            generarReciboYImprimir();
+            setTimeout(() => { modificarPedido(contrasena); }, 1000);
+          },
+          function() { // No imprimir
+            modificarPedido(contrasena);
           }
-          if (typeof item.valorC === 'undefined' || item.valorC === null) {
-            item.valorC = 0;
+        );
+      });
+    };
+
+    // Nueva función para modificar el pedido (solo si la contraseña fue correcta y no se canceló nada)
+    function modificarPedido(contrasena) {
+      // Validar artículos
+      for (const item of items) {
+        if (!item.nombre || item.cantidad <= 0 || item.valorU < 0) {
+          messageDiv.textContent = 'Complete correctamente los datos de los artículos.';
+          messageDiv.style.color = 'red';
+          return;
+        }
+        if (typeof item.valorC === 'undefined' || item.valorC === null) {
+          item.valorC = 0;
+        }
+      }
+      // Procesar y guardar subtotal y total como enteros (solo dígitos)
+      function onlyDigits(str) {
+        return (str + '').replace(/\D/g, '');
+      }
+      const subtotal = parseInt(onlyDigits(form.subtotal.value), 10) || 0;
+      const totalFinal = parseInt(onlyDigits(form.totalFinal.value), 10) || 0;
+      const recargo = parseInt(onlyDigits(form.recargo.value), 10) || 0;
+      const descuento = parseInt(onlyDigits(form.descuento.value), 10) || 0;
+      const envio = parseInt(onlyDigits(form.envio.value), 10) || 0;
+      const nota = form.nota ? form.nota.value.trim() : '';
+      const vendedor = form.vendedor ? form.vendedor.value.trim() : '';
+      // Obtener cotización blue en tiempo real
+      fetch('https://api.bluelytics.com.ar/v2/latest')
+        .then(r => r.json())
+        .then(d => {
+          let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
+          const costos = calcularCostos();
+          // Determinar tipo de entrega
+          let entrega = 'Local';
+          if (form.direccion.value.trim() && form.direccion.value.trim().length > 7) {
+            entrega = 'Envios';
           }
-        }
-        // Procesar y guardar subtotal y total como enteros (solo dígitos)
-        function onlyDigits(str) {
-          return (str + '').replace(/\D/g, '');
-        }
-        const subtotal = parseInt(onlyDigits(form.subtotal.value), 10) || 0;
-        const totalFinal = parseInt(onlyDigits(form.totalFinal.value), 10) || 0;
-        const recargo = parseInt(onlyDigits(form.recargo.value), 10) || 0;
-        const descuento = parseInt(onlyDigits(form.descuento.value), 10) || 0;
-        const envio = parseInt(onlyDigits(form.envio.value), 10) || 0;
-        // Obtener cotización blue en tiempo real
-        fetch('https://api.bluelytics.com.ar/v2/latest')
-          .then(r => r.json())
-          .then(d => {
-            let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
-            const costos = calcularCostos();
-            // Determinar tipo de entrega
-            let entrega = 'Local';
-            if (form.direccion.value.trim() && form.direccion.value.trim().length > 7) {
-              entrega = 'Envios';
-            }
-            const pedidoObj = {
-              timestamp: Date.now(),
-              locked: false,
-              adminViewed: true,
-              cliente: { nombre: form.nombre.value.trim(), telefono: form.telefono.value.trim(), direccion: form.direccion.value.trim(), dni: form.dni.value.trim(), email: form.email.value.trim().toLowerCase(), tipoCliente: document.querySelector('input[name="tipoCliente"]:checked')?.value || '' },
-              items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
-              pagos: {
-                medioPago: form.medioPago.value,
-                recargo,
-                descuento,
-                envio,
-                subtotal,
-                totalFinal
-              },
-              costos,
-              status: 'DESPACHADO/ENTREGADO',
-              cotizacionCierre: cotizacionCierre,
-              costoUSD: costos / cotizacionCierre,
-              createdby: 'admin',
-              entrega,
-              nota,
-              vendedor,
-              lastOrderUpdate: contrasena
-            };
-            // CONSERVAR fecha original si existe
+          const pedidoObj = {
+            timestamp: Date.now(),
+            locked: false,
+            adminViewed: true,
+            cliente: { nombre: form.nombre.value.trim(), telefono: form.telefono.value.trim(), direccion: form.direccion.value.trim(), dni: form.dni.value.trim(), email: form.email.value.trim().toLowerCase(), tipoCliente: document.querySelector('input[name="tipoCliente"]:checked')?.value || '' },
+            items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
+            pagos: {
+              medioPago: form.medioPago.value,
+              recargo,
+              descuento,
+              envio,
+              subtotal,
+              totalFinal
+            },
+            costos,
+            status: 'DESPACHADO/ENTREGADO',
+            cotizacionCierre: cotizacionCierre,
+            costoUSD: costos / cotizacionCierre,
+            createdby: 'admin',
+            entrega,
+            nota,
+            vendedor,
+            lastOrderUpdate: contrasena
+          };
+          // CONSERVAR fecha original si existe
+          db.ref('pedidos/' + pedidoId).once('value').then(snap => {
+            const pedido = snap.val();
             if (pedido && pedido.fecha) {
               pedidoObj.fecha = pedido.fecha;
             }
-
             db.ref('pedidos/' + pedidoId).set(pedidoObj)
               .then(() => {
+                // Registrar movimientos de inventario también en edición
+                registrarMovimientosInventario(items, pedidoObj.cotizacionCierre, pedidoId);
                 messageDiv.textContent = 'Pedido actualizado correctamente.';
                 messageDiv.style.color = 'green';
                 setTimeout(() => {
-                  // Si la ventana fue abierta como popup/edición, cerrarla y recargar la principal
                   if (window.opener && !window.opener.closed) {
                     window.opener.location.reload();
                     window.close();
                   } else {
-                    // Si no es popup, redirigir a ingresoPedido.html limpio
                     window.location.href = 'ingresoPedido.html';
                   }
                 }, 1200);
@@ -630,13 +692,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageDiv.textContent = 'Error al actualizar el pedido.';
                 messageDiv.style.color = 'red';
               });
-          })
-          .catch(() => {
-            messageDiv.textContent = 'No se pudo obtener la cotización del dólar blue.';
-            messageDiv.style.color = 'red';
           });
-      });
-    };
+        })
+        .catch(() => {
+          messageDiv.textContent = 'No se pudo obtener la cotización del dólar blue.';
+          messageDiv.style.color = 'red';
+        });
+    }
   }
 
   // Hacer campos de cliente solo lectura (excepto nombre)
@@ -659,7 +721,27 @@ document.addEventListener('DOMContentLoaded', function() {
       const tipoRadio = document.querySelector('input[name="tipoCliente"]:checked');
       if (tipoRadio) tipoCliente = tipoRadio.value;
       mostrarModalRegistroCliente(nombre, telefono, direccion, dni, email, tipoCliente, true);
+      // Forzar display flex para asegurar que el modal esté visible
+      const modal = document.getElementById('modalRegistroCliente');
+      if (modal) modal.style.display = 'flex';
     };
+    // Soporte teclado: Enter abre modal, Escape cierra modal si está abierto o blurea el botón
+    editarClienteBtn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        editarClienteBtn.click();
+      } else if (e.key === 'Escape') {
+        // Si el modal está abierto, ciérralo
+        const modal = document.getElementById('modalRegistroCliente');
+        if (modal && (modal.style.display === 'flex' || modal.style.display === '')) {
+          const cancelarBtn = modal.querySelector('#cancelarNuevoCliente');
+          if (cancelarBtn) cancelarBtn.click();
+        } else {
+          // Si no hay modal, blurea el botón
+          editarClienteBtn.blur();
+        }
+      }
+    });
   }
 
   // Detectar cambio de medio de pago y aplicar recargo automático si corresponde
@@ -821,6 +903,7 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
   // Cancelar
   modal.querySelector('#cancelarNuevoCliente').onclick = function() {
     modal.remove();
+    cleanup();
   };
   // Registrar/Guardar
   modal.querySelector('#formNuevoCliente').onsubmit = function(e) {
@@ -892,6 +975,22 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
         modal.remove();
       });
   };
+  // Soporte Enter/Escape
+  function keyHandler(e) {
+    if (modal.style.display !== 'flex') return;
+    // Solo confirmar con Enter si el foco está en un input o textarea
+    if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') {
+      modal.querySelector('button[type="submit"]').click();
+      e.preventDefault();
+    } else if (e.key === 'Escape') {
+      modal.querySelector('#cancelarNuevoCliente').click();
+      e.preventDefault();
+    }
+  }
+  function cleanup() {
+    document.removeEventListener('keydown', keyHandler);
+  }
+  document.addEventListener('keydown', keyHandler);
 }
 
 // Botón Imprimir
@@ -998,23 +1097,78 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
   form.medioPago.addEventListener('change', actualizarVisibilidadComprobanteTransferencia);
 
   // === MODAL CONTRASEÑA PARA MODIFICAR PEDIDO ===
+  // Agregar estilos para el modal de contraseña (extraído del HTML de eliminación)
+  const styleModalPassword = document.createElement('style');
+  styleModalPassword.innerHTML = `
+    #modalPassword {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.3);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    #modalPassword > div {
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      min-width: 300px;
+      box-shadow: 0 2px 16px #0002;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #modalPassword input[type="password"] {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      margin-bottom: 16px;
+      width: 100%;
+    }
+    #modalPassword .modal-btns {
+      display: flex;
+      gap: 10px;
+    }
+    #modalPassword .modal-btns button {
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+    #modalPassword .modal-btns .eliminar {
+      background: #f44336;
+    }
+    #modalPassword .modal-btns .cancelar {
+      background: #888;
+    }
+    #modalPassword .msg-error {
+      color: #f44336;
+      margin-top: 10px;
+      display: none;
+    }
+  `;
+  document.head.appendChild(styleModalPassword);
+
   function mostrarModalPasswordEdicion(onConfirm) {
-    let modal = document.getElementById('modalPasswordEdicion');
+    let modal = document.getElementById('modalPassword');
     if (!modal) {
       modal = document.createElement('div');
-      modal.id = 'modalPasswordEdicion';
+      modal.id = 'modalPassword';
       modal.innerHTML = `
-        <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:10000;">
-          <div style="background:#fff;border-radius:8px;padding:24px;min-width:300px;box-shadow:0 2px 16px #0002;display:flex;flex-direction:column;align-items:center;">
-            <h3 style="color:#4b2e83;margin-bottom:16px;">Confirmar modificación</h3>
-            <p style="margin-bottom:12px;color:#333;">Ingrese la contraseña para modificar el pedido:</p>
-            <input id="inputPasswordEdicion" type="password" placeholder="Contraseña" style="padding:8px;border-radius:4px;border:1px solid #ccc;margin-bottom:16px;width:100%;">
-            <div style="display:flex;gap:10px;">
-              <button id="btnConfirmarEdicion" style="background:#4b2e83;color:#fff;">Confirmar</button>
-              <button id="btnCancelarEdicion" style="background:#888;color:#fff;">Cancelar</button>
-            </div>
-            <span id="msgPasswordErrorEdicion" style="color:#f44336;margin-top:10px;display:none;">Contraseña incorrecta</span>
+        <div>
+          <h3 style="color:#4b2e83; margin-bottom:16px;">Confirmar modificación</h3>
+          <p style="margin-bottom:12px; color:#333;">Ingrese la contraseña para modificar el pedido:</p>
+          <input id="inputPasswordEdicion" type="password" placeholder="Contraseña">
+          <div class="modal-btns">
+            <button id="btnConfirmarEdicion" class="eliminar">Modificar</button>
+            <button id="btnCancelarEdicion" class="cancelar">Cancelar</button>
           </div>
+          <span id="msgPasswordErrorEdicion" class="msg-error">Contraseña incorrecta</span>
         </div>
       `;
       document.body.appendChild(modal);
@@ -1026,17 +1180,84 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
     modal.style.display = 'flex';
     const input = modal.querySelector('#inputPasswordEdicion');
     input.focus();
+    // Bandera para evitar doble ejecución
+    let accionRealizada = false;
+    function keyHandler(e) {
+      if (modal.style.display !== 'flex') return;
+      if (e.key === 'Enter') {
+        modal.querySelector('#btnConfirmarEdicion').click();
+        e.preventDefault();
+      } else if (e.key === 'Escape') {
+        modal.querySelector('#btnCancelarEdicion').click();
+        e.preventDefault();
+      }
+    }
+    document.addEventListener('keydown', keyHandler);
+    function cleanup() {
+      document.removeEventListener('keydown', keyHandler);
+    }
     modal.querySelector('#btnConfirmarEdicion').onclick = function() {
+      if (accionRealizada) return;
       const pass = input.value;
       if (pass !== '3469' && pass !== '1234') {
         modal.querySelector('#msgPasswordErrorEdicion').style.display = 'block';
-        return;
+        return; // Detener aquí, no llamar onConfirm
       }
+      accionRealizada = true;
       modal.style.display = 'none';
+      cleanup();
       onConfirm(pass);
     };
     modal.querySelector('#btnCancelarEdicion').onclick = function() {
+      if (accionRealizada) return;
+      accionRealizada = true;
       modal.style.display = 'none';
+      cleanup();
+      // No llamar onConfirm, solo cerrar y detener
     };
+  }
+
+  // --- REGISTRO DE MOVIMIENTOS DE INVENTARIO ---
+  function registrarMovimientosInventario(items, cotizacionCierre, pedidoId) {
+    if (!Array.isArray(items) || !cotizacionCierre || !pedidoId) return;
+    // 1. Eliminar movimientos previos de este pedido (por pedidoId)
+    db.ref('movimientos').orderByChild('pedidoId').equalTo(pedidoId).once('value', function(snapshot) {
+      const updates = {};
+      snapshot.forEach(child => {
+        updates[child.key] = null;
+      });
+      if (Object.keys(updates).length > 0) {
+        db.ref('movimientos').update(updates).catch(err => {
+          console.error('Error eliminando movimientos previos:', err, updates);
+        });
+      }
+      // 2. Registrar los nuevos movimientos
+      items.forEach((item) => {
+        try {
+          if (!item || !item.codigo || !item.nombre || !item.cantidad || !item.valorU) return;
+          const timestamp = new Date().toISOString();
+          const now = new Date();
+          const pad = n => n.toString().padStart(2, '0');
+          const id = `mov_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}_${item.codigo}_${pedidoId}`;
+          const movimiento = {
+            timestamp: timestamp,
+            codigo: item.codigo,
+            nombre: item.nombre,
+            cantidad: parseInt(item.cantidad, 10) || 0,
+            valorC: parseInt(item.valorC, 10) || 0,
+            valorU: parseInt(item.valorU, 10) || 0,
+            cotizacionCierre: cotizacionCierre,
+            tipo: 'SALIDA',
+            pedidoId: pedidoId
+          };
+          db.ref('movimientos/' + id).set(movimiento)
+            .catch(err => {
+              console.error('Error registrando movimiento de inventario:', err, movimiento);
+            });
+        } catch (err) {
+          console.error('Error inesperado al registrar movimiento de inventario:', err, item);
+        }
+      });
+    });
   }
 });

@@ -4,13 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Historial de Pedidos</title>
+  <link rel="icon" href="faviconnegro.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <!-- Firebase Auth Check -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="config.js"></script>
   <script>
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user) {
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+      }
+    });
     const db = firebase.database();
+  </script>
+  <!-- Fin Firebase Auth Check -->
+  <script>
+    // firebase.initializeApp(firebaseConfig); // Eliminado: ya está inicializado arriba
+    // const db = firebase.database(); // Eliminado: ya está declarado arriba
     let pedidosCache = {};
     document.addEventListener('DOMContentLoaded', function() {
       const tbody = document.getElementById('pedidosBody');
@@ -18,12 +33,16 @@
         pedidosCache = snap.val() || {};
         renderPedidos();
       });
-      document.getElementById('filtroNombre').addEventListener('input', aplicarFiltros);
-      document.getElementById('filtroTipoCliente').addEventListener('change', aplicarFiltros);
-      // Mover aquí el binding del botón del modal para asegurar que el DOM ya existe
+      // Permitir aplicar filtros con Enter en los campos de filtro
+      document.getElementById('filtroNombre').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') aplicarFiltros();
+      });
+      document.getElementById('filtroTipoCliente').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') aplicarFiltros();
+      });
       document.getElementById('btnConfirmarEliminar').onclick = function() {
         const pass = document.getElementById('inputPassword').value;
-        if (pass !== '3469') {
+        if (pass !== '212118') {
           document.getElementById('msgPasswordError').style.display = 'block';
           return;
         }
@@ -107,19 +126,34 @@
       document.getElementById('msgPasswordError').style.display = 'none';
       document.getElementById('modalPassword').style.display = 'flex';
       document.getElementById('inputPassword').focus();
+      // Agregar listeners para Enter y Escape
+      document.addEventListener('keydown', modalKeyHandler);
     }
     function cerrarModalPassword() {
       document.getElementById('modalPassword').style.display = 'none';
       pedidoAEliminar = null;
+      // Remover listeners para evitar duplicados
+      document.removeEventListener('keydown', modalKeyHandler);
+    }
+    function modalKeyHandler(e) {
+      if (document.getElementById('modalPassword').style.display !== 'flex') return;
+      if (e.key === 'Enter') {
+        document.getElementById('btnConfirmarEliminar').click();
+        e.preventDefault();
+      } else if (e.key === 'Escape') {
+        cerrarModalPassword();
+        e.preventDefault();
+      }
     }
   </script>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; background: #f1f1f1; }
     main { max-width: 900px; margin: 30px auto; background: #fff; border-radius: 8px; padding: 24px; }
-    h1 { color: #6c4eb6; text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+    header {background: linear-gradient(90deg, #5c5866, #989899); padding: 1.5rem 1rem 1.5rem 1rem; box-shadow: #5c5866 0px 2px 8px 0px; text-align: center;}
+    header h1 {margin: 0; font-size: 2.2rem; color: #39373f; letter-spacing: 1px; font-weight: 700;}
+    table { width: 100%; min-width: 900px; border-collapse: collapse; margin-top: 20px; background: #fff; }
     th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
-    th { background: #4b2e83; color: #fff; }
+    th { background: #5c5866; color: #fff; }
     tr:nth-child(even) { background: #f9f9f9; }
     button { margin: 0 2px; padding: 6px 12px; border-radius: 4px; border: none; background: #f44336; color: #fff; cursor: pointer; }
     button:hover { background: #d8382c; }
@@ -146,19 +180,24 @@
       flex-direction: column;
       align-items: center;
     }
+    #filtroNombre, #filtroTipoCliente {
+      width: 220px; /* Puedes ajustar este valor según lo que necesites */
+    }
   </style>
 </head>
 <body>
+<header>
+  <h1>📦 Historial de Pedidos 📝</h1>
+</header>
   <main>
-    <h1>Historial de Pedidos</h1>
-    <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+    <div style="margin-bottom: 16px; display: flex; gap: 20px; align-items: center;">
       <input type="text" id="filtroNombre" placeholder="Filtrar por nombre" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
       <select id="filtroTipoCliente" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
         <option value="">Todos los tipos</option>
         <option value="consumidor final">Minorista</option>
         <option value="mayorista">Mayorista</option>
       </select>
-      <button style="background:#4b2e83;" onclick="aplicarFiltros()">Filtrar</button>
+      <button style="background:#39373f;" onclick="aplicarFiltros()">Filtrar</button>
       <button style="background:#888;" onclick="limpiarFiltros()">Limpiar</button>
     </div>
     <table>

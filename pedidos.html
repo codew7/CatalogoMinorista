@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pedido | HomePoint</title>
+  <link rel="icon" href="faviconnegro.png" type="image/png">
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -276,14 +277,31 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
         despachadoEntregadoBtn.style.opacity = despachadoEntregadoBtn.disabled ? '0.5' : '1';
       }
       actualizarBotonDespachado();
-      despachadoEntregadoBtn.onclick = null;
-      despachadoEntregadoBtn.onclick = () => {
+      // Asignar SOLO este onclick, sin sobrescribirlo después
+      despachadoEntregadoBtn.onclick = async () => {
+        if (pedidoActual.status === 'CANCELADO') return;
         if (despachadoEntregadoBtn.disabled) return;
         despachadoEntregadoBtn.disabled = true;
-        // Solo permite marcar como DESPACHADO/ENTREGADO, nunca volver a ABIERTO
-        pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true })
-          .catch(() => alert('Error al despachar/entregar el pedido'))
-          .finally(() => { actualizarBotonDespachado(); });
+        try {
+          if (pedidoActual.movimientosRegistrados) {
+            await pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true });
+            alert('Pedido marcado como DESPACHADO/ENTREGADO. (Movimientos ya registrados)');
+            return;
+          }
+          // 1. Actualizar el pedido (status y locked)
+          await pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true });
+          // 2. Registrar movimientos de salida leyendo el pedido actualizado
+          await registrarMovimientoSalidaDesdePedido(pedidoActual.id);
+          // 3. Marcar que ya se registraron movimientos
+          await pedidoRef.update({ movimientosRegistrados: true });
+          alert('Pedido despachado y movimientos registrados correctamente.');
+        } catch (err) {
+          await pedidoRef.update({ status: 'ABIERTO', locked: false });
+          alert('Error al registrar movimientos de salida: ' + (err.message || err));
+          console.error('Error al registrar movimientos:', err);
+        } finally {
+          despachadoEntregadoBtn.disabled = false;
+        }
       };
     }
     // Mostrar estado
@@ -819,21 +837,61 @@ if (admin) {
   }
   actualizarBotonDespachado();
 
-  despachadoEntregadoBtn.onclick = () => {
+  despachadoEntregadoBtn.onclick = async () => {
     if (pedidoActual.status === 'CANCELADO') return;
+    if (despachadoEntregadoBtn.disabled) return;
     despachadoEntregadoBtn.disabled = true;
-    if (pedidoActual.status === 'DESPACHADO/ENTREGADO') {
-      // Desbloquear y volver a ABIERTO
-      pedidoRef.update({ status: 'ABIERTO', locked: false })
-        .catch(() => alert('Error al desbloquear el pedido'))
-        .finally(() => { despachadoEntregadoBtn.disabled = false; });
-    } else {
-      // Marcar como despachado/entregado y bloquear
-      pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true })
-        .catch(() => alert('Error al despachar/entregar el pedido'))
-        .finally(() => { despachadoEntregadoBtn.disabled = false; });
+    try {
+      if (pedidoActual.movimientosRegistrados) {
+        await pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true });
+        alert('Pedido marcado como DESPACHADO/ENTREGADO. (Movimientos ya registrados)');
+        return;
+      }
+      // 1. Actualizar el pedido (status y locked)
+      await pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true });
+      // 2. Registrar movimientos de salida leyendo el pedido actualizado
+      await registrarMovimientoSalidaDesdePedido(pedidoActual.id);
+      // 3. Marcar que ya se registraron movimientos
+      await pedidoRef.update({ movimientosRegistrados: true });
+      alert('Pedido despachado y movimientos registrados correctamente.');
+    } catch (err) {
+      await pedidoRef.update({ status: 'ABIERTO', locked: false });
+      alert('Error al registrar movimientos de salida: ' + (err.message || err));
+      console.error('Error al registrar movimientos:', err);
+    } finally {
+      despachadoEntregadoBtn.disabled = false;
     }
   };
+}
+
+// === REGISTRO AUTOMÁTICO DE MOVIMIENTOS DE SALIDA (SÓLO CAMPOS BÁSICOS) ===
+/**
+ * Lee el pedido actualizado y registra todos los artículos como movimientos de salida en Firebase.
+ * @param {string} pedidoId - ID del pedido
+ * @returns {Promise<void>}
+ */
+async function registrarMovimientoSalidaDesdePedido(pedidoId) {
+  const pedidoSnap = await db.ref('pedidos/' + pedidoId).once('value');
+  const pedido = pedidoSnap.val();
+  if (!pedido || !Array.isArray(pedido.items) || !pedido.items.length) throw new Error('No hay artículos para registrar en movimientos.');
+  const movimientosRef = db.ref('movimientos');
+  const timestamp = Date.now();
+  const updates = {};
+  for (const it of pedido.items) {
+    const nombre = it.nombre || '';
+    const cantidad = it.cantidad || 0;
+    if (!nombre) continue; // No registrar si no hay nombre
+    const key = movimientosRef.push().key;
+    updates[key] = {
+      timestamp,
+      pedidoId,
+      nombre,
+      cantidad,
+      tipo: 'SALIDA'
+    };
+  }
+  if (Object.keys(updates).length === 0) throw new Error('No hay artículos válidos para registrar en movimientos.');
+  await movimientosRef.update(updates);
 }
 
 // Lista de emails de administradores

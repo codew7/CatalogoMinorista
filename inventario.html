@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Inventario</title>
+  <link rel="icon" href="faviconnegro.png" type="image/png">
+  <!-- Firebase Auth Check -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="config.js"></script>
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (!user) {
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+      }
+    });
+    const db = firebase.database();
+  </script>
+  <!-- Fin Firebase Auth Check -->
+  
+  <style>
+    :root {
+      --primary: #ffe066;
+      --secondary: #fff9db;
+      --accent: #ffd43b;
+      --pastel1: #f8edeb;
+      --pastel2: #e0d6d4;
+      --pastel3: #fae697;
+      --success: #38b000;
+      --danger: #e63946;
+      --text: #333;
+      --border: #ffe066;
+      --shadow: 0 2px 8px rgba(255, 213, 59, 0.267);
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--secondary);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: linear-gradient(90deg, var(--primary), var(--pastel1));
+      padding: 1.5rem 1rem 1.5rem 1rem;
+      box-shadow: #5c5866 0px 2px 8px 0px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.2rem;
+      color: #b68900;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    main {
+      flex: 1;
+      max-width: 1200px;
+      margin: 2rem auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 2rem 1.5rem 2.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+    /* Sección de Ingreso */
+    .ingreso-section {
+      background: var(--pastel1);
+      border-radius: 12px;
+      padding: 1.5rem 1rem 1.5rem 1rem;
+      box-shadow: 0 1px 4px #ffe06644;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      align-items: stretch;
+    }
+    .ingreso-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 1rem;
+      align-items: center;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 180px;
+      min-width: 150px;
+    }
+    label {
+      font-weight: 500;
+      margin-bottom: 0.3rem;
+      color: #b68900;
+    }
+    select, input[type="number"], input[readonly], input[type="text"] {
+      padding: 0.5rem 0.7rem;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 1rem;
+      background: var(--pastel2);
+      transition: border 0.2s;
+    }
+    select:focus, input:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+    .btn-agregar {
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      color: #b68900;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 2.2rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #ffd43b33;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .btn-agregar:hover {
+      background: linear-gradient(90deg, #ffe066, #ffe066cc);
+    }
+    .feedback {
+      margin-top: 0.5rem;
+      font-size: 1.5rem;
+      min-height: 1.2em;
+      transition: color 0.2s;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .feedback.success {
+      color: var(--success);
+    }
+    .feedback.error {
+      color: var(--danger);
+    }
+    /* Tabla de Movimientos */
+    .tabla-section {
+      min-width: 1100px;
+      background: var(--pastel2);
+      border-radius: 12px;
+      padding: 1.5rem 1rem;
+      box-shadow: 0 1px 4px #ffe06633;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    .tabla-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .search-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .search-group input {
+      padding: 0.5rem 0.7rem;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 1rem;
+      background: #fff;
+      min-width: 300px;
+    }
+    .search-group select {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 1rem;
+      padding: 0.5rem 0.7rem;
+    }
+    .tabla-movimientos {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px #ffd43b22;
+      font-size: 0.98rem;
+    }
+    .tabla-movimientos th, .tabla-movimientos td {
+      padding: 0.7rem 0.5rem;
+      text-align: left;
+    }
+    .tabla-movimientos th {
+      background: var(--primary);
+      color: #b68900;
+      font-weight: 600;
+      border-bottom: 2px solid var(--accent);
+    }
+    .tabla-movimientos tbody tr {
+      transition: background 0.2s;
+    }
+    .tabla-movimientos tbody tr:hover {
+      background: var(--pastel3);
+    }
+    .entrada {
+      color: var(--success);
+      font-weight: bold;
+    }
+    .salida {
+      color: var(--danger);
+      font-weight: bold;
+    }
+    .acciones-btns {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-accion {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.3rem 0.5rem;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+    .btn-accion:hover {
+      background: var(--primary);
+    }
+    .paginacion {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+    .paginacion button {
+      background: var(--primary);
+      border: none;
+      border-radius: 5px;
+      padding: 0.4rem 0.9rem;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #b68900;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .paginacion button.active, .paginacion button:hover {
+      background: var(--accent);
+    }
+    @media (max-width: 700px) {
+      main {
+        padding: 1rem 0.2rem;
+      }
+      .ingreso-form, .tabla-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .tabla-movimientos th, .tabla-movimientos td {
+        font-size: 0.93rem;
+        padding: 0.5rem 0.2rem;
+      }
+    }
+    @media (max-width: 500px) {
+      header h1 {
+        font-size: 1.3rem;
+      }
+      main {
+        padding: 0.5rem 0.1rem;
+      }
+    }
+    /* Animaciones */
+    .fade-in {
+      animation: fadeIn 0.7s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: none; }
+    }
+    .loading {
+      color: #b68900;
+      font-style: italic;
+      font-size: 1.1rem;
+      margin: 1rem 0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📋 Gestión de Inventario 📊</h1>
+  </header>
+  <main>
+    <!-- SECCIÓN 1: Ingreso de Stock -->
+    <section class="ingreso-section fade-in">
+      <form class="ingreso-form" id="formIngreso" style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto auto;gap:1rem;align-items:center;">
+        <div class="form-group" style="grid-column:1;grid-row:1;">
+          <label for="producto">Articulo</label>
+          <select id="producto" required>
+            <option value="">Cargando productos...</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:2;grid-row:1;">
+          <label for="cantidad">Cantidad</label>
+          <input type="number" id="cantidad" min="1" required placeholder="Cantidad" />
+        </div>
+        <div class="form-group" style="grid-column:3;grid-row:1/span 3;justify-self:center;align-self:center;">
+          <label style="visibility:hidden;">Imagen</label>
+          <img id="imgArticulo" src="" alt="Imagen artículo" style="width:180px;height:180px;object-fit:cover;border-radius:16px;border:1.5px solid var(--border);background:#fff;display:none;" />
+        </div>
+        <div class="form-group" style="grid-column:1;grid-row:2;">
+          <label for="codigo">Código</label>
+          <input type="text" id="codigo" readonly placeholder="Código" />
+        </div>
+        <div class="form-group" style="grid-column:2;grid-row:2;">
+          <label for="valorC">Valor Costo</label>
+          <input type="text" id="valorC" min="0" step="0.01" placeholder="Valor costo" inputmode="numeric" pattern="[0-9.,]*" />
+        </div>
+        <div style="grid-column:1/3;grid-row:3;justify-self:stretch;">
+          <button type="submit" class="btn-agregar" id="btnAgregar" style="width:100%;">➕ Agregar Stock</button>
+        </div>
+      </form>
+      <div class="feedback" id="feedbackIngreso"></div>
+    </section>
+    <!-- SECCIÓN 2: Historial de Movimientos -->
+    <section class="tabla-section fade-in">
+      <div class="tabla-header">
+        <div class="search-group">
+          <label for="busqueda">🔎 Buscar:</label>
+          <input type="text" id="busqueda" placeholder="Nombre o código..." />
+          <select id="tipoFiltro" style="margin-left:10px;">
+            <option value="">Todos</option>
+            <option value="ENTRADA">Entrada</option>
+            <option value="SALIDA">Salida</option>
+          </select>
+        </div>
+        <div>
+          <span style="font-size:1.1rem;">📊 Historial de Movimientos</span>
+        </div>
+      </div>
+      <div id="tablaContainer">
+        <div class="loading">Cargando movimientos...</div>
+      </div>
+      <div class="paginacion" id="paginacion"></div>
+    </section>
+  </main>
+  <!-- Firebase scripts duplicados eliminados -->
+  <script>
+    // Usar firebaseConfig y GOOGLE_SHEETS_CONFIG desde config.js
+
+    // Construir URL de Google Sheets
+    const SHEETS_URL = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`;
+
+    // Variables globales
+    let productos = [];
+    let movimientos = [];
+    let movimientosFiltrados = [];
+    let paginaActual = 1;
+    const MOVS_POR_PAGINA = 10;
+    let editandoId = null;
+
+    // Utilidades
+    function formatearFecha(ts) {
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return 'Fecha inválida';
+      // yyyy-mm-dd HH:MM:SS (24hs)
+      const pad = n => n.toString().padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    function mostrarFeedback(msg, tipo = 'success') {
+      const fb = document.getElementById('feedbackIngreso');
+      fb.textContent = msg;
+      fb.className = 'feedback ' + tipo;
+      setTimeout(() => { fb.textContent = ''; }, 10000);
+    }
+    function mostrarLoadingTabla(msg = 'Cargando movimientos...') {
+      document.getElementById('tablaContainer').innerHTML = `<div class="loading">${msg}</div>`;
+    }
+
+    // Cargar productos desde Google Sheets
+    async function cargarProductos() {
+      try {
+        const res = await fetch(SHEETS_URL);
+        const data = await res.json();
+        let rows = data.values || [];
+        let productosArr = [];
+        // En cargarProductos, obtener la imagen de la columna 1 (índice 1), tomar solo la primera url
+        for (let i = 0; i < rows.length; i++) {
+          let row = rows[i];
+          let codigo = row[2] || '';
+          let nombre = row[3] || '';
+          let valorC = row[7] ? String(row[7]).trim() : '';
+          let imgUrl = '';
+          if (row[1]) {
+            imgUrl = row[1].split(',')[0].trim();
+          }
+          if (codigo && nombre) {
+            productosArr.push({ codigo, nombre, valorC, imgUrl });
+          }
+        }
+        productos = productosArr;
+        const select = document.getElementById('producto');
+        select.innerHTML = '<option value="">Selecciona un producto...</option>';
+        productos.forEach(prod => {
+          select.innerHTML += `<option value="${prod.codigo}" data-nombre="${prod.nombre}" data-codigo="${prod.codigo}" data-valorc="${prod.valorC}" data-imgurl="${prod.imgUrl}">${prod.nombre}</option>`;
+        });
+      } catch (e) {
+        document.getElementById('producto').innerHTML = '<option value="">Error al cargar productos</option>';
+      }
+    }
+
+    // Autocompletar código y valorC al seleccionar producto
+    document.getElementById('producto').addEventListener('change', function() {
+      const opt = this.options[this.selectedIndex];
+      document.getElementById('codigo').value = opt.getAttribute('data-codigo') || '';
+      document.getElementById('valorC').value = opt.getAttribute('data-valorc') || '';
+      const imgUrl = opt.getAttribute('data-imgurl') || '';
+      const img = document.getElementById('imgArticulo');
+      if (imgUrl) {
+        img.src = imgUrl;
+        img.style.display = 'block';
+      } else {
+        img.src = 'no-disponible.png';
+        img.style.display = 'block';
+      }
+    });
+
+    // Validaciones en tiempo real
+    document.getElementById('cantidad').addEventListener('input', function() {
+      if (this.value < 1) this.value = 1;
+    });
+    document.getElementById('valorC').addEventListener('input', function() {
+      if (this.value < 0) this.value = 0;
+    });
+
+    // Registrar movimiento en Firebase
+    async function registrarMovimiento(mov) {
+      const ref = db.ref('movimientos').push();
+      await ref.set(mov);
+    }
+
+    // Manejo de formulario de ingreso
+    document.getElementById('formIngreso').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const productoSel = document.getElementById('producto');
+      const codigo = document.getElementById('codigo').value.trim();
+      const cantidad = parseInt(document.getElementById('cantidad').value);
+      // Al registrar movimiento, guardar valorC como string (o null si vacío)
+      const valorC = document.getElementById('valorC').value === '' ? null : document.getElementById('valorC').value;
+      const nombre = productoSel.options[productoSel.selectedIndex]?.text || '';
+      if (!codigo || !nombre || isNaN(cantidad) || cantidad < 1) {
+        mostrarFeedback('Completa todos los campos correctamente', 'error');
+        return;
+      }
+      const mov = {
+        timestamp: Date.now(),
+        codigo,
+        nombre,
+        cantidad,
+        valorC,
+        tipo: 'ENTRADA'
+      };
+      try {
+        await registrarMovimiento(mov);
+        mostrarFeedback('Stock agregado exitosamente!','success');
+        document.getElementById('formIngreso').reset();
+        document.getElementById('codigo').value = '';
+      } catch (e) {
+        mostrarFeedback('Error al registrar movimiento','error');
+      }
+    });
+
+    // Cargar movimientos desde Firebase
+    function cargarMovimientos() {
+      mostrarLoadingTabla();
+      db.ref('movimientos').on('value', snap => {
+        movimientos = [];
+        snap.forEach(child => {
+          let mov = { ...child.val(), _id: child.key };
+          // Normalizar timestamp: si es string, intentar convertir a número
+          if (typeof mov.timestamp === 'string') {
+            // Si es un número en string
+            if (!isNaN(Number(mov.timestamp))) {
+              mov.timestamp = Number(mov.timestamp);
+            } else {
+              // Si es una fecha en string, convertir a timestamp
+              let d = new Date(mov.timestamp);
+              mov.timestamp = isNaN(d.getTime()) ? 0 : d.getTime();
+            }
+          }
+          movimientos.push(mov);
+        });
+        movimientos.sort((a, b) => b.timestamp - a.timestamp);
+        filtrarMovimientos();
+      });
+    }
+
+    // Filtrar movimientos por búsqueda
+    document.getElementById('busqueda').addEventListener('input', function() {
+      paginaActual = 1;
+      filtrarMovimientos();
+    });
+    document.getElementById('tipoFiltro').addEventListener('change', function() {
+      paginaActual = 1;
+      filtrarMovimientos();
+    });
+    function filtrarMovimientos() {
+      const q = document.getElementById('busqueda').value.trim().toLowerCase();
+      const tipo = document.getElementById('tipoFiltro').value;
+      movimientosFiltrados = movimientos.filter(m => {
+        const coincideBusqueda = m.nombre.toLowerCase().includes(q) || m.codigo.toLowerCase().includes(q);
+        const coincideTipo = !tipo || m.tipo === tipo;
+        return coincideBusqueda && coincideTipo;
+      });
+      renderTabla();
+    }
+
+    // Renderizar tabla de movimientos
+    function renderTabla() {
+      const cont = document.getElementById('tablaContainer');
+      if (!movimientosFiltrados.length) {
+        cont.innerHTML = '<div class="loading">No hay movimientos registrados.</div>';
+        document.getElementById('paginacion').innerHTML = '';
+        return;
+      }
+      // Paginación
+      const total = movimientosFiltrados.length;
+      const totalPaginas = Math.ceil(total / MOVS_POR_PAGINA);
+      if (paginaActual > totalPaginas) paginaActual = totalPaginas;
+      const ini = (paginaActual - 1) * MOVS_POR_PAGINA;
+      const fin = ini + MOVS_POR_PAGINA;
+      const pageMovs = movimientosFiltrados.slice(ini, fin);
+      let html = `<table class="tabla-movimientos">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Tipo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>`;
+      pageMovs.forEach(mov => {
+        html += `<tr>
+          <td>${formatearFecha(mov.timestamp)}</td>
+          <td>${mov.codigo}</td>
+          <td>${mov.nombre}</td>
+          <td>${mov.cantidad}</td>
+          <td class="${mov.tipo === 'ENTRADA' ? 'entrada' : 'salida'}">${mov.tipo === 'ENTRADA' ? '🟢 ENTRADA' : '🔴 SALIDA'}</td>
+          <td>
+            <div class="acciones-btns">
+              <button class="btn-accion" title="Modificar" onclick="editarMovimiento('${mov._id}')">✏️</button>
+              <button class="btn-accion" title="Eliminar" onclick="eliminarMovimiento('${mov._id}')">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      cont.innerHTML = html;
+      // Paginación
+      let pagHtml = '';
+      for (let i = 1; i <= totalPaginas; i++) {
+        pagHtml += `<button class="${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`;
+      }
+      document.getElementById('paginacion').innerHTML = pagHtml;
+    }
+    window.cambiarPagina = function(pag) {
+      paginaActual = pag;
+      renderTabla();
+    }
+
+    // Eliminar movimiento
+    window.eliminarMovimiento = function(id) {
+      if (!confirm('¿Seguro que deseas eliminar este movimiento?')) return;
+      db.ref('movimientos/' + id).remove();
+      mostrarFeedback('Movimiento eliminado','success');
+    }
+
+    // Editar movimiento (modal inline)
+    window.editarMovimiento = function(id) {
+      const mov = movimientos.find(m => m._id === id);
+      if (!mov) return;
+      const nuevaCantidad = prompt('Editar cantidad:', mov.cantidad);
+      if (nuevaCantidad === null) return;
+      const cantidadNum = parseInt(nuevaCantidad);
+      if (isNaN(cantidadNum) || cantidadNum < 1) {
+        mostrarFeedback('Cantidad inválida','error');
+        return;
+      }
+      db.ref('movimientos/' + id).update({ cantidad: cantidadNum });
+      mostrarFeedback('Movimiento modificado','success');
+    }
+
+    // Inicialización
+    cargarProductos();
+    cargarMovimientos();
+  </script>
+</body>
+</html>

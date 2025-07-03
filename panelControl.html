@@ -55,7 +55,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 3rem;
+            gap: 1rem;
         }
 
         /* Header Section */
@@ -64,22 +64,11 @@
             margin-bottom: 1rem;
         }
 
-        .logo-container {
-            margin-bottom: 2rem;
-            position: relative;
-        }
 
         .logo {
-            width: 120px;
+            width: 200px;
             height: auto;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
 
-        .logo:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: var(--shadow-xl);
         }
 
         .title {
@@ -106,14 +95,9 @@
             max-width: 800px;
             margin-bottom: 2rem;
         }
-
         .nav-grid .row-2 {
             grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-            max-width: 520px;
-            margin: 0 auto;
+            display: contents;
         }
 
         /* Navigation Cards */
@@ -203,6 +187,28 @@
         .nav-card.secondary .nav-card-title,
         .nav-card.secondary .nav-card-description {
             color: var(--white);
+        }
+
+        .nav-card.inventory {
+            background: linear-gradient(135deg, #FFD600 0%, #FFF59D 100%);
+            color: var(--gray-800);
+            border: none;
+        }
+
+        .nav-card.inventory .nav-card-title,
+        .nav-card.inventory .nav-card-description {
+            color: var(--gray-800);
+        }
+
+        .nav-card.gray {
+            background: linear-gradient(135deg, var(--gray-300) 0%, var(--gray-100) 100%);
+            color: var(--gray-800);
+            border: none;
+        }
+
+        .nav-card.gray .nav-card-title,
+        .nav-card.gray .nav-card-description {
+            color: var(--gray-800);
         }
 
         /* Footer */
@@ -361,7 +367,7 @@
                 <p class="nav-card-description">Crear nuevos pedidos</p>
             </a>
 
-            <a href="historialPedidos.html" class="nav-card" tabindex="0" target="_blank">
+            <a href="historialPedidos.html" class="nav-card gray" tabindex="0" target="_blank">
                 <span class="nav-card-icon">📋</span>
                 <h2 class="nav-card-title">Historial</h2>
                 <p class="nav-card-description">Consultar pedidos anteriores</p>
@@ -373,8 +379,14 @@
                 <p class="nav-card-description">Gestión de pedidos web</p>
             </a>
 
-            <!-- Segunda fila - 2 botones centrados -->
+            <!-- Segunda fila - 3 botones alineados -->
             <div class="row-2">
+                <a href="consultaStock.html" class="nav-card inventory" tabindex="0" target="_blank">
+                    <span class="nav-card-icon">📋</span>
+                    <h2 class="nav-card-title">Inventario</h2>
+                    <p class="nav-card-description">Gestión y control de stock</p>
+                </a>
+
                 <a href="index.html" class="nav-card" tabindex="0" target="_blank">
                     <span class="nav-card-icon">🛍️</span>
                     <h2 class="nav-card-title">Catálogo Minorista</h2>
