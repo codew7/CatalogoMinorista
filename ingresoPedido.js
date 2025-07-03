@@ -119,9 +119,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let valorCRaw = art[7] || '0';
         valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
         const valorC = parseInt(valorCRaw) || 0;
-        if (item.valorU !== valorU || item.valorC !== valorC) {
+        // Nuevo: categoria desde columna A (índice 0)
+        const categoria = art[0] || '';
+        if (item.valorU !== valorU || item.valorC !== valorC || item.categoria !== categoria) {
           item.valorU = valorU;
           item.valorC = valorC;
+          item.categoria = categoria;
           row.querySelector('.valorU').value = valorU;
           row.querySelector('.valorTotal').textContent = (item.cantidad * valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
         }
@@ -191,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   addItemBtn.addEventListener('click', function() {
-    items.push({ codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0 }); // valorC inicializado
+    items.push({ codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '' }); // valorC y categoria inicializados
     renderItems();
   });
 
@@ -206,6 +209,10 @@ document.addEventListener('DOMContentLoaded', function() {
     items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
     let valorUraw = row.querySelector('.valorU').value.replace(/,/g, '');
     items[idx].valorU = parseInt(valorUraw) || 0;
+    // Actualizar categoria si corresponde
+    if (items[idx].nombre && articulosPorNombre[items[idx].nombre]) {
+      items[idx].categoria = articulosPorNombre[items[idx].nombre][0] || '';
+    }
     row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
     subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
     calcularTotalFinal();
@@ -342,6 +349,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (typeof item.valorC === 'undefined' || item.valorC === null) {
         item.valorC = 0;
       }
+      // Asegurar que categoria nunca sea undefined
+      if (typeof item.categoria === 'undefined' || item.categoria === null) {
+        if (item.nombre && articulosPorNombre[item.nombre]) {
+          item.categoria = articulosPorNombre[item.nombre][0] || '';
+        } else {
+          item.categoria = '';
+        }
+      }
     }
     // Obtener cotización blue en tiempo real
     fetch('https://api.bluelytics.com.ar/v2/latest')
@@ -368,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
           locked: false,
           adminViewed: true,
           cliente: { nombre, telefono, direccion, dni, email, tipoCliente },
-          items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
+          items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria })),
           pagos: {
             medioPago,
             recargo,
@@ -620,6 +635,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof item.valorC === 'undefined' || item.valorC === null) {
           item.valorC = 0;
         }
+        // Asegurar que categoria nunca sea undefined y siempre actualizada
+        if (item.nombre && articulosPorNombre[item.nombre]) {
+          item.categoria = articulosPorNombre[item.nombre][0] || '';
+        } else {
+          item.categoria = '';
+        }
       }
       // Procesar y guardar subtotal y total como enteros (solo dígitos)
       function onlyDigits(str) {
@@ -648,7 +669,7 @@ document.addEventListener('DOMContentLoaded', function() {
             locked: false,
             adminViewed: true,
             cliente: { nombre: form.nombre.value.trim(), telefono: form.telefono.value.trim(), direccion: form.direccion.value.trim(), dni: form.dni.value.trim(), email: form.email.value.trim().toLowerCase(), tipoCliente: document.querySelector('input[name="tipoCliente"]:checked')?.value || '' },
-            items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC })),
+            items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria })),
             pagos: {
               medioPago: form.medioPago.value,
               recargo,

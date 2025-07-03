@@ -288,11 +288,31 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             alert('Pedido marcado como DESPACHADO/ENTREGADO. (Movimientos ya registrados)');
             return;
           }
-          // 1. Actualizar el pedido (status y locked)
-          await pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true });
-          // 2. Registrar movimientos de salida leyendo el pedido actualizado
+          // === NUEVO: Actualizar valorC de cada artículo usando el código ===
+          // 1. Obtener los datos de la hoja
+          const sheetResp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`);
+          const sheetData = await sheetResp.json();
+          const sheetRows = sheetData.values || [];
+          // 2. Crear un mapa codigo -> valorC
+          const mapValorC = {};
+          sheetRows.forEach(row => {
+            if (row[2] && row[7]) mapValorC[row[2]] = row[7];
+          });
+          // 3. Reescribir SIEMPRE valorC de cada item del pedido usando el código
+          if (Array.isArray(pedidoActual.items)) {
+            pedidoActual.items.forEach(it => {
+              it.valorC = mapValorC[it.codigo] || '';
+            });
+          }
+          // 4. Actualizar el pedido en Firebase con los nuevos items y status
+          await pedidoRef.update({
+            items: pedidoActual.items,
+            status: 'DESPACHADO/ENTREGADO',
+            locked: true
+          });
+          // 5. Registrar movimientos de salida leyendo el pedido actualizado
           await registrarMovimientoSalidaDesdePedido(pedidoActual.id);
-          // 3. Marcar que ya se registraron movimientos
+          // 6. Marcar que ya se registraron movimientos
           await pedidoRef.update({ movimientosRegistrados: true });
           alert('Pedido despachado y movimientos registrados correctamente.');
         } catch (err) {
@@ -368,6 +388,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     const tbl = document.createElement('table');
     tbl.innerHTML = `
       <tr>
+        <th>Código</th>
         <th>Artículo</th>
         <th class="cant">Cant</th>
         <th>Valor</th>
@@ -385,8 +406,12 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
 
       const row = tbl.insertRow(-1);
 
+      /* 0) CÓDIGO */
+      const codigoCell = row.insertCell(0);
+      codigoCell.textContent = it.codigo || '';
+
       /* 1) NOMBRE clickeable → abre lightbox */
-      const nameCell = row.insertCell(0);
+      const nameCell = row.insertCell(1);
       const nameSpan = document.createElement('span');
       nameSpan.textContent  = it.nombre;
       nameSpan.style.cursor = 'pointer';
@@ -394,7 +419,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       nameCell.appendChild(nameSpan);
 
       /* 2) INPUT cantidad */
-      const qtyCell = row.insertCell(1);
+      const qtyCell = row.insertCell(2);
       qtyCell.className = 'cant';
       const qty = document.createElement('input');
       qty.type  = 'number';
@@ -410,13 +435,13 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       qtyCell.appendChild(qty);
 
       /* 3) valor unitario $ */
-      row.insertCell(2).textContent = unitPesos.toLocaleString('es-AR');
+      row.insertCell(3).textContent = unitPesos.toLocaleString('es-AR');
 
       /* 4) subtotal $ */
-      row.insertCell(3).textContent = subtotal.toLocaleString('es-AR');
+      row.insertCell(4).textContent = subtotal.toLocaleString('es-AR');
 
       /* 5) botón eliminar */
-      const delCell = row.insertCell(4);
+      const delCell = row.insertCell(5);
       delCell.className = 'elim';
       const del = document.createElement('button');
       del.textContent = 'X';
@@ -603,7 +628,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       .then(()=>alert("Pedido cerrado"));
   };
 
-  document.getElementById('reabrirBtn').onclick = () => {
+  document.getElementById('reabrirBtn').onclick = async () => {
   if (!admin || !pedidoActual.locked) return;            // solo admin y pedido cerrado
   if (!confirm("¿Querés reabrir este pedido?")) return;
   // Determinar quién modifica
@@ -613,12 +638,25 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     lastModifiedBy = 'admin';
     lastModifiedEmail = firebase.auth().currentUser.email || '';
   }
-  pedidoRef.update({ locked:false, status: 'ABIERTO', lastModifiedBy, lastModifiedEmail })
-    .then(() => alert("Pedido reabierto"))
-    .catch(() => alert("Error al reabrir"));
-  };
+  try {
+    await pedidoRef.update({ locked:false, status: 'ABIERTO', lastModifiedBy, lastModifiedEmail, movimientosRegistrados: false });
+    // Eliminar movimientos relacionados a este pedido
+    const movimientosSnap = await db.ref('movimientos').orderByChild('pedidoId').equalTo(pedidoActual.id).once('value');
+    const movimientos = movimientosSnap.val();
+    if (movimientos) {
+      const updates = {};
+      Object.keys(movimientos).forEach(key => {
+        updates[key] = null;
+      });
+      await db.ref('movimientos').update(updates);
+    }
+    alert("Pedido reabierto y movimientos eliminados.");
+  } catch (e) {
+    alert("Error al reabrir o eliminar movimientos");
+  }
+};
 
-  document.getElementById('cancelarBtn').onclick = () => {
+  document.getElementById('cancelarBtn').onclick = async () => {
   if (pedidoActual.locked || pedidoActual.status === 'CANCELADO') return; // bloqueado si cerrado o ya cancelado
   if (!confirm("¿Seguro que desea cancelar el pedido? Esta acción es IRREVERSIBLE y el pedido no podrá ser modificado ni reactivado.")) return;
   // Determinar quién modifica
@@ -628,11 +666,22 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     lastModifiedBy = 'admin';
     lastModifiedEmail = firebase.auth().currentUser.email || '';
   }
-  pedidoRef.update({ status: 'CANCELADO', locked: true, lastModifiedBy, lastModifiedEmail })
-    .then(() => {
-      alert("Pedido cancelado. Ya no podrá ser modificado.");
-    })
-    .catch(() => alert("Error al cancelar"));
+  try {
+    await pedidoRef.update({ status: 'CANCELADO', locked: true, lastModifiedBy, lastModifiedEmail, movimientosRegistrados: false });
+    // Eliminar movimientos relacionados a este pedido
+    const movimientosSnap = await db.ref('movimientos').orderByChild('pedidoId').equalTo(pedidoActual.id).once('value');
+    const movimientos = movimientosSnap.val();
+    if (movimientos) {
+      const updates = {};
+      Object.keys(movimientos).forEach(key => {
+        updates[key] = null;
+      });
+      await db.ref('movimientos').update(updates);
+    }
+    alert("Pedido cancelado. Ya no podrá ser modificado. Los movimientos asociados han sido eliminados.");
+  } catch (e) {
+    alert("Error al cancelar o eliminar movimientos");
+  }
 };
 
 
@@ -847,11 +896,31 @@ if (admin) {
         alert('Pedido marcado como DESPACHADO/ENTREGADO. (Movimientos ya registrados)');
         return;
       }
-      // 1. Actualizar el pedido (status y locked)
-      await pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true });
-      // 2. Registrar movimientos de salida leyendo el pedido actualizado
+      // === NUEVO: Actualizar valorC de cada artículo usando el código ===
+      // 1. Obtener los datos de la hoja
+      const sheetResp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`);
+      const sheetData = await sheetResp.json();
+      const sheetRows = sheetData.values || [];
+      // 2. Crear un mapa codigo -> valorC
+      const mapValorC = {};
+      sheetRows.forEach(row => {
+        if (row[2] && row[7]) mapValorC[row[2]] = row[7];
+      });
+      // 3. Reescribir SIEMPRE valorC de cada item del pedido usando el código
+      if (Array.isArray(pedidoActual.items)) {
+        pedidoActual.items.forEach(it => {
+          it.valorC = mapValorC[it.codigo] || '';
+        });
+      }
+      // 4. Actualizar el pedido en Firebase con los nuevos items y status
+      await pedidoRef.update({
+        items: pedidoActual.items,
+        status: 'DESPACHADO/ENTREGADO',
+        locked: true
+      });
+      // 5. Registrar movimientos de salida leyendo el pedido actualizado
       await registrarMovimientoSalidaDesdePedido(pedidoActual.id);
-      // 3. Marcar que ya se registraron movimientos
+      // 6. Marcar que ya se registraron movimientos
       await pedidoRef.update({ movimientosRegistrados: true });
       alert('Pedido despachado y movimientos registrados correctamente.');
     } catch (err) {
@@ -880,6 +949,7 @@ async function registrarMovimientoSalidaDesdePedido(pedidoId) {
   for (const it of pedido.items) {
     const nombre = it.nombre || '';
     const cantidad = it.cantidad || 0;
+    const codigo = it.codigo || '';
     if (!nombre) continue; // No registrar si no hay nombre
     const key = movimientosRef.push().key;
     updates[key] = {
@@ -887,6 +957,7 @@ async function registrarMovimientoSalidaDesdePedido(pedidoId) {
       pedidoId,
       nombre,
       cantidad,
+      codigo,
       tipo: 'SALIDA'
     };
   }

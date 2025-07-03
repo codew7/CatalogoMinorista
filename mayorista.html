@@ -574,146 +574,149 @@
             grid.innerHTML = '';
 
             data.forEach(item => {
-            const card = document.createElement('div');
-            card.classList.add('card');
+                const card = document.createElement('div');
+                card.classList.add('card');
 
-            const articulo = document.createElement('h3');
-            articulo.textContent = item[3];
-            card.appendChild(articulo);
+                const articulo = document.createElement('h3');
+                articulo.textContent = item[3];
+                card.appendChild(articulo);
 
-            if (isValidImageUrl(item[1])) {
-                let imageUrls = [];
-                if (item[1].indexOf(',') !== -1) {
-                imageUrls = item[1].split(',').map(url => url.trim());
-                } else {
-                imageUrls.push(item[1]);
+                if (isValidImageUrl(item[1])) {
+                    let imageUrls = [];
+                    if (item[1].indexOf(',') !== -1) {
+                    imageUrls = item[1].split(',').map(url => url.trim());
+                    } else {
+                    imageUrls.push(item[1]);
+                    }
+                    
+                    const img = document.createElement('img');
+                    img.src = imageUrls[0];
+                    img.loading = 'lazy'; // Agregar lazy loading
+                    img.onerror = function() {
+                        this.src = 'no-disponible.png'; // Imagen de respaldo
+                    };
+                    img.addEventListener('click', () => {
+                        abrirLightbox(imageUrls);
+                    });
+                    card.appendChild(img);
                 }
-                
-                const img = document.createElement('img');
-                img.src = imageUrls[0];
-                img.loading = 'lazy'; // Agregar lazy loading
-                img.onerror = function() {
-                    this.src = 'no-disponible.png'; // Imagen de respaldo
-                };
-                img.addEventListener('click', () => {
-                    abrirLightbox(imageUrls);
+
+                const info = document.createElement('div');
+                info.classList.add('info');
+                info.textContent = `Código: ${item[2]}`;
+                card.appendChild(info);
+
+                if (ITEMPESOS == "6") {
+                    const valorUSD = document.createElement('p');
+                    valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[5]}`;
+                    card.appendChild(valorUSD);
+                }
+
+                const valorPesos = document.createElement('p');
+                valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
+                card.appendChild(valorPesos);
+
+                // Contenedor para el selector de cantidad y el botón
+                const actionContainer = document.createElement('div');
+                actionContainer.style.display = 'flex';
+                actionContainer.style.alignItems = 'center';
+                actionContainer.style.justifyContent = 'center';
+                actionContainer.style.gap = '10px';
+
+                // Selector de cantidad
+                const cantidadSelector = document.createElement('input');
+                cantidadSelector.type = 'number';
+                cantidadSelector.min = '1';
+                cantidadSelector.value = ''; // Por defecto vacío
+                cantidadSelector.style.width = '35px';
+                cantidadSelector.style.height = '35px';
+                cantidadSelector.style.padding = '5px';
+                actionContainer.appendChild(cantidadSelector);
+
+                // Evento para actualizar la cantidad en el carrito al cambiar el selector
+                cantidadSelector.addEventListener('change', () => {
+                    const nuevaCantidad = parseInt(cantidadSelector.value);
+                    if (!isNaN(nuevaCantidad) && nuevaCantidad > 0) {
+                        const existe = carrito.find(item => item.nombre === articulo.textContent); // Usar el nombre del artículo
+                        if (existe) {
+                            existe.cantidad = nuevaCantidad; // Actualizar la cantidad en el carrito
+                            actualizarCarrito(); // Refrescar el carrito
+                        }
+                    }
                 });
-                card.appendChild(img);
-            }
 
-            const info = document.createElement('div');
-            info.classList.add('info');
-            info.textContent = `Código: ${item[2]}`;
-            card.appendChild(info);
-
-            if (ITEMPESOS == "6") {
-                const valorUSD = document.createElement('p');
-                valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[5]}`;
-                card.appendChild(valorUSD);
-            }
-
-            const valorPesos = document.createElement('p');
-            valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
-            card.appendChild(valorPesos);
-
-            // Contenedor para el selector de cantidad y el botón
-            const actionContainer = document.createElement('div');
-            actionContainer.style.display = 'flex';
-            actionContainer.style.alignItems = 'center';
-            actionContainer.style.justifyContent = 'center';
-            actionContainer.style.gap = '10px';
-
-            // Selector de cantidad
-            const cantidadSelector = document.createElement('input');
-            cantidadSelector.type = 'number';
-            cantidadSelector.min = '1';
-            cantidadSelector.value = ''; // Por defecto vacío
-            cantidadSelector.style.width = '35px';
-            cantidadSelector.style.height = '35px';
-            cantidadSelector.style.padding = '5px';
-            actionContainer.appendChild(cantidadSelector);
-
-            // Evento para actualizar la cantidad en el carrito al cambiar el selector
-            cantidadSelector.addEventListener('change', () => {
-                const nuevaCantidad = parseInt(cantidadSelector.value);
-                if (!isNaN(nuevaCantidad) && nuevaCantidad > 0) {
-                    const existe = carrito.find(item => item.nombre === articulo.textContent); // Usar el nombre del artículo
-                    if (existe) {
-                        existe.cantidad = nuevaCantidad; // Actualizar la cantidad en el carrito
-                        actualizarCarrito(); // Refrescar el carrito
+                // Botón para agregar el artículo al carrito
+                const btnAgregar = document.createElement('button');
+                btnAgregar.innerHTML = '<i class="fas fa-cart-plus"></i>';
+                btnAgregar.style.padding = '10px 10px';  // Aumenta el espacio interno
+                btnAgregar.style.fontSize = '16px';     // Aumenta el tamaño del texto
+                btnAgregar.style.height = '50px';       // Ajusta la altura
+                btnAgregar.style.width = '50px';        // Ajusta el ancho
+                btnAgregar.classList.add('btn-agregar-carrito');
+                // Función para actualizar el color del botón según la cantidad
+                function actualizarColorBoton() {
+                    const existe = carrito.find(item => item.nombre === articulo.textContent);
+                    let cantidad = 0;
+                    // Si el selector está vacío o en blanco, cantidad = 0
+                    if (cantidadSelector.value === '' || cantidadSelector.value === null) {
+                        cantidad = 0;
+                    } else if (existe) {
+                        cantidad = existe.cantidad;
+                    } else if (!isNaN(parseInt(cantidadSelector.value))) {
+                        cantidad = parseInt(cantidadSelector.value);
+                    }
+                    if (cantidad > 0) {
+                        btnAgregar.style.background = '#ff9800';
+                        btnAgregar.style.color = '#fff';
+                        btnAgregar.style.border = '1px solid #ff9800';
+                    } else {
+                        btnAgregar.style.background = '';
+                        btnAgregar.style.color = '';
+                        btnAgregar.style.border = '';
                     }
                 }
-            });
-
-            // Botón para agregar el artículo al carrito
-            const btnAgregar = document.createElement('button');
-            btnAgregar.innerHTML = '<i class="fas fa-cart-plus"></i>';
-            btnAgregar.style.padding = '10px 10px';  // Aumenta el espacio interno
-            btnAgregar.style.fontSize = '16px';     // Aumenta el tamaño del texto
-            btnAgregar.style.height = '50px';       // Ajusta la altura
-            btnAgregar.style.width = '50px';        // Ajusta el ancho
-            btnAgregar.classList.add('btn-agregar-carrito');
-            // Función para actualizar el color del botón según la cantidad
-            function actualizarColorBoton() {
-                const existe = carrito.find(item => item.nombre === articulo.textContent);
-                let cantidad = 0;
-                // Si el selector está vacío o en blanco, cantidad = 0
-                if (cantidadSelector.value === '' || cantidadSelector.value === null) {
-                    cantidad = 0;
-                } else if (existe) {
-                    cantidad = existe.cantidad;
-                } else if (!isNaN(parseInt(cantidadSelector.value))) {
-                    cantidad = parseInt(cantidadSelector.value);
-                }
-                if (cantidad > 0) {
-                    btnAgregar.style.background = '#ff9800';
-                    btnAgregar.style.color = '#fff';
-                    btnAgregar.style.border = '1px solid #ff9800';
-                } else {
-                    btnAgregar.style.background = '';
-                    btnAgregar.style.color = '';
-                    btnAgregar.style.border = '';
-                }
-            }
-            btnAgregar.addEventListener('click', () => {
-                let cantidad = parseInt(cantidadSelector.value);
-                if (isNaN(cantidad) || cantidad <= 0) {
-                    cantidad = 1;
-                    cantidadSelector.value = '1';
-                }
-                const existe = carrito.find(item => item.nombre === articulo.textContent);
-                if (existe) {
-                    existe.cantidad = cantidad;
-                } else {
-                    agregarAlCarrito(articulo.textContent, item[5], cantidad);
-                }
-                actualizarCarrito();
+                btnAgregar.addEventListener('click', () => {
+                    let cantidad = parseInt(cantidadSelector.value);
+                    if (isNaN(cantidad) || cantidad <= 0) {
+                        cantidad = 1;
+                    } else {
+                        cantidad += 1; // Sumar 1 cada vez que se presiona
+                    }
+                    cantidadSelector.value = cantidad;
+                    const existe = carrito.find(item => item.nombre === articulo.textContent);
+                    if (existe) {
+                        existe.cantidad = cantidad;
+                    } else {
+                        // Aquí se agrega valorC (índice 7)
+                        agregarAlCarrito(articulo.textContent, item[5], cantidad, item[2], item[0], item[7]);
+                    }
+                    actualizarCarrito();
+                    actualizarColorBoton();
+                });
+                cantidadSelector.addEventListener('change', () => {
+                    actualizarColorBoton();
+                });
+                // Al cargar, si ya hay cantidad en el carrito, mostrar naranja
                 actualizarColorBoton();
-            });
-            cantidadSelector.addEventListener('change', () => {
-                actualizarColorBoton();
-            });
-            // Al cargar, si ya hay cantidad en el carrito, mostrar naranja
-            actualizarColorBoton();
 
-            actionContainer.appendChild(btnAgregar);
+                actionContainer.appendChild(btnAgregar);
 
-            card.appendChild(actionContainer);
-            grid.appendChild(card);
-            });
-        }
+                card.appendChild(actionContainer);
+                grid.appendChild(card);
+                });
+}
 
-        function agregarAlCarrito(nombre, precio, cantidad) {
-            const existe = carrito.find(item => item.nombre === nombre);
-            if (existe) {
-                // Si el artículo ya existe, actualizamos la cantidad
-                existe.cantidad += cantidad;
-            } else {
-                // Si no existe, lo agregamos al carrito
-                carrito.push({ nombre, precio, cantidad });
-            }
-            actualizarCarrito();
-        }
+function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria, valorC) {
+    const existe = carrito.find(item => item.nombre === nombre);
+    if (existe) {
+        // Si el artículo ya existe, actualizamos la cantidad
+        existe.cantidad += cantidad;
+    } else {
+        // Si no existe, lo agregamos al carrito, incluyendo valorC
+        carrito.push({ nombre, precio, cantidad, codigo, categoria, valorC });
+    }
+    actualizarCarrito();
+}
 
         function actualizarPaginacion(paginaActual, datos) {
             const pagination = document.getElementById('pagination');
@@ -1039,10 +1042,16 @@ continuarBtn.addEventListener('click', () => {
                                 mostrarMensajePedidoAbierto(pedidoId);
                                 return;
                             }
-                            // ...existing code... (aquí va el resto de la lógica original del click)
-                            // Copiar aquí el código original desde la validación de cliente existente
-                            // ...
-                            // (El resto del código sigue igual)
+                            // --- FLUJO ORIGINAL PARA CLIENTE REGISTRADO ---
+                            const cli = Object.values(snap.val())[0];
+                            nombreInput.value    = cli.nombre    || '';
+                            telefonoInput.value  = cli.telefono  || '';
+                            direccionInput.value = cli.direccion || '';
+                            dniNuevoInput.value  = cli.dni       || '';
+                            emailInput.value     = cli.email     || '';
+                            datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, dni: cli.dni };
+                            modal.style.display = 'none';
+                            enviarPedidoFinal();
                         });
                     } else {
                         // Si no es cliente registrado, continuar lógica normal
@@ -1052,21 +1061,22 @@ continuarBtn.addEventListener('click', () => {
         }
 
         function enviarPedidoFinal() {
-        if (pedidoEnviado) return;  // Si ya se envió, salimos
-        pedidoEnviado = true;
-        
-        if (carrito.length === 0) { alert("El carrito está vacío."); return; }
+    if (pedidoEnviado) return;  // Si ya se envió, salimos
+    pedidoEnviado = true;
+    
+    if (carrito.length === 0) { alert("El carrito está vacío."); return; }
 
-        /* ------------------ NUEVO PEDIDO ------------------ */
-        if (!modoEdicion) {
-            const pedidoRef = db.ref('pedidos').push();
-            const pedidoId  = pedidoRef.key;
+    /* ------------------ NUEVO PEDIDO ------------------ */
+    if (!modoEdicion) {
+        const pedidoRef = db.ref('pedidos').push();
+        const pedidoId  = pedidoRef.key;
 
-            const pedidoObj = {
+        const pedidoObj = {
             id:        pedidoId,
             timestamp: Date.now(),
             locked:    false,
             adminViewed: false,
+            createdby: "web", 
 
             cliente: {
                 nombre:    datosExtraCliente.nombre    || '',
@@ -1077,13 +1087,16 @@ continuarBtn.addEventListener('click', () => {
             },
 
             items: carrito.map(it => ({
-                nombre:   it.nombre,
-                cantidad: it.cantidad,
-                valorUSD: it.precio
+                nombre:    it.nombre,
+                cantidad:  it.cantidad,
+                valorUSD:  it.precio,
+                codigo:    it.codigo || '',
+                categoria: it.categoria || '',
+                valorC:    it.valorC || '' // ← Guardar valorC en Firebase
             }))
-            };
+        };
 
-            pedidoRef.set(pedidoObj).then(() => {
+        pedidoRef.set(pedidoObj).then(() => {
             // Construir mensaje detallado para WhatsApp
             let mensaje = "Hola! Este es mi pedido:%0A";
             mensaje += `https://www.home-point.com.ar/pedidos.html?id=${pedidoId}%0A`;
@@ -1093,54 +1106,57 @@ continuarBtn.addEventListener('click', () => {
             });
             window.open(`${WHATSAPP_URL}&text=${mensaje}`);
             limpiarCarrito();
-            });
-            return;
-        }
+        });
+        return;
+    }
 
-        /* -------------- EDITAR PEDIDO EXISTENTE -------------- */
-        const pedidoRef = db.ref('pedidos/' + pedidoEditId);
+    /* -------------- EDITAR PEDIDO EXISTENTE -------------- */
+    const pedidoRef = db.ref('pedidos/' + pedidoEditId);
 
-        pedidoRef.once('value').then(snap => {
-            const pedido = snap.val();
-            if (!pedido || pedido.locked) { alert("Este pedido no existe o está cerrado."); return; }
+    pedidoRef.once('value').then(snap => {
+        const pedido = snap.val();
+        if (!pedido || pedido.locked) { alert("Este pedido no existe o está cerrado."); return; }
 
-            // fusiono artículos
-            carrito.forEach(sel => {
+        // fusiono artículos
+        carrito.forEach(sel => {
             const idx = pedido.items.findIndex(it => it.nombre === sel.nombre);
             if (idx > -1) {
                 pedido.items[idx].cantidad += sel.cantidad;
             } else {
                 pedido.items.push({
-                nombre:   sel.nombre,
-                cantidad: sel.cantidad,
-                valorUSD: sel.precio
+                    nombre:    sel.nombre,
+                    cantidad:  sel.cantidad,
+                    valorUSD:  sel.precio,
+                    codigo:    sel.codigo || '',
+                    categoria: sel.categoria || '',
+                    valorC:    sel.valorC || '' // ← Guardar valorC también al editar
                 });
             }
-            });
-
-        pedido.cliente = {
-        nombre:    datosExtraCliente.nombre    || pedido.cliente?.nombre    || '',
-        telefono:  datosExtraCliente.telefono  || pedido.cliente?.telefono || '',
-        direccion: datosExtraCliente.direccion || pedido.cliente?.direccion || '',
-        dni:       String(
-                    datosExtraCliente.dni ||
-                    pedido.cliente?.dni    || ''
-                    ),
-        email:     datosExtraCliente.email     || pedido.cliente?.email || ''
-            };
-        return pedidoRef.update({
-        items:   pedido.items,
-        cliente: pedido.cliente,
-        adminViewed: false,
-        lastUpdated: Date.now()
         });
 
-        })
-        .then(() => {
-            alert("Artículos agregados al pedido 👌");
-            window.location.href = `pedidos.html?id=${pedidoEditId}`;
-        })
-        .catch(err => { console.error(err); alert("Error actualizando el pedido"); });
+        pedido.cliente = {
+            nombre:    datosExtraCliente.nombre    || pedido.cliente?.nombre    || '',
+            telefono:  datosExtraCliente.telefono  || pedido.cliente?.telefono || '',
+            direccion: datosExtraCliente.direccion || pedido.cliente?.direccion || '',
+            dni:       String(
+                        datosExtraCliente.dni ||
+                        pedido.cliente?.dni    || ''
+                        ),
+            email:     datosExtraCliente.email     || pedido.cliente?.email || ''
+        };
+        return pedidoRef.update({
+            items:   pedido.items,
+            cliente: pedido.cliente,
+            adminViewed: false,
+            lastUpdated: Date.now()
+        });
+
+    })
+    .then(() => {
+        alert("Artículos agregados al pedido 👌");
+        window.location.href = `pedidos.html?id=${pedidoEditId}`;
+    })
+    .catch(err => { console.error(err); alert("Error actualizando el pedido"); });
         }
 
         
