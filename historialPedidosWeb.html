@@ -96,6 +96,7 @@
 
   // Por defecto seleccionados
   let statusSeleccionados = ['ABIERTO', 'CERRADO'];
+  let entregaSeleccionada = null; // 'Retiro', 'Envio' o null
 
 
   // listener principal
@@ -113,6 +114,7 @@
 
   function renderBotonesFiltro() {
     filtroStatusBtns.innerHTML = '';
+    // Filtros de estado
     estados.forEach(est => {
       const btn = document.createElement('button');
       btn.textContent = est.label;
@@ -146,11 +148,47 @@
       };
       filtroStatusBtns.appendChild(btn);
     });
+
+    // Filtros de entrega
+    const btnRetiro = document.createElement('button');
+    btnRetiro.textContent = 'Retiro';
+    btnRetiro.style.background = entregaSeleccionada === 'Retiro' ? '#FFD600' : '#fff'; // amarillo activo
+    btnRetiro.style.color = entregaSeleccionada === 'Retiro' ? '#333' : '#333';
+    btnRetiro.style.border = '1.5px solid #FFD600';
+    btnRetiro.style.borderRadius = '18px';
+    btnRetiro.style.padding = '6px 16px';
+    btnRetiro.style.fontWeight = 'bold';
+    btnRetiro.style.cursor = 'pointer';
+    btnRetiro.style.marginLeft = '12px';
+    btnRetiro.onclick = () => {
+      entregaSeleccionada = entregaSeleccionada === 'Retiro' ? null : 'Retiro';
+      renderBotonesFiltro();
+      renderTabla();
+    };
+    filtroStatusBtns.appendChild(btnRetiro);
+
+    const btnEnvio = document.createElement('button');
+    btnEnvio.textContent = 'Envio';
+    btnEnvio.style.background = entregaSeleccionada === 'Envio' ? '#FFD600' : '#fff'; // amarillo activo
+    btnEnvio.style.color = entregaSeleccionada === 'Envio' ? '#333' : '#333';
+    btnEnvio.style.border = '1.5px solid #FFD600';
+    btnEnvio.style.borderRadius = '18px';
+    btnEnvio.style.padding = '6px 16px';
+    btnEnvio.style.fontWeight = 'bold';
+    btnEnvio.style.cursor = 'pointer';
+    btnEnvio.style.marginLeft = '6px';
+    btnEnvio.onclick = () => {
+      entregaSeleccionada = entregaSeleccionada === 'Envio' ? null : 'Envio';
+      renderBotonesFiltro();
+      renderTabla();
+    };
+    filtroStatusBtns.appendChild(btnEnvio);
+
     // Botón para ver todos
     const btnTodos = document.createElement('button');
     btnTodos.textContent = 'Todos';
-    btnTodos.style.background = statusSeleccionados.length === 0 ? '#4CAF50' : '#fff';
-    btnTodos.style.color = statusSeleccionados.length === 0 ? '#fff' : '#333';
+    btnTodos.style.background = statusSeleccionados.length === 0 && !entregaSeleccionada ? '#4CAF50' : '#fff';
+    btnTodos.style.color = statusSeleccionados.length === 0 && !entregaSeleccionada ? '#fff' : '#333';
     btnTodos.style.border = '1.5px solid #4CAF50';
     btnTodos.style.borderRadius = '18px';
     btnTodos.style.padding = '6px 16px';
@@ -159,6 +197,7 @@
     btnTodos.style.marginLeft = '12px';
     btnTodos.onclick = () => {
       statusSeleccionados = [];
+      entregaSeleccionada = null;
       renderBotonesFiltro();
       renderTabla();
     };
@@ -169,6 +208,17 @@
 
   function getSelectedStatuses() {
     return statusSeleccionados.length ? statusSeleccionados : null;
+  }
+
+  function getEntregaPedido(p) {
+    if (
+      p.cliente &&
+      typeof p.cliente.direccion === 'string' &&
+      p.cliente.direccion.trim() !== ''
+    ) {
+      return 'Envio';
+    }
+    return 'Retiro';
   }
 
   function renderTabla() {
@@ -191,6 +241,10 @@
           estado = 'ABIERTO';
         }
         return statusSel.includes(estado);
+      })
+      .filter(p => {
+        if (!entregaSeleccionada) return true;
+        return getEntregaPedido(p) === entregaSeleccionada;
       })
       .sort((a, b) => b.timestamp - a.timestamp) // más nuevos arriba
       .forEach(p => {
@@ -230,7 +284,15 @@
         tr.insertCell().textContent = (p.items || []).reduce((acc, item) => acc + (item.cantidad || 0), 0);
 
         /* --- 6. ENTREGA --- */
-        tr.insertCell().textContent = p.tipoEntrega || '—';
+        let tipoEntrega = 'Retiro';
+        if (
+          p.cliente &&
+          typeof p.cliente.direccion === 'string' &&
+          p.cliente.direccion.trim() !== ''
+        ) {
+          tipoEntrega = 'Envio';
+        }
+        tr.insertCell().textContent = tipoEntrega;
 
         /* --- 7. Estado --- */
         let estado = 'ABIERTO';
