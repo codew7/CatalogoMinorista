@@ -284,13 +284,15 @@
         tr.insertCell().textContent = (p.items || []).reduce((acc, item) => acc + (item.cantidad || 0), 0);
 
         /* --- 6. ENTREGA --- */
-        let tipoEntrega = 'Retiro';
-        if (
-          p.cliente &&
-          typeof p.cliente.direccion === 'string' &&
-          p.cliente.direccion.trim() !== ''
-        ) {
+        let tipoEntrega = '';
+        if (p.tipoEntrega === 'Showroom' && (!p.cliente?.direccion || p.cliente.direccion.trim() === '')) {
+          tipoEntrega = 'Retiro';
+        } else if (p.tipoEntrega === 'Correo Argentino' || p.tipoEntrega === 'Via Cargo') {
           tipoEntrega = 'Envio';
+        } else if (p.tipoEntrega !== 'Correo Argentino' && p.tipoEntrega !== 'Via Cargo' && p.cliente?.direccion && p.cliente.direccion.trim() !== '') {
+          tipoEntrega = 'Envio?';
+        } else {
+          tipoEntrega = 'Retiro';
         }
         tr.insertCell().textContent = tipoEntrega;
 

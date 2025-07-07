@@ -21,13 +21,31 @@
     let pedidoActual = null;
     let cotizacionCierre = null;
 
-    fetch('https://api.bluelytics.com.ar/v2/latest')
-    .then(r => r.json())
-    .then(d => {
-      cotizacion = (d.blue.value_sell || d.blue.sell) + 10;
-      if (pedidoActual) renderItems();
-    })
-    .catch(() => alert('No pude obtener la cotización Blue'));
+    // Lista de emails de administradores
+    const adminEmails = ["distribuidorahomepoint@gmail.com"];
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user && adminEmails.includes(user.email)) {
+        admin = true;
+        // Si la URL no tiene ?admin=true, la agrega para mantener compatibilidad
+        if (!location.search.includes('admin=true')) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('admin', 'true');
+          window.location.replace(url.toString());
+          return; // IMPORTANTE: no seguir ejecutando código si se recarga
+        }
+      }
+      // Solo ejecutar el fetch de cotización cuando la URL ya es la correcta
+      fetch('https://api.bluelytics.com.ar/v2/latest')
+        .then(r => r.json())
+        .then(d => {
+          cotizacion = (d.blue.value_sell || d.blue.sell) + 10;
+          if (pedidoActual) renderItems();
+        })
+        .catch(() => {
+          alert('No pude obtener la cotización Blue');
+        });
+    });
 </script>
 
 
@@ -44,7 +62,7 @@
     }
     h1{color:#4CAF50;text-align:center;;margin-bottom:10px}
     #items{
-      max-width:600px;
+      max-width:750px;
       width:100%;
       margin:0 auto;
       background:#fff;
@@ -485,14 +503,16 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       pagoDiv.id = 'pagoSelector';
       pagoDiv.style = 'margin-top:18px;text-align:left;width:100%';
       pagoDiv.innerHTML = `
-        <div style="font-weight:bold;margin-bottom:4px;">Pago</div>
-        <div style="display:flex;gap:20px;flex-wrap:wrap;">
-          <label style="margin-right:15px;display:inline-flex;align-items:center;">
-            <input type="radio" name="tipoPago" value="Efectivo"> Efectivo
-          </label>
-          <label style="display:inline-flex;align-items:center;">
-            <input type="radio" name="tipoPago" value="Transferencia"> Transferencia
-          </label>
+        <div style="display:flex;align-items:center;">
+          <div style="font-weight:bold;min-width:75px;">Pago</div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+            <label style="margin-right:15px;display:inline-flex;align-items:center;">
+              <input type="radio" name="tipoPago" value="Efectivo"> Efectivo
+            </label>
+            <label style="display:inline-flex;align-items:center;">
+              <input type="radio" name="tipoPago" value="Transferencia"> Transferencia
+            </label>
+          </div>
         </div>
       `;
       totalPagoWrap.appendChild(pagoDiv);
@@ -507,20 +527,26 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       entregaDiv.id = 'entregaSelector';
       entregaDiv.style = 'margin-top:18px;text-align:left;width:100%';
       entregaDiv.innerHTML = `
-        <div style="font-weight:bold;margin-bottom:4px;">Entrega</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <label style="margin-right:15px;display:inline-flex;align-items:center;">
-            <input type="radio" name="tipoEntrega" value="Retiro en local">
-            <img src="logo.png" alt="Retiro en local" style="width:80px;vertical-align:middle;">
-          </label>
-          <label style="margin-right:15px;display:inline-flex;align-items:center;">
-            <input type="radio" name="tipoEntrega" value="Correo Argentino">
-            <img src="logo-correo.png" alt="Correo Argentino" style="width:80px;vertical-align:middle;">
-          </label>
-          <label style="display:inline-flex;align-items:center;">
-            <input type="radio" name="tipoEntrega" value="Via Cargo">
-            <img src="logo-viacargo.png" alt="Via Cargo" style="width:80px;vertical-align:middle;">
-          </label>
+        <div style="display:flex;align-items:center;">
+          <div style="font-weight:bold;min-width:75px;">Entrega</div>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+            <label style="display:inline-flex;align-items:center;">
+              <input type="radio" name="tipoEntrega" value="Retiro en local">
+              <img src="logo.png" alt="Retiro en local" style="width:80px;vertical-align:middle;">
+            </label>
+            <label style="display:inline-flex;align-items:center;">
+              <input type="radio" name="tipoEntrega" value="Motomensajeria">
+              <img src="logo-moto.png" alt="Motomensajeria" style="width:40px;vertical-align:middle;">
+            </label>
+            <label style="display:inline-flex;align-items:center;">
+              <input type="radio" name="tipoEntrega" value="Correo Argentino">
+              <img src="logo-correo.png" alt="Correo Argentino" style="width:80px;vertical-align:middle;">
+            </label>
+            <label style="display:inline-flex;align-items:center;">
+              <input type="radio" name="tipoEntrega" value="Via Cargo">
+              <img src="logo-viacargo.png" alt="Via Cargo" style="width:80px;vertical-align:middle;">
+            </label>
+          </div>
         </div>
       `;
       totalPagoWrap.appendChild(entregaDiv);
@@ -543,25 +569,6 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       for (let r of entregaRadios) {
         r.checked = (entregaValue !== null && r.value === entregaValue);
       }
-
-      // === Actualizar total según pago seleccionado ===
-      //function actualizarTotalConRecargo() {
-      //  const pagoSeleccionado = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
-      //  let textoTotal = `TOTAL $ ${total.toLocaleString('es-AR')}`;
-      //  if (pagoSeleccionado === 'Transferencia') {
-      //    const recargo = Math.round(total * 0.02);
-      //    const totalConRecargo = total + recargo;
-      //    textoTotal = `TOTAL $ ${totalConRecargo.toLocaleString('es-AR')} <span style=\"font-weight:normal;font-size:0.80em;margin-left:6px;\">(recargo $${recargo.toLocaleString('es-AR')})</span>`;
-      //  }
-      //  totalDiv.innerHTML = textoTotal;
-      //}
-      // Listener para radios de pago
-      //const pagoRadiosArr = Array.from(document.getElementsByName('tipoPago'));
-      //pagoRadiosArr.forEach(radio => {
-      //  radio.onchange = actualizarTotalConRecargo;
-      //});
-      // Llamar al inicio
-      //actualizarTotalConRecargo();
 
     }, 0);
   }
@@ -758,8 +765,9 @@ guardarEditBtn.onclick = () => {
   const nuevoDni = document.getElementById('editDni').value.trim();
   const nuevoTelefono = document.getElementById('editTelefono').value.trim();
   const email = document.getElementById('editEmail').value.trim();
-  if (!nuevoNombre || !nuevaDireccion || !nuevoDni || !email) {
-    alert('Todos los campos son obligatorios excepto el teléfono.');
+  // Solo Nombre y Email son obligatorios
+  if (!nuevoNombre || !email) {
+    alert('Los campos Nombre y Email son obligatorios.');
     return;
   }
   pedidoRef.update({
@@ -965,20 +973,45 @@ async function registrarMovimientoSalidaDesdePedido(pedidoId) {
   await movimientosRef.update(updates);
 }
 
-// Lista de emails de administradores
-const adminEmails = ["distribuidorahomepoint@gmail.com"];
-
-firebase.auth().onAuthStateChanged(user => {
-  if (user && adminEmails.includes(user.email)) {
-    admin = true;
-    // Si la URL no tiene ?admin=true, la agrega para mantener compatibilidad
-    if (!location.search.includes('admin=true')) {
-      const url = new URL(window.location.href);
-      url.searchParams.set('admin', 'true');
-      window.location.replace(url.toString());
+// === HABILITAR/DESHABILITAR BOTONES SEGÚN ENTREGA ===
+function actualizarEstadoBotonesPorEntrega() {
+  const entregaSeleccionada = document.querySelector('input[name="tipoEntrega"]:checked');
+  const cerrarBtn = document.getElementById('cerrarBtn');
+  const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
+  // Si no hay seleccionada o es Retiro en local, deshabilitar ambos
+  if (!entregaSeleccionada || entregaSeleccionada.value === 'Retiro en local') {
+    if (cerrarBtn) cerrarBtn.disabled = true;
+    if (despachadoEntregadoBtn) despachadoEntregadoBtn.disabled = true;
+    if (despachadoEntregadoBtn) despachadoEntregadoBtn.style.opacity = '0.5';
+  } else {
+    // Solo habilitar si no está bloqueado por otras condiciones
+    const bloqueado = pedidoActual && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO');
+    if (cerrarBtn) cerrarBtn.disabled = bloqueado;
+    if (despachadoEntregadoBtn) {
+      despachadoEntregadoBtn.disabled = bloqueado;
+      despachadoEntregadoBtn.style.opacity = bloqueado ? '0.5' : '1';
     }
   }
+}
+
+// Asignar listeners a los radios de entrega
+function asignarListenersEntrega() {
+  const entregaRadios = document.getElementsByName('tipoEntrega');
+  for (let r of entregaRadios) {
+    r.addEventListener('change', actualizarEstadoBotonesPorEntrega);
+  }
+  // Llamar al inicio para el estado inicial
+  actualizarEstadoBotonesPorEntrega();
+}
+
+// Llamar después de renderItems para asegurar que los radios existen
+const observer = new MutationObserver(() => {
+  if (document.getElementsByName('tipoEntrega').length > 0) {
+    asignarListenersEntrega();
+    observer.disconnect();
+  }
 });
+observer.observe(document.body, { childList: true, subtree: true });
 </script>
 
 <div style="max-width:600px;margin:30px auto 0 auto;font-size:0.90em;color:#444;text-align:left;opacity:0.85;">
