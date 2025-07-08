@@ -571,7 +571,8 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       for (let r of entregaRadios) {
         r.checked = (entregaValue !== null && r.value === entregaValue);
       }
-
+      // Llamar para actualizar el estado de los botones después de renderizar
+      actualizarEstadoBotonesPorEntrega();
     }, 0);
   }
 
@@ -872,6 +873,7 @@ document.getElementById('ImprimirBtn').onclick = () => {
       <b>Dirección:</b> ${cliente.direccion || ''} <br>
       <b>Provincia:</b> ${cliente.provincia || ''} <br>
       <b>Teléfono:</b> ${cliente.telefono || ''} <br>
+      <b>DNI:</b> ${cliente.dni || ''} <br>
       <b>Envío:</b> ${pedidoActual.tipoEntrega || ''} <br>
       <br>
       <b>REMITENTE:</b><br>
@@ -1009,17 +1011,18 @@ async function registrarMovimientoSalidaDesdePedido(pedidoId) {
 // === HABILITAR/DESHABILITAR BOTONES SEGÚN ENTREGA ===
 function actualizarEstadoBotonesPorEntrega() {
   const entregaSeleccionada = document.querySelector('input[name="tipoEntrega"]:checked');
-  const cerrarBtn = document.getElementById('cerrarBtn');
   const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
-  // Si no hay seleccionada o es Retiro en local, deshabilitar ambos
+  // Solo deshabilitar despachadoEntregadoBtn si no hay seleccionada o es Retiro en local
   if (!entregaSeleccionada || entregaSeleccionada.value === 'Retiro en local') {
-    if (cerrarBtn) cerrarBtn.disabled = true;
     if (despachadoEntregadoBtn) despachadoEntregadoBtn.disabled = true;
     if (despachadoEntregadoBtn) despachadoEntregadoBtn.style.opacity = '0.5';
   } else {
-    // Solo habilitar si no está bloqueado por otras condiciones
-    const bloqueado = pedidoActual && (pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO');
-    if (cerrarBtn) cerrarBtn.disabled = bloqueado;
+    // Deshabilitar solo si status es CANCELADO, DESPACHADO/ENTREGADO, o si locked y status NO es CERRADO
+    const bloqueado = pedidoActual && (
+      pedidoActual.status === 'CANCELADO' ||
+      pedidoActual.status === 'DESPACHADO/ENTREGADO' ||
+      (pedidoActual.locked && pedidoActual.status !== 'CERRADO')
+    );
     if (despachadoEntregadoBtn) {
       despachadoEntregadoBtn.disabled = bloqueado;
       despachadoEntregadoBtn.style.opacity = bloqueado ? '0.5' : '1';
@@ -1031,6 +1034,7 @@ function actualizarEstadoBotonesPorEntrega() {
 function asignarListenersEntrega() {
   const entregaRadios = document.getElementsByName('tipoEntrega');
   for (let r of entregaRadios) {
+    r.removeEventListener('change', actualizarEstadoBotonesPorEntrega); // Evita listeners duplicados
     r.addEventListener('change', actualizarEstadoBotonesPorEntrega);
   }
   // Llamar al inicio para el estado inicial

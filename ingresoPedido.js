@@ -89,10 +89,16 @@ document.addEventListener('DOMContentLoaded', function() {
   function renderItems() {
     itemsBody.innerHTML = '';
     let subtotal = 0;
+    // Ordenar artículos alfabéticamente por nombre antes de renderizar
+    const articulosOrdenados = [...articulosDisponibles].sort((a, b) => {
+      const nombreA = (a[3] || '').toLowerCase();
+      const nombreB = (b[3] || '').toLowerCase();
+      return nombreA.localeCompare(nombreB, 'es');
+    });
     items.forEach((item, idx) => {
       const row = document.createElement('tr');
       let options = '<option value="">Seleccione artículo</option>';
-      articulosDisponibles.forEach(art => {
+      articulosOrdenados.forEach(art => {
         options += `<option value="${art[3]}" data-codigo="${art[2]}" data-precio="${art[6] || art[5] || ''}">${art[3]}</option>`;
       });
       row.innerHTML = `
@@ -100,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <td>
           <select class="nombre-select" data-idx="${idx}" style="width:220px">
             <option value="">Seleccione artículo</option>
-            ${articulosDisponibles.map(art => `<option value="${art[3]}"${item.nombre === art[3] ? ' selected' : ''}>${art[3]}</option>`).join('')}
+            ${articulosOrdenados.map(art => `<option value="${art[3]}"${item.nombre === art[3] ? ' selected' : ''}>${art[3]}</option>`).join('')}
           </select>
         </td>
         <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>

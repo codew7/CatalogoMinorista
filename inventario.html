@@ -364,7 +364,7 @@
     let movimientos = [];
     let movimientosFiltrados = [];
     let paginaActual = 1;
-    const MOVS_POR_PAGINA = 10;
+    const MOVS_POR_PAGINA = 30;
     let editandoId = null;
 
     // Utilidades
@@ -407,6 +407,8 @@
           }
         }
         productos = productosArr;
+        // Ordenar productos alfabéticamente por nombre
+        productos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
         const select = document.getElementById('producto');
         select.innerHTML = '<option value="">Selecciona un producto...</option>';
         productos.forEach(prod => {
@@ -567,10 +569,34 @@
       });
       html += '</tbody></table>';
       cont.innerHTML = html;
-      // Paginación
+      // Paginación con máximo 10 botones y ...
       let pagHtml = '';
-      for (let i = 1; i <= totalPaginas; i++) {
-        pagHtml += `<button class="${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`;
+      if (totalPaginas <= 10) {
+        for (let i = 1; i <= totalPaginas; i++) {
+          pagHtml += `<button class="${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`;
+        }
+      } else {
+        if (paginaActual <= 6) {
+          for (let i = 1; i <= 8; i++) {
+            pagHtml += `<button class="${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`;
+          }
+          pagHtml += '<span style="padding:0 0.3rem;">...</span>';
+          pagHtml += `<button onclick="cambiarPagina(${totalPaginas})">${totalPaginas}</button>`;
+        } else if (paginaActual >= totalPaginas - 5) {
+          pagHtml += `<button onclick="cambiarPagina(1)">1</button>`;
+          pagHtml += '<span style="padding:0 0.3rem;">...</span>';
+          for (let i = totalPaginas - 7; i <= totalPaginas; i++) {
+            pagHtml += `<button class="${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`;
+          }
+        } else {
+          pagHtml += `<button onclick="cambiarPagina(1)">1</button>`;
+          pagHtml += '<span style="padding:0 0.3rem;">...</span>';
+          for (let i = paginaActual - 4; i <= paginaActual + 3; i++) {
+            pagHtml += `<button class="${i === paginaActual ? 'active' : ''}" onclick="cambiarPagina(${i})">${i}</button>`;
+          }
+          pagHtml += '<span style="padding:0 0.3rem;">...</span>';
+          pagHtml += `<button onclick="cambiarPagina(${totalPaginas})">${totalPaginas}</button>`;
+        }
       }
       document.getElementById('paginacion').innerHTML = pagHtml;
     }
