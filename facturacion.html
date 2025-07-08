@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Facturación</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, sans-serif;
+            margin: 0;
+        }
+        .dashboard {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 2rem 1rem;
+        }
+        .dashboard-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .dashboard-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--primary);
+        }
+        .view-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .tab-btn {
+            background: var(--bg-secondary);
+            color: var(--primary);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            font-weight: 500;
+            box-shadow: 0 2px 6px -2px var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+        }
+        .tab-btn.active, .tab-btn:hover {
+            background: linear-gradient(90deg, var(--primary) 60%, var(--secondary));
+            color: #fff;
+            box-shadow: 0 4px 6px -1px var(--shadow);
+        }
+        .filters-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px var(--shadow);
+            padding: 1rem 1.5rem;
+            justify-content: space-between;
+        }
+        .category-filter {
+            min-width: 220px;
+        }
+        .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-left: auto;
+            justify-content: flex-end;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .metric-card {
+            background: linear-gradient(120deg, var(--bg-secondary) 80%, var(--bg-primary));
+            border-radius: 14px;
+            box-shadow: 0 4px 6px -1px var(--shadow);
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+        .metric-card:hover {
+            box-shadow: 0 8px 16px -2px var(--shadow);
+            transform: translateY(-2px) scale(1.02);
+        }
+        .metric-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            color: var(--secondary);
+        }
+        .metric-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .segmented-values {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            font-size: 1.1rem;
+            color: var(--success);
+        }
+        .chart-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        @media (max-width: 1024px) {
+            .dashboard-header h1 { font-size: 1.3rem; }
+            .metrics-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 768px) {
+            .dashboard-header { flex-direction: column; gap: 1rem; }
+            .metrics-grid { grid-template-columns: 1fr; }
+            .filters-section { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header class="dashboard-header">
+            <h1>📊 Panel de Facturación</h1>
+            <div class="view-tabs">
+                <button class="tab-btn active" data-view="monthly">📅 Mensual</button>
+                <button class="tab-btn" data-view="weekly">📆 Semanal</button>
+                <button class="tab-btn" data-view="daily">📈 Diario</button>
+                <button class="tab-btn" data-view="yearly">📊 Anual</button>
+                <button class="tab-btn" data-view="custom">🎯 Personalizado</button>
+            </div>
+        </header>
+        <div class="filters-section">
+            <div class="category-filter">
+                <button id="toggle-categorias" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:0.5rem 1rem;font-weight:500;cursor:pointer;box-shadow:0 2px 6px -2px var(--shadow);margin-bottom:0.5rem;">📂 Categorías</button>
+                <div class="category-list" id="category-list" style="display:none;">
+                    <!-- Categorías con checkboxes -->
+                </div>
+            </div>
+            <div class="date-filter" id="date-filter">
+                <!-- Filtros de fecha según vista -->
+            </div>
+        </div>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>💰 Facturación Total</h3>
+                <span class="value" id="facturacion-total">$0</span>
+            </div>
+            <div class="metric-card expandable" id="ganancia-card">
+                <h3>💵 Ganancia Bruta</h3>
+                <span class="value" id="ganancia-total">$0</span>
+                <div class="segmented-values" id="ganancia-segment" style="display:none;">
+                    <span>🛒 Consumidor Final: <span id="ganancia-cf">$0</span></span>
+                    <span>🏢 Mayorista: <span id="ganancia-mayorista">$0</span></span>
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>💸 Costo Total</h3>
+                <span class="value" id="costo-total">$0</span>
+            </div>
+            <div class="metric-card expandable" id="ventas-card">
+                <h3>📈 Cantidad de Ventas</h3>
+                <span class="value" id="ventas-total">0</span>
+                <div class="segmented-values" id="ventas-segment" style="display:none;">
+                    <span>🛒 Consumidor Final: <span id="ventas-cf">0</span></span>
+                    <span>🏢 Mayorista: <span id="ventas-mayorista">0</span></span>
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>🏷️ Gasto</h3>
+                <span class="value" id="gasto-total">$0</span>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+    <!-- Firebase y Chart.js -->
+    <script src="config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    // --- Configuración e inicialización de Firebase ---
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // --- Estado global ---
+    let ventas = [];
+    let categorias = new Set();
+    let categoriasSeleccionadas = new Set();
+    let vistaActual = 'monthly';
+    let chart;
+    let datosFiltrados = [];
+    let rangoFechas = { inicio: null, fin: null };
+
+    // --- Utilidades de fechas ---
+    function formatearMoneda(valor) {
+        return '$' + (valor || 0).toLocaleString('es-AR');
+    }
+    function obtenerCategorias(ventas) {
+        return Array.from(new Set(ventas.map(v => v.categoria || 'Sin categoría'))).sort();
+    }
+    // --- Renderizado de categorías ---
+    function renderCategorias() {
+        const cont = document.getElementById('category-list');
+        cont.innerHTML = '';
+        obtenerCategorias(ventas).forEach(cat => {
+            const id = 'cat_' + cat.replace(/\W/g, '');
+            cont.innerHTML += `<label><input type="checkbox" value="${cat}" id="${id}" checked> ${cat}</label>`;
+        });
+        categoriasSeleccionadas = new Set(obtenerCategorias(ventas));
+        cont.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (cb.checked) categoriasSeleccionadas.add(cb.value);
+                else categoriasSeleccionadas.delete(cb.value);
+                actualizarDashboard();
+            });
+        });
+    }
+    // --- Renderizado de filtros de fecha según vista ---
+    function renderDateFilter() {
+        const cont = document.getElementById('date-filter');
+        cont.innerHTML = '';
+        const hoy = new Date();
+        if (vistaActual === 'monthly') {
+            cont.innerHTML = `<b>📅 Año:</b> <select id="filtro-anio"></select>`;
+            const anios = Array.from(new Set(ventas.map(v => new Date(v.fecha).getFullYear()))).sort();
+            const sel = cont.querySelector('#filtro-anio');
+            anios.forEach(anio => {
+                sel.innerHTML += `<option value="${anio}" ${anio===hoy.getFullYear()?'selected':''}>${anio}</option>`;
+            });
+            sel.addEventListener('change', actualizarDashboard);
+        } else if (vistaActual === 'weekly') {
+            cont.innerHTML = `<b>📆 Últimas 12 semanas</b>`;
+        } else if (vistaActual === 'daily') {
+            cont.innerHTML = `<b>📈 Últimos 12 días</b>`;
+        } else if (vistaActual === 'yearly') {
+            cont.innerHTML = `<b>📊 Todos los años</b>`;
+        } else if (vistaActual === 'custom') {
+            cont.innerHTML = `<b>🎯 Rango:</b> <input type="date" id="filtro-inicio"> - <input type="date" id="filtro-fin"> <button id="btn-filtrar">Filtrar</button>`;
+            cont.querySelector('#btn-filtrar').addEventListener('click', () => {
+                rangoFechas.inicio = cont.querySelector('#filtro-inicio').value;
+                rangoFechas.fin = cont.querySelector('#filtro-fin').value;
+                actualizarDashboard();
+            });
+        }
+    }
+    // --- Filtros y segmentación ---
+    function filtrarVentas() {
+        let filtradas = ventas.filter(v => categoriasSeleccionadas.has(v.categoria || 'Sin categoría'));
+        if (vistaActual === 'monthly') {
+            const anio = document.getElementById('filtro-anio')?.value || (new Date()).getFullYear();
+            filtradas = filtradas.filter(v => new Date(v.fecha).getFullYear() == anio);
+        } else if (vistaActual === 'weekly') {
+            const ultimasSemanas = obtenerUltimasSemanas(12);
+            filtradas = filtradas.filter(v => ultimasSemanas.includes(obtenerSemanaISO(v.fecha)));
+        } else if (vistaActual === 'daily') {
+            const ultimosDias = obtenerUltimosDias(12);
+            filtradas = filtradas.filter(v => ultimosDias.includes(v.fecha));
+        } else if (vistaActual === 'yearly') {
+            // No filtro, muestro todo
+        } else if (vistaActual === 'custom') {
+            if (rangoFechas.inicio && rangoFechas.fin) {
+                filtradas = filtradas.filter(v => v.fecha >= rangoFechas.inicio && v.fecha <= rangoFechas.fin);
+            }
+        }
+        return filtradas;
+    }
+    // --- Cálculo de métricas ---
+    function calcularMetricas(datos) {
+        let facturacionTotal = 0, costoTotal = 0, gananciaCF = 0, gananciaMayorista = 0, ventasCF = 0, ventasMayorista = 0;
+        datos.forEach(v => {
+            facturacionTotal += v.facturacion || 0;
+            costoTotal += v.costo || 0;
+            if ((v.tipoCliente || '').toLowerCase().includes('mayorista')) {
+                gananciaMayorista += v.ganancia || 0;
+                ventasMayorista++;
+            } else {
+                gananciaCF += v.ganancia || 0;
+                ventasCF++;
+            }
+        });
+        return { facturacionTotal, costoTotal, gananciaCF, gananciaMayorista, ventasCF, ventasMayorista };
+    }
+    // --- Actualización de dashboard y métricas ---
+    function actualizarDashboard() {
+        datosFiltrados = filtrarVentas();
+        const m = calcularMetricas(datosFiltrados);
+        document.getElementById('facturacion-total').textContent = formatearMoneda(m.facturacionTotal);
+        document.getElementById('costo-total').textContent = formatearMoneda(m.costoTotal);
+        document.getElementById('ganancia-total').textContent = formatearMoneda(m.gananciaCF + m.gananciaMayorista);
+        document.getElementById('ganancia-cf').textContent = formatearMoneda(m.gananciaCF);
+        document.getElementById('ganancia-mayorista').textContent = formatearMoneda(m.gananciaMayorista);
+        document.getElementById('ventas-total').textContent = m.ventasCF + m.ventasMayorista;
+        document.getElementById('ventas-cf').textContent = m.ventasCF;
+        document.getElementById('ventas-mayorista').textContent = m.ventasMayorista;
+        document.getElementById('gasto-total').textContent = '$0'; // Placeholder
+        renderChart();
+    }
+    // --- Expansión de métricas ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const gananciaCard = document.getElementById('ganancia-card');
+        const gananciaSegment = document.getElementById('ganancia-segment');
+        if(gananciaCard && gananciaSegment) {
+            gananciaCard.addEventListener('click', () => {
+                gananciaSegment.style.display = gananciaSegment.style.display === 'none' ? 'flex' : 'none';
+            });
+            gananciaCard.style.cursor = 'pointer';
+        }
+        const ventasCard = document.getElementById('ventas-card');
+        const ventasSegment = document.getElementById('ventas-segment');
+        if(ventasCard && ventasSegment) {
+            ventasCard.addEventListener('click', () => {
+                ventasSegment.style.display = ventasSegment.style.display === 'none' ? 'flex' : 'none';
+            });
+            ventasCard.style.cursor = 'pointer';
+        }
+    });
+    // --- Chart.js: configuración y renderizado ---
+    function renderChart() {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if (chart) chart.destroy();
+        let labels = [], facturacion = [], ganancia = [], costo = [];
+        if (vistaActual === 'monthly') {
+            const anio = document.getElementById('filtro-anio')?.value || (new Date()).getFullYear();
+            for (let m = 0; m < 12; m++) {
+                labels.push(new Date(0, m).toLocaleString('es-AR', {month:'short'}));
+                const datosMes = datosFiltrados.filter(v => new Date(v.fecha).getMonth() === m && new Date(v.fecha).getFullYear() == anio);
+                facturacion.push(datosMes.reduce((a,v)=>a+v.facturacion,0));
+                ganancia.push(datosMes.reduce((a,v)=>a+v.ganancia,0));
+                costo.push(datosMes.reduce((a,v)=>a+v.costo,0));
+            }
+        } else if (vistaActual === 'weekly') {
+            const semanas = obtenerUltimasSemanas(12);
+            labels = semanas.map(s=>`Sem ${s}`);
+            semanas.forEach(sem=>{
+                const datosSemana = datosFiltrados.filter(v=>obtenerSemanaISO(v.fecha)===sem);
+                facturacion.push(datosSemana.reduce((a,v)=>a+v.facturacion,0));
+                ganancia.push(datosSemana.reduce((a,v)=>a+v.ganancia,0));
+                costo.push(datosSemana.reduce((a,v)=>a+v.costo,0));
+            });
+        } else if (vistaActual === 'daily') {
+            const dias = obtenerUltimosDias(12);
+            labels = dias;
+            dias.forEach(dia=>{
+                const datosDia = datosFiltrados.filter(v=>v.fecha===dia);
+                facturacion.push(datosDia.reduce((a,v)=>a+v.facturacion,0));
+                ganancia.push(datosDia.reduce((a,v)=>a+v.ganancia,0));
+                costo.push(datosDia.reduce((a,v)=>a+v.costo,0));
+            });
+        } else if (vistaActual === 'yearly') {
+            const anios = Array.from(new Set(datosFiltrados.map(v=>new Date(v.fecha).getFullYear()))).sort();
+            labels = anios;
+            anios.forEach(anio=>{
+                const datosAnio = datosFiltrados.filter(v=>new Date(v.fecha).getFullYear()===anio);
+                facturacion.push(datosAnio.reduce((a,v)=>a+v.facturacion,0));
+                ganancia.push(datosAnio.reduce((a,v)=>a+v.ganancia,0));
+                costo.push(datosAnio.reduce((a,v)=>a+v.costo,0));
+            });
+        } else if (vistaActual === 'custom') {
+            // Agrupar por día dentro del rango personalizado
+            if (rangoFechas.inicio && rangoFechas.fin) {
+                // Generar todas las fechas del rango
+                let start = new Date(rangoFechas.inicio);
+                let end = new Date(rangoFechas.fin);
+                let diasRango = [];
+                while (start <= end) {
+                    diasRango.push(start.toISOString().slice(0,10));
+                    start.setDate(start.getDate() + 1);
+                }
+                // Agrupar ventas por día
+                let map = new Map();
+                datosFiltrados.forEach(v => {
+                    if (!map.has(v.fecha)) map.set(v.fecha, {fecha: v.fecha, facturacion:0, ganancia:0, costo:0});
+                    let d = map.get(v.fecha);
+                    d.facturacion += v.facturacion||0;
+                    d.ganancia += v.ganancia||0;
+                    d.costo += v.costo||0;
+                });
+                labels = diasRango;
+                facturacion = diasRango.map(f=>map.has(f)?map.get(f).facturacion:0);
+                ganancia = diasRango.map(f=>map.has(f)?map.get(f).ganancia:0);
+                costo = diasRango.map(f=>map.has(f)?map.get(f).costo:0);
+            } else {
+                labels = [];
+                facturacion = [];
+                ganancia = [];
+                costo = [];
+            }
+        }
+        chart = new Chart(ctx, {
+            type: vistaActual==='yearly' ? 'bar' : (vistaActual==='daily' ? 'bar' : 'line'),
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: '💰 Facturación',
+                        data: facturacion,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99,102,241,0.1)',
+                        fill: true,
+                        type: 'line',
+                        order: 1
+                    },
+                    {
+                        label: '💵 Ganancia',
+                        data: ganancia,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.1)',
+                        fill: true,
+                        type: 'line',
+                        order: 2
+                    },
+                    {
+                        label: '💸 Costo',
+                        data: costo,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239,68,68,0.1)',
+                        fill: true,
+                        type: 'line',
+                        order: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: obtenerTituloVista() }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) { return '$' + value.toLocaleString('es-AR'); }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    // --- Helpers de fechas ---
+    function obtenerSemanaISO(fecha) {
+        const d = new Date(fecha);
+        d.setHours(0,0,0,0);
+        d.setDate(d.getDate() + 4 - (d.getDay()||7));
+        const yearStart = new Date(d.getFullYear(),0,1);
+        return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    }
+    function obtenerUltimasSemanas(n) {
+        const hoy = new Date();
+        let semanas = [];
+        for(let i=n-1;i>=0;i--) {
+            const d = new Date(hoy);
+            d.setDate(d.getDate() - i*7);
+            // Formatear fecha local YYYY-MM-DD
+            const year = d.getFullYear();
+            const month = (d.getMonth()+1).toString().padStart(2,'0');
+            const day = d.getDate().toString().padStart(2,'0');
+            const fechaLocal = `${year}-${month}-${day}`;
+            semanas.push(obtenerSemanaISO(fechaLocal));
+        }
+        return semanas;
+    }
+    function obtenerUltimosDias(n) {
+        const hoy = new Date();
+        let dias = [];
+        for(let i=n-1;i>=0;i--) {
+            const d = new Date(hoy);
+            d.setDate(d.getDate() - i);
+            // Formatear fecha local YYYY-MM-DD
+            const year = d.getFullYear();
+            const month = (d.getMonth()+1).toString().padStart(2,'0');
+            const day = d.getDate().toString().padStart(2,'0');
+            dias.push(`${year}-${month}-${day}`);
+        }
+        return dias;
+    }
+    function agruparPorDia(datos) {
+        let map = new Map();
+        datos.forEach(v => {
+            if (!map.has(v.fecha)) map.set(v.fecha, {fecha: v.fecha, facturacion:0, ganancia:0, costo:0});
+            let d = map.get(v.fecha);
+            d.facturacion += v.facturacion||0;
+            d.ganancia += v.ganancia||0;
+            d.costo += v.costo||0;
+        });
+        return Array.from(map.values()).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+    }
+    function obtenerTituloVista() {
+        switch(vistaActual) {
+            case 'monthly': return 'Evolución Mensual';
+            case 'weekly': return 'Tendencia Semanal';
+            case 'daily': return 'Análisis Diario';
+            case 'yearly': return 'Panorama Anual';
+            case 'custom': return 'Período Específico';
+            default: return '';
+        }
+    }
+    // --- Cambio de vista ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            vistaActual = btn.getAttribute('data-view');
+            renderDateFilter();
+            actualizarDashboard();
+        });
+    });
+    // --- Mostrar/Ocultar categorías ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('toggle-categorias');
+        const lista = document.getElementById('category-list');
+        if(btn && lista) {
+            btn.addEventListener('click', () => {
+                lista.style.display = lista.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+    });
+    // --- Escuchar cambios en Firebase ---
+    database.ref('pedidos').on('value', (snapshot) => {
+        const data = snapshot.val() || {};
+        ventas = [];
+        Object.values(data).forEach(pedido => {
+            if (!pedido || !pedido.items || !Array.isArray(pedido.items) || !pedido.fecha) return;
+            // Determinar tipo de cliente (por campo en cliente o fallback)
+            let tipoCliente = 'Consumidor Final';
+            if (pedido.cliente && pedido.cliente.tipoCliente) {
+                const t = pedido.cliente.tipoCliente.toLowerCase();
+                if (t.includes('mayorista')) tipoCliente = 'Mayorista';
+            }
+            // Calcular totales del pedido
+            let facturacion = 0, costo = 0, ganancia = 0, categoria = 'Sin categoría';
+            let categoriasPedido = new Set();
+            pedido.items.forEach(item => {
+                if (!item) return;
+                facturacion += Number(item.valorU || 0) * Number(item.cantidad || 0);
+                costo += Number(item.valorC || 0) * Number(item.cantidad || 0);
+                if (item.categoria) categoriasPedido.add(item.categoria);
+            });
+            ganancia = facturacion - costo;
+            // Si hay varias categorías, usar 'Varias' o la primera
+            categoria = categoriasPedido.size === 1 ? Array.from(categoriasPedido)[0] : (categoriasPedido.size > 1 ? 'Varias' : 'Sin categoría');
+            // --- Normalizar fecha a YYYY-MM-DD ---
+            let fecha = pedido.fecha;
+            if (fecha && fecha.length === 10 && fecha.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/)) {
+                // Si es DD/MM/YYYY o DD-MM-YYYY
+                const [d, m, y] = fecha.split(/[\/\-]/);
+                fecha = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+            } else if (fecha && fecha.length === 10 && fecha.match(/\d{4}-\d{2}-\d{2}/)) {
+                // Ya está en formato ISO
+            } else {
+                // Intentar parsear con Date y obtener fecha local
+                const f = new Date(fecha);
+                if (!isNaN(f)) {
+                    const year = f.getFullYear();
+                    const month = (f.getMonth()+1).toString().padStart(2,'0');
+                    const day = f.getDate().toString().padStart(2,'0');
+                    fecha = `${year}-${month}-${day}`;
+                }
+            }
+            ventas.push({
+                facturacion,
+                costo,
+                ganancia,
+                tipoCliente,
+                categoria,
+                fecha,
+                articulos: pedido.items
+            });
+        });
+        renderCategorias();
+        renderDateFilter();
+        actualizarDashboard();
+    });
+    // --- Inicialización ---
+    </script>
+</body>
+</html>
