@@ -396,9 +396,10 @@ document.addEventListener('DOMContentLoaded', function() {
             descuento,
             envio,
             subtotal,
-            totalFinal
+            totalFinal,
+            costos,
+            ganancia: subtotal - costos
           },
-          costos,
           status: 'DESPACHADO/ENTREGADO',
           cotizacionCierre: cotizacionCierre,
           costoUSD: costos / cotizacionCierre,
@@ -411,9 +412,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (pedidoId) {
           db.ref('pedidos/' + pedidoId).once('value').then(snap => {
             const pedidoAnterior = snap.val();
-            if (pedidoAnterior && pedidoAnterior.Orden) {
-              pedidoObj.Orden = pedidoAnterior.Orden;
-            }
             // CONSERVAR lastOrderUpdate si existe
             if (pedidoAnterior && pedidoAnterior.lastOrderUpdate) {
               pedidoObj.lastOrderUpdate = pedidoAnterior.lastOrderUpdate;
@@ -443,32 +441,24 @@ document.addEventListener('DOMContentLoaded', function() {
               });
           });
         } else {
-          db.ref('pedidos').orderByChild('Orden').limitToLast(1).once('value', function(snapshot) {
-            let lastOrden = 0;
-            snapshot.forEach(function(child) {
-              if (child.val() && child.val().Orden) {
-                lastOrden = parseInt(child.val().Orden, 10) || 0;
-              }
+          // Ya no se calcula ni se asigna pedidoObj.Orden
+          // Agregar campo fecha solo al crear el pedido
+          pedidoObj.fecha = getFechaActual();
+          // Usar push para obtener el id generado
+          const pedidoRef = db.ref('pedidos').push();
+          pedidoRef.set(pedidoObj)
+            .then(() => {
+              // Registrar movimientos de inventario usando el id generado
+              registrarMovimientosInventario(items, pedidoObj.cotizacionCierre, pedidoRef.key);
+              showPopup('Pedido ingresado', '✅', true);
+              form.reset();
+              items = [];
+              renderItems();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            })
+            .catch(err => {
+              showPopup('Error al guardar el pedido.', '❌', false);
             });
-            pedidoObj.Orden = lastOrden + 1;
-            // Agregar campo fecha solo al crear el pedido
-            pedidoObj.fecha = getFechaActual();
-            // Usar push para obtener el id generado
-            const pedidoRef = db.ref('pedidos').push();
-            pedidoRef.set(pedidoObj)
-              .then(() => {
-                // Registrar movimientos de inventario usando el id generado
-                registrarMovimientosInventario(items, pedidoObj.cotizacionCierre, pedidoRef.key);
-                showPopup('Pedido ingresado', '✅', true);
-                form.reset();
-                items = [];
-                renderItems();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              })
-              .catch(err => {
-                showPopup('Error al guardar el pedido.', '❌', false);
-              });
-          });
         }
       })
       .catch(() => {
@@ -682,9 +672,10 @@ document.addEventListener('DOMContentLoaded', function() {
               descuento,
               envio,
               subtotal,
-              totalFinal
+              totalFinal,
+              costos,
+              ganancia: subtotal - costos
             },
-            costos,
             status: 'DESPACHADO/ENTREGADO',
             cotizacionCierre: cotizacionCierre,
             costoUSD: costos / cotizacionCierre,
@@ -875,6 +866,7 @@ form.nombre.addEventListener('blur', function() {
     if (cli.tipoCliente) {
       const radio = document.querySelector(`input[name="tipoCliente"][value="${cli.tipoCliente}"]`);
       if (radio) radio.checked = true;
+      tipoCliente = cli.tipoCliente; // <-- ACTUALIZAR VARIABLE INTERNA
     }
   } else {
     // Mostrar modal para registrar cliente
@@ -967,6 +959,7 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
               if (tipoCliente) {
                 const radio = document.querySelector(`input[name="tipoCliente"][value="${tipoCliente}"]`);
                 if (radio) radio.checked = true;
+                tipoCliente = tipoCliente; // <-- ACTUALIZAR VARIABLE INTERNA
               }
               modal.remove();
             });
@@ -980,6 +973,7 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
           if (tipoCliente) {
             const radio = document.querySelector(`input[name="tipoCliente"][value="${tipoCliente}"]`);
             if (radio) radio.checked = true;
+            tipoCliente = tipoCliente; // <-- ACTUALIZAR VARIABLE INTERNA
           }
           modal.remove();
         }
