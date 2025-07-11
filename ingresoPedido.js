@@ -537,7 +537,19 @@ document.addEventListener('DOMContentLoaded', function() {
       // Rellenar tipo de cliente si existe
       if (pedido.cliente?.tipoCliente) {
         const radio = document.querySelector(`input[name="tipoCliente"][value="${pedido.cliente.tipoCliente}"]`);
-        if (radio) radio.checked = true;
+        if (radio) {
+          radio.checked = true;
+          tipoCliente = pedido.cliente.tipoCliente; // <-- ACTUALIZAR VARIABLE INTERNA
+          // Forzar actualización de valores de artículos según tipoCliente
+          items.forEach((item, idx) => {
+            if (item.nombre && articulosPorNombre[item.nombre]) {
+              const art = articulosPorNombre[item.nombre];
+              let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
+              valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+              items[idx].valorU = parseInt(valorRaw) || 0;
+            }
+          });
+        }
       }
       // Rellenar items
       items = (pedido.items || []).map(it => ({
