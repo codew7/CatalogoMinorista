@@ -230,7 +230,16 @@ function getTipoCliente() {
     totalFinalInput.value = formatMiles(total);
   }
 
+
 addItemBtn.addEventListener('click', function() {
+  // Si hay al menos un artículo y el último no tiene nombre seleccionado, no permitir agregar otro
+  if (items.length > 0) {
+    const lastItem = items[items.length - 1];
+    if (!lastItem.nombre) {
+      showPopup('Debe seleccionar un artículo antes de agregar una nueva fila.', '❗', false);
+      return;
+    }
+  }
   window._abrirSelect2NuevaFila = true;
   items.push({ codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '' });
   renderItems();
