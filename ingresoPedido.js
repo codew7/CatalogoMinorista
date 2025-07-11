@@ -2,6 +2,13 @@
 
 document.addEventListener('DOMContentLoaded', function() {
   // --- TAB = Agregar Artículo ---
+  // === BLOQUEO DE CONTROLES HASTA CARGA DE ARTÍCULOS ===
+  // Elementos a bloquear: inputs, selects, botones, tabla de artículos
+  // Usar las referencias ya declaradas más abajo
+  let bloqueables = [];
+  // La declaración de form, addItemBtn, itemsBody ya existe más abajo
+  // Por lo tanto, solo inicializar bloqueables después de esas declaraciones
+  // (El resto del código sigue igual hasta la declaración de form, itemsBody, addItemBtn)
   document.addEventListener('keydown', function(e) {
     // Solo si es TAB, sin Shift, y no en textarea ni en select2 search
     if (e.key === 'Tab' && !e.shiftKey) {
@@ -26,6 +33,40 @@ document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('orderForm');
   const itemsBody = document.getElementById('itemsBody');
   const addItemBtn = document.getElementById('addItemBtn');
+  // Inicializar bloqueables aquí, después de declarar form, itemsBody, addItemBtn
+  bloqueables = [];
+  if (form) {
+    Array.from(form.elements).forEach(el => {
+      if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'BUTTON' || el.type === 'button' || el.type === 'submit') {
+        bloqueables.push(el);
+      }
+    });
+  }
+  if (addItemBtn) bloqueables.push(addItemBtn);
+  if (itemsBody) bloqueables.push(itemsBody);
+  function setControlesBloqueados(bloquear) {
+    bloqueables.forEach(el => {
+      if (!el) return;
+      if (el === itemsBody) {
+        Array.from(itemsBody.querySelectorAll('input, select, button')).forEach(ctrl => {
+          ctrl.disabled = bloquear;
+          if (bloquear) ctrl.classList.add('cargando-articulos');
+          else ctrl.classList.remove('cargando-articulos');
+        });
+      } else {
+        el.disabled = bloquear;
+        if (bloquear) el.classList.add('cargando-articulos');
+        else el.classList.remove('cargando-articulos');
+      }
+    });
+    if (bloquear) {
+      document.body.classList.add('cargando-articulos-body');
+    } else {
+      document.body.classList.remove('cargando-articulos-body');
+    }
+  }
+  // Bloquear al inicio
+  setControlesBloqueados(true);
   const subtotalInput = document.getElementById('subtotal');
   const totalFinalInput = document.getElementById('totalFinal');
   const recargoInput = document.getElementById('recargo');
@@ -40,8 +81,6 @@ document.addEventListener('DOMContentLoaded', function() {
   let articulosPorCodigo = {};
   let articulosPorNombre = {};
 
-  // Deshabilitar controles hasta que termine la carga de artículos
-  addItemBtn.disabled = true;
   // Radios de tipo de cliente
   let radiosTipoCliente = [];
   // Insertar radios de tipo de cliente debajo de Datos del Cliente
@@ -58,11 +97,8 @@ document.addEventListener('DOMContentLoaded', function() {
     clienteSection.appendChild(tipoClienteRow);
     // Guardar referencia a los radios
     radiosTipoCliente = Array.from(tipoClienteRow.querySelectorAll('input[type="radio"][name="tipoCliente"]'));
-    // Deshabilitar radios
-    radiosTipoCliente.forEach(radio => radio.disabled = true);
   } else if (clienteSection) {
     radiosTipoCliente = Array.from(document.querySelectorAll('input[type="radio"][name="tipoCliente"]'));
-    radiosTipoCliente.forEach(radio => radio.disabled = true);
   }
 
   // Cargar artículos al iniciar
@@ -76,15 +112,22 @@ document.addEventListener('DOMContentLoaded', function() {
         articulosPorNombre[item[3]] = item;
       });
       // Habilitar controles después de cargar
-      addItemBtn.disabled = false;
+      setControlesBloqueados(false);
       // Mantener tipoCliente como solo lectura
       radiosTipoCliente.forEach(radio => radio.disabled = true);
     })
     .catch(() => {
       // Si falla la carga, mantener controles deshabilitados
-      addItemBtn.disabled = true;
+      setControlesBloqueados(true);
       radiosTipoCliente.forEach(radio => radio.disabled = true);
     });
+  // === ESTILOS PARA BLOQUEO VISUAL ===
+  const styleCargando = document.createElement('style');
+  styleCargando.innerHTML = `
+    .cargando-articulos { opacity: 0.6 !important; cursor: not-allowed !important; }
+    .cargando-articulos-body { cursor: progress !important; }
+  `;
+  document.head.appendChild(styleCargando);
 
   // Helper: always read current cliente type from DOM
 function getTipoCliente() {
@@ -143,23 +186,29 @@ function getTipoCliente() {
           }, 50);
         }, 0);
       }
-      // --- NUEVO: Calcular valorU y valorC automáticamente si hay artículo seleccionado ---
+      // --- NUEVO: Calcular valorU, valorC, seleccionado y valorG automáticamente si hay artículo seleccionado ---
       if (item.nombre && articulosPorNombre[item.nombre]) {
         const art = articulosPorNombre[item.nombre];
         // Usar columna según tipo de cliente seleccionado
         let valorRaw = currentTipo === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
         valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
         const valorU = parseInt(valorRaw) || 0;
-        // Nuevo: valorC desde columna H (índice 7)
+        // valorC desde columna H (índice 7)
         let valorCRaw = art[7] || '0';
         valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
         const valorC = parseInt(valorCRaw) || 0;
-        // Nuevo: categoria desde columna A (índice 0)
+        // categoria desde columna A (índice 0)
         const categoria = art[0] || '';
-        if (item.valorU !== valorU || item.valorC !== valorC || item.categoria !== categoria) {
+        // seleccionado desde columna I (índice 8)
+        const seleccionado = art[8] || '';
+        // valorG = (valorU - valorC) * cantidad
+        const valorG = (valorU - valorC) * (item.cantidad || 1);
+        if (item.valorU !== valorU || item.valorC !== valorC || item.categoria !== categoria || item.seleccionado !== seleccionado || item.valorG !== valorG) {
           item.valorU = valorU;
           item.valorC = valorC;
           item.categoria = categoria;
+          item.seleccionado = seleccionado;
+          item.valorG = valorG;
           row.querySelector('.valorU').value = valorU;
           row.querySelector('.valorTotal').textContent = (item.cantidad * valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
         }
@@ -241,7 +290,7 @@ addItemBtn.addEventListener('click', function() {
     }
   }
   window._abrirSelect2NuevaFila = true;
-  items.push({ codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '' });
+  items.push({ codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '', seleccionado: '', valorG: 0 });
   renderItems();
   window._abrirSelect2NuevaFila = false;
 });
@@ -257,9 +306,17 @@ addItemBtn.addEventListener('click', function() {
     items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
     let valorUraw = row.querySelector('.valorU').value.replace(/,/g, '');
     items[idx].valorU = parseInt(valorUraw) || 0;
-    // Actualizar categoria si corresponde
+    // Actualizar categoria, seleccionado y valorG si corresponde
     if (items[idx].nombre && articulosPorNombre[items[idx].nombre]) {
       items[idx].categoria = articulosPorNombre[items[idx].nombre][0] || '';
+      items[idx].seleccionado = articulosPorNombre[items[idx].nombre][8] || '';
+      let valorCRaw = articulosPorNombre[items[idx].nombre][7] || '0';
+      valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+      items[idx].valorC = parseInt(valorCRaw) || 0;
+      items[idx].valorG = (items[idx].valorU - items[idx].valorC) * (items[idx].cantidad || 1);
+    } else {
+      items[idx].seleccionado = '';
+      items[idx].valorG = 0;
     }
     row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
     subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
@@ -423,6 +480,16 @@ addItemBtn.addEventListener('click', function() {
           item.categoria = '';
         }
       }
+      // Asegurar que seleccionado nunca sea undefined
+      if (typeof item.seleccionado === 'undefined' || item.seleccionado === null) {
+        if (item.nombre && articulosPorNombre[item.nombre]) {
+          item.seleccionado = articulosPorNombre[item.nombre][8] || '';
+        } else {
+          item.seleccionado = '';
+        }
+      }
+      // Calcular valorG
+      item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
     }
     // Obtener cotización blue en tiempo real
     fetch('https://api.bluelytics.com.ar/v2/latest')
@@ -447,12 +514,16 @@ addItemBtn.addEventListener('click', function() {
           return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
         }
 
+        // Calcular gananciaSelec: suma de valorG de los artículos seleccionados
+        const gananciaSelec = items
+          .filter(it => it.seleccionado && it.seleccionado.toUpperCase() === 'SI')
+          .reduce((acc, it) => acc + (parseInt(it.valorG) || 0), 0);
         const pedidoObj = {
           timestamp: Date.now(),
           locked: false,
           adminViewed: true,
           cliente: { nombre, telefono, direccion, dni, email, tipoCliente },
-          items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria })),
+          items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria, seleccionado: it.seleccionado, valorG: it.valorG })),
           pagos: {
             medioPago,
             recargo,
@@ -461,7 +532,8 @@ addItemBtn.addEventListener('click', function() {
             subtotal,
             totalFinal,
             costos,
-            ganancia: subtotal - costos
+            ganancia: subtotal - costos,
+            gananciaSelec
           },
           status: 'DESPACHADO/ENTREGADO',
           cotizacionCierre: cotizacionCierre,
@@ -624,7 +696,10 @@ addItemBtn.addEventListener('click', function() {
         nombre: it.nombre || '',
         cantidad: it.cantidad || 1,
         valorU: it.valorU || 0,
-        valorC: typeof it.valorC !== 'undefined' ? it.valorC : 0
+        valorC: typeof it.valorC !== 'undefined' ? it.valorC : 0,
+        categoria: typeof it.categoria !== 'undefined' ? it.categoria : '',
+        seleccionado: typeof it.seleccionado !== 'undefined' ? it.seleccionado : (it.nombre && articulosPorNombre[it.nombre] ? articulosPorNombre[it.nombre][8] || '' : ''),
+        valorG: typeof it.valorG !== 'undefined' ? it.valorG : (typeof it.valorU !== 'undefined' && typeof it.valorC !== 'undefined' ? it.valorU - it.valorC : 0)
       }));
       renderItems();
       // Rellenar pagos
@@ -716,6 +791,16 @@ addItemBtn.addEventListener('click', function() {
         } else {
           item.categoria = '';
         }
+        // Asegurar que seleccionado nunca sea undefined
+        if (typeof item.seleccionado === 'undefined' || item.seleccionado === null) {
+          if (item.nombre && articulosPorNombre[item.nombre]) {
+            item.seleccionado = articulosPorNombre[item.nombre][8] || '';
+          } else {
+            item.seleccionado = '';
+          }
+        }
+        // Calcular valorG
+        item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
       }
       // Procesar y guardar subtotal y total como enteros (solo dígitos)
       function onlyDigits(str) {
@@ -739,12 +824,16 @@ addItemBtn.addEventListener('click', function() {
           if (form.direccion.value.trim() && form.direccion.value.trim().length > 7) {
             entrega = 'Envios';
           }
+          // Calcular gananciaSelec: suma de valorG de los artículos seleccionados
+          const gananciaSelec = items
+            .filter(it => it.seleccionado && it.seleccionado.toUpperCase() === 'SI')
+            .reduce((acc, it) => acc + (parseInt(it.valorG) || 0), 0);
           const pedidoObj = {
             timestamp: Date.now(),
             locked: false,
             adminViewed: true,
             cliente: { nombre: form.nombre.value.trim(), telefono: form.telefono.value.trim(), direccion: form.direccion.value.trim(), dni: form.dni.value.trim(), email: form.email.value.trim().toLowerCase(), tipoCliente: document.querySelector('input[name="tipoCliente"]:checked')?.value || '' },
-            items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria })),
+            items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria, seleccionado: it.seleccionado, valorG: it.valorG })),
             pagos: {
               medioPago: form.medioPago.value,
               recargo,
@@ -753,7 +842,8 @@ addItemBtn.addEventListener('click', function() {
               subtotal,
               totalFinal,
               costos,
-              ganancia: subtotal - costos
+              ganancia: subtotal - costos,
+              gananciaSelec
             },
             status: 'DESPACHADO/ENTREGADO',
             cotizacionCierre: cotizacionCierre,

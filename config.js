@@ -12,5 +12,5 @@ const firebaseConfig = {
 const GOOGLE_SHEETS_CONFIG = {
     API_KEY: 'AIzaSyDwiZWDc66tv4usDIA-IreiJMLFuk0236Q',
     SPREADSHEET_ID: '1cD50d0-oSTogEe9tYo9ABUSP1ONCy3SAV92zsYYIG84',
-    RANGO: 'A2:H'
+    RANGO: 'Lista!A2:I'
 };
