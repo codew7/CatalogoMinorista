@@ -1,6 +1,25 @@
 // Script para ingresoPedido.html: manejo de formulario, artículos dinámicos y registro en Firebase
 
 document.addEventListener('DOMContentLoaded', function() {
+  // --- TAB = Agregar Artículo ---
+  document.addEventListener('keydown', function(e) {
+    // Solo si es TAB, sin Shift, y no en textarea ni en select2 search
+    if (e.key === 'Tab' && !e.shiftKey) {
+      const active = document.activeElement;
+      // No interceptar si está en textarea, input tipo hidden, o en el buscador de select2
+      if (active && (
+        active.tagName === 'TEXTAREA' ||
+        (active.tagName === 'INPUT' && active.type === 'hidden') ||
+        (active.classList && active.classList.contains('select2-search__field'))
+      )) {
+        return;
+      }
+      e.preventDefault();
+      // Simular click en el botón Agregar Artículo
+      const btn = document.getElementById('addItemBtn');
+      if (btn && !btn.disabled) btn.click();
+    }
+  });
   // Firebase ya está inicializado en el HTML
 
   // Elementos del DOM
@@ -58,7 +77,8 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       // Habilitar controles después de cargar
       addItemBtn.disabled = false;
-      radiosTipoCliente.forEach(radio => radio.disabled = false);
+      // Mantener tipoCliente como solo lectura
+      radiosTipoCliente.forEach(radio => radio.disabled = true);
     })
     .catch(() => {
       // Si falla la carga, mantener controles deshabilitados
@@ -66,29 +86,17 @@ document.addEventListener('DOMContentLoaded', function() {
       radiosTipoCliente.forEach(radio => radio.disabled = true);
     });
 
-  // Variable para el tipo de cliente
-    let tipoCliente = 'consumidor final';
-    document.addEventListener('change', function(e) {
-    if (e.target.name === 'tipoCliente') {
-        tipoCliente = e.target.value;
-        // Actualizar todos los valores unitarios de los artículos seleccionados
-        items.forEach((item, idx) => {
-        if (item.nombre && articulosPorNombre[item.nombre]) {
-            const art = articulosPorNombre[item.nombre];
-            // Usar columna 4 (índice 4) para consumidor final, columna 6 (índice 6) para mayorista
-            let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
-            // Eliminar signos de $ y separadores de mil (coma o punto)
-            valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
-            items[idx].valorU = parseInt(valorRaw) || 0;
-        }
-        });
-        renderItems();
-    }
-    });
+  // Helper: always read current cliente type from DOM
+function getTipoCliente() {
+  const sel = document.querySelector('input[name="tipoCliente"]:checked');
+  return sel ? sel.value : 'consumidor final';
+}
 
   function renderItems() {
     itemsBody.innerHTML = '';
     let subtotal = 0;
+    // Obtener tipo de cliente actual
+    const currentTipo = getTipoCliente();
     // Ordenar artículos alfabéticamente por nombre antes de renderizar
     const articulosOrdenados = [...articulosDisponibles].sort((a, b) => {
       const nombreA = (a[3] || '').toLowerCase();
@@ -115,10 +123,31 @@ document.addEventListener('DOMContentLoaded', function() {
         <td><button type="button" class="remove-btn" data-idx="${idx}" style="background:#d32f2f;color:#fff;border:none;border-radius:4px;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Eliminar"><span style="font-weight:bold;font-size:20px;line-height:1;">&times;</span></button></td>
       `;
       itemsBody.appendChild(row);
+      // Inicializar Select2 en el select de artículo
+      var $select = $(row).find('.nombre-select');
+      $select.select2({
+        placeholder: 'Seleccione artículo',
+        width: '95%'
+      });
+      $select.on('select2:select', function(e) {
+        this.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      // Si es la última fila agregada y se acaba de agregar, abrir Select2 automáticamente
+      if (idx === items.length - 1 && window._abrirSelect2NuevaFila) {
+        setTimeout(function() {
+          $select.select2('open');
+          // Forzar foco en el input de búsqueda de Select2
+          setTimeout(function() {
+            var $search = $('.select2-container--open .select2-search__field');
+            if ($search.length) $search[0].focus();
+          }, 50);
+        }, 0);
+      }
       // --- NUEVO: Calcular valorU y valorC automáticamente si hay artículo seleccionado ---
       if (item.nombre && articulosPorNombre[item.nombre]) {
         const art = articulosPorNombre[item.nombre];
-        let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
+        // Usar columna según tipo de cliente seleccionado
+        let valorRaw = currentTipo === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
         valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
         const valorU = parseInt(valorRaw) || 0;
         // Nuevo: valorC desde columna H (índice 7)
@@ -151,8 +180,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (art) {
           items[idx].codigo = art[2];
           items[idx].nombre = art[3];
-          // Usar columna 4 (índice 4) para consumidor final, columna 6 (índice 6) para mayorista
-          let valorRaw = tipoCliente === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
+          // Leer tipo de cliente actual
+          const currentTipo = getTipoCliente();
+          // Asignar valorU según tipo
+          let valorRaw = currentTipo === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
           valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
           items[idx].valorU = parseInt(valorRaw) || 0;
           // Asignar valorC desde columna H (índice 7)
@@ -199,10 +230,12 @@ document.addEventListener('DOMContentLoaded', function() {
     totalFinalInput.value = formatMiles(total);
   }
 
-  addItemBtn.addEventListener('click', function() {
-    items.push({ codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '' }); // valorC y categoria inicializados
-    renderItems();
-  });
+addItemBtn.addEventListener('click', function() {
+  window._abrirSelect2NuevaFila = true;
+  items.push({ codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '' });
+  renderItems();
+  window._abrirSelect2NuevaFila = false;
+});
 
   itemsBody.addEventListener('input', function(e) {
     const row = e.target.closest('tr');
@@ -320,13 +353,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Extraer la lógica de ingreso de pedido a una función reutilizable
   function ingresarPedido() {
-    // Validar campos cliente
+    // Validar campos obligatorios
     const nombre = form.nombre.value.trim();
     const telefono = form.telefono.value.trim();
     const direccion = form.direccion.value.trim();
     const dni = form.dni.value.trim();
     const email = form.email.value.trim().toLowerCase();
     const medioPago = form.medioPago.value;
+    const vendedor = form.vendedor ? form.vendedor.value.trim() : '';
+    const tipoClienteRadio = document.querySelector('input[name="tipoCliente"]:checked');
+    const tipoCliente = tipoClienteRadio ? tipoClienteRadio.value : '';
+
+    if (!nombre) {
+      showPopup('Debe completar el campo Nombre de cliente.', '❗', false);
+      return;
+    }
+    if (!tipoCliente) {
+      showPopup('Debe seleccionar el Tipo de Cliente.', '❗', false);
+      return;
+    }
+    if (!medioPago) {
+      showPopup('Debe seleccionar el Medio de Pago.', '❗', false);
+      return;
+    }
+    if (!vendedor) {
+      showPopup('Debe completar el campo Vendedor.', '❗', false);
+      return;
+    }
 
     // Procesar y guardar subtotal y total como enteros (solo dígitos)
     function onlyDigits(str) {
@@ -337,9 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const envio = parseInt(onlyDigits(form.envio.value), 10) || 0;
     const subtotal = parseInt(onlyDigits(form.subtotal.value), 10) || 0;
     const totalFinal = parseInt(onlyDigits(form.totalFinal.value), 10) || 0;
-
     const nota = form.nota ? form.nota.value.trim() : '';
-    const vendedor = form.vendedor ? form.vendedor.value.trim() : '';
 
     if (items.length === 0) {
       showPopup('Debe agregar al menos un artículo.', '❗', false);
@@ -368,6 +419,9 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch('https://api.bluelytics.com.ar/v2/latest')
       .then(r => r.json())
       .then(d => {
+        if (!d.blue || (typeof d.blue.value_sell === 'undefined' && typeof d.blue.sell === 'undefined')) {
+          throw new Error('cotizacion');
+        }
         let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
         // Construir objeto pedido
         const costos = calcularCostos();
@@ -441,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function() {
               });
           });
         } else {
-          // Ya no se calcula ni se asigna pedidoObj.Orden
+
           // Agregar campo fecha solo al crear el pedido
           pedidoObj.fecha = getFechaActual();
           // Usar push para obtener el id generado
@@ -461,8 +515,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
       })
-      .catch(() => {
-        showPopup('No se pudo obtener la cotización del dólar blue.', '❌', false);
+      .catch(err => {
+        if (err && err.message === 'cotizacion') {
+          showPopup('No se pudo obtener la cotización del dólar blue.', '❌', false);
+        } else {
+          showPopup('Ocurrió un error inesperado al guardar el pedido.', '❌', false);
+        }
       });
   }
 

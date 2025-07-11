@@ -6,12 +6,17 @@
   <title>Ingreso de Pedido</title>
   <link rel="icon" href="faviconnegro.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
+  <!-- Agregar Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <!-- Firebase SDKs (solo una vez, última versión) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="config.js"></script>
+  <!-- Agregar jQuery y Select2 JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
     // Inicializar Firebase solo una vez
     if (!firebase.apps.length) {
@@ -48,7 +53,8 @@
         </div>
         <div class="form-row">
           <label for="telefono">Teléfono</label>
-          <input type="tel" id="telefono" name="telefono" maxlength="20" pattern="^[0-9+\\s()\\-]{7,20}$" autocomplete="tel">
+          <!-- Eliminado pattern para evitar error de regex; usar inputmode para orientación numérica -->
+          <input type="tel" id="telefono" name="telefono" maxlength="20" inputmode="tel" autocomplete="tel">
         </div>
         <div class="form-row">
           <label for="direccion">Dirección</label>
