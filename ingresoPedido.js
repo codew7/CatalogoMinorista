@@ -498,7 +498,7 @@ addItemBtn.addEventListener('click', function() {
         if (!d.blue || (typeof d.blue.value_sell === 'undefined' && typeof d.blue.sell === 'undefined')) {
           throw new Error('cotizacion');
         }
-        let cotizacionCierre = (d.blue.value_sell || d.blue.sell) + 10;
+        let cotizacionCierre = (d.blue.value_sell || d.blue.sell);
         // Construir objeto pedido
         const costos = calcularCostos();
         // Determinar tipo de entrega

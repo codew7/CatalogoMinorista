@@ -39,7 +39,7 @@
       fetch('https://api.bluelytics.com.ar/v2/latest')
         .then(r => r.json())
         .then(d => {
-          cotizacion = (d.blue.value_sell || d.blue.sell) + 10;
+          cotizacion = (d.blue.value_sell || d.blue.sell);
           if (pedidoActual) renderItems();
         })
         .catch(() => {
@@ -302,9 +302,15 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
         if (pedidoActual.status === 'CANCELADO') return;
         if (despachadoEntregadoBtn.disabled) return;
         despachadoEntregadoBtn.disabled = true;
+        // Función para obtener la fecha en el formato de ingresoPedido.js
+        function getFechaActual() {
+          const now = new Date();
+          const pad = n => n.toString().padStart(2, '0');
+          return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        }
         try {
           if (pedidoActual.movimientosRegistrados) {
-            await pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true });
+            await pedidoRef.update({ status: 'DESPACHADO/ENTREGADO', locked: true, fecha: getFechaActual() });
             alert('Pedido marcado como DESPACHADO/ENTREGADO. (Movimientos ya registrados)');
             return;
           }
@@ -330,7 +336,8 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
           await pedidoRef.update({
             items: pedidoActual.items,
             status: 'DESPACHADO/ENTREGADO',
-            locked: true
+            locked: true,
+            fecha: getFechaActual()
           });
           // === REGISTRO DE PAGOS ===
           // Calcular subtotal (total en pesos)
@@ -612,59 +619,75 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
   };
 
   /* === Guardar Cambios === */
-  document.getElementById('guardarBtn').onclick = () => {
-    /* 1. Validación opcional */
-    if (!pedidoActual || !pedidoActual.items || !pedidoActual.items.length) {
-      alert('El pedido está vacío.');
-      return;
-    }
+document.getElementById('guardarBtn').onclick = () => {
+  /* 1. Validación opcional */
+  if (!pedidoActual || !pedidoActual.items || !pedidoActual.items.length) {
+    alert('El pedido está vacío.');
+    return;
+  }
 
-    // Obtener selección de pago y entrega
-    const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
-    const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked')?.value || 'Retiro en local';
+  // Obtener selección de pago y entrega
+  const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
+  const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked')?.value || 'Retiro en local';
 
-    // Determinar quién modifica
-    let lastModifiedBy = 'usuario';
-    let lastModifiedEmail = '';
-    let adminViewedValue = false;
-    const user = firebase.auth().currentUser;
-    if (admin && user) {
-      lastModifiedBy = 'admin';
-      lastModifiedEmail = user.email || '';
-      adminViewedValue = true;
-    }
+  // Calcular campo entrega
+  let entrega = '';
+  if (tipoEntrega && tipoEntrega !== 'Retiro en local') {
+    entrega = 'Envios';
+  }
 
-    /* 2. Enviamos la actualización */
-    firebase
-      .database()
-      .ref('pedidos/' + pedidoActual.id)
-      .update({
-        items:       pedidoActual.items, // lista modificada
-        adminViewed: adminViewedValue,   // ← solo true si admin
-        lastUpdated: Date.now(),         // (útil para ordenar por fecha)
-        tipoPago: tipoPago,
-        tipoEntrega: tipoEntrega,
-        lastModifiedBy: lastModifiedBy,
-        lastModifiedEmail: lastModifiedEmail
-      })
-      .then(() => alert('Pedido actualizado ✔️'))
-      .catch(()  => alert('Error al guardar'));
-  };
+  // Determinar quién modifica
+  let lastModifiedBy = 'usuario';
+  let lastModifiedEmail = '';
+  let adminViewedValue = false;
+  const user = firebase.auth().currentUser;
+  if (admin && user) {
+    lastModifiedBy = 'admin';
+    lastModifiedEmail = user.email || '';
+    adminViewedValue = true;
+  }
+
+  /* 2. Enviamos la actualización */
+  firebase
+    .database()
+    .ref('pedidos/' + pedidoActual.id)
+    .update({
+      items:       pedidoActual.items, // lista modificada
+      adminViewed: adminViewedValue,   // ← solo true si admin
+      lastUpdated: Date.now(),         // (útil para ordenar por fecha)
+      tipoPago: tipoPago,
+      tipoEntrega: tipoEntrega,
+      entrega: entrega,
+      lastModifiedBy: lastModifiedBy,
+      lastModifiedEmail: lastModifiedEmail
+    })
+    .then(() => alert('Pedido actualizado ✔️'))
+    .catch(()  => alert('Error al guardar'));
+};
 
 
-  document.getElementById('cerrarBtn').onclick = () => {
-    if (!confirm("¿Cerrar definitivamente el pedido?")) return;
-    // Determinar quién modifica
-    let lastModifiedBy = 'usuario';
-    let lastModifiedEmail = '';
-    if (admin && firebase.auth().currentUser) {
-      lastModifiedBy = 'admin';
-      lastModifiedEmail = firebase.auth().currentUser.email || '';
-    }
-    // Al cerrar, guardo la cotización actual y status
-    pedidoRef.update({ locked:true, cotizacionCierre: cotizacion, status: 'CERRADO', lastModifiedBy, lastModifiedEmail })
-      .then(()=>alert("Pedido cerrado"));
-  };
+document.getElementById('cerrarBtn').onclick = () => {
+  // Validar que ambos radios estén seleccionados
+  const tipoPago = document.querySelector('input[name="tipoPago"]:checked');
+  const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked');
+  if (!tipoPago || !tipoEntrega) {
+    alert('Debe seleccionar un tipo de pago y un tipo de entrega antes de cerrar el pedido.');
+    return;
+  }
+  // Ejecutar guardarBtn antes de cerrar
+  document.getElementById('guardarBtn').click();
+  if (!confirm("¿Cerrar definitivamente el pedido?")) return;
+  // Determinar quién modifica
+  let lastModifiedBy = 'usuario';
+  let lastModifiedEmail = '';
+  if (admin && firebase.auth().currentUser) {
+    lastModifiedBy = 'admin';
+    lastModifiedEmail = firebase.auth().currentUser.email || '';
+  }
+  // Al cerrar, guardo la cotización actual y status
+  pedidoRef.update({ locked:true, cotizacionCierre: cotizacion, status: 'CERRADO', lastModifiedBy, lastModifiedEmail })
+    .then(()=>alert("Pedido cerrado"));
+};
 
   document.getElementById('reabrirBtn').onclick = async () => {
   if (!admin || !pedidoActual.locked) return;            // solo admin y pedido cerrado
