@@ -101,6 +101,24 @@ document.addEventListener('DOMContentLoaded', function() {
     radiosTipoCliente = Array.from(document.querySelectorAll('input[type="radio"][name="tipoCliente"]'));
   }
 
+  // === FUNCIÓN PARA ACTUALIZAR TODOS LOS ITEMS DESPUÉS DE CARGAR GOOGLE SHEETS ===
+  function actualizarTodosLosItems() {
+    items.forEach(item => {
+      if (item.nombre && articulosPorNombre[item.nombre]) {
+        // Preservar cantidad actual
+        const cantidadActual = item.cantidad;
+        // Usar función auxiliar para actualizar campos
+        actualizarCamposArticulo(item, item.nombre);
+        // Restaurar cantidad
+        item.cantidad = cantidadActual;
+        // Recalcular valorG
+        item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
+      }
+    });
+    // Re-renderizar para mostrar cambios
+    renderItems();
+  }
+
   // Cargar artículos al iniciar
   fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
     .then(response => response.json())
@@ -111,6 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
         articulosPorCodigo[item[2]] = item;
         articulosPorNombre[item[3]] = item;
       });
+      // Actualizar items existentes con datos frescos de Google Sheets
+      actualizarTodosLosItems();
       // Habilitar controles después de cargar
       setControlesBloqueados(false);
       // Mantener tipoCliente como solo lectura
@@ -134,6 +154,50 @@ function getTipoCliente() {
   const sel = document.querySelector('input[name="tipoCliente"]:checked');
   return sel ? sel.value : 'consumidor final';
 }
+
+  // === FUNCIÓN AUXILIAR PARA ACTUALIZAR CAMPOS DE ARTÍCULO ===
+  function actualizarCamposArticulo(item, nombre) {
+    if (!nombre || !articulosPorNombre[nombre]) {
+      // Si no hay artículo, limpiar campos
+      item.codigo = '';
+      item.nombre = '';
+      item.valorU = 0;
+      item.valorC = 0;
+      item.categoria = '';
+      item.seleccionado = '';
+      item.valorG = 0;
+      return;
+    }
+
+    const art = articulosPorNombre[nombre];
+    const currentTipo = getTipoCliente();
+    
+    // Asignar campos básicos
+    item.codigo = art[2] || '';
+    item.nombre = art[3] || '';
+    
+    // Asignar valorU según tipo de cliente
+    let valorRaw = currentTipo === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
+    valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+    item.valorU = parseInt(valorRaw) || 0;
+    
+    // Asignar valorC desde columna H (índice 7)
+    let valorCRaw = art[7] || '0';
+    valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+    item.valorC = parseInt(valorCRaw) || 0;
+    
+    // Asignar categoria desde columna A (índice 0) - SIEMPRE
+    item.categoria = art[0] || '';
+    
+    // Asignar seleccionado desde columna I (índice 8) - SIEMPRE
+    item.seleccionado = art[8] || '';
+    
+    // Calcular valorG
+    item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
+    
+    // Debug log para verificar que los campos se están asignando correctamente
+    console.log(`Artículo actualizado: ${nombre} -> categoria: "${item.categoria}", seleccionado: "${item.seleccionado}"`);
+  }
 
   function renderItems() {
     itemsBody.innerHTML = '';
@@ -186,32 +250,20 @@ function getTipoCliente() {
           }, 50);
         }, 0);
       }
-      // --- NUEVO: Calcular valorU, valorC, seleccionado y valorG automáticamente si hay artículo seleccionado ---
+      // --- Actualizar todos los campos del artículo si hay uno seleccionado ---
       if (item.nombre && articulosPorNombre[item.nombre]) {
-        const art = articulosPorNombre[item.nombre];
-        // Usar columna según tipo de cliente seleccionado
-        let valorRaw = currentTipo === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
-        valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
-        const valorU = parseInt(valorRaw) || 0;
-        // valorC desde columna H (índice 7)
-        let valorCRaw = art[7] || '0';
-        valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
-        const valorC = parseInt(valorCRaw) || 0;
-        // categoria desde columna A (índice 0)
-        const categoria = art[0] || '';
-        // seleccionado desde columna I (índice 8)
-        const seleccionado = art[8] || '';
-        // valorG = (valorU - valorC) * cantidad
-        const valorG = (valorU - valorC) * (item.cantidad || 1);
-        if (item.valorU !== valorU || item.valorC !== valorC || item.categoria !== categoria || item.seleccionado !== seleccionado || item.valorG !== valorG) {
-          item.valorU = valorU;
-          item.valorC = valorC;
-          item.categoria = categoria;
-          item.seleccionado = seleccionado;
-          item.valorG = valorG;
-          row.querySelector('.valorU').value = valorU;
-          row.querySelector('.valorTotal').textContent = (item.cantidad * valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
-        }
+        // Usar función auxiliar para garantizar consistencia
+        const cantidadOriginal = item.cantidad; // Preservar cantidad
+        const valorUOriginal = item.valorU; // Preservar valorU si ya estaba definido
+        actualizarCamposArticulo(item, item.nombre);
+        // Restaurar cantidad y valorU originales si existían
+        if (cantidadOriginal) item.cantidad = cantidadOriginal;
+        if (valorUOriginal) item.valorU = valorUOriginal;
+        // Recalcular valorG con valores actuales
+        item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
+        // Actualizar interfaz
+        row.querySelector('.valorU').value = item.valorU;
+        row.querySelector('.valorTotal').textContent = (item.cantidad * item.valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
       }
       subtotal += item.cantidad * item.valorU;
     });
@@ -224,32 +276,16 @@ function getTipoCliente() {
     itemsBody.querySelectorAll('.nombre-select').forEach((select, idx) => {
       select.addEventListener('change', function() {
         const nombreSel = this.value;
-        const art = articulosPorNombre[nombreSel];
         const row = this.closest('tr');
-        if (art) {
-          items[idx].codigo = art[2];
-          items[idx].nombre = art[3];
-          // Leer tipo de cliente actual
-          const currentTipo = getTipoCliente();
-          // Asignar valorU según tipo
-          let valorRaw = currentTipo === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
-          valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
-          items[idx].valorU = parseInt(valorRaw) || 0;
-          // Asignar valorC desde columna H (índice 7)
-          let valorCRaw = art[7] || '0';
-          valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
-          items[idx].valorC = parseInt(valorCRaw) || 0;
-          row.querySelector('.codigo').value = art[2];
-          row.querySelector('.valorU').value = items[idx].valorU;
-        } else {
-          items[idx].codigo = '';
-          items[idx].nombre = '';
-          items[idx].valorU = 0;
-          items[idx].valorC = 0;
-          row.querySelector('.codigo').value = '';
-          row.querySelector('.valorU').value = '';
-        }
+        
+        // Usar función auxiliar para actualizar todos los campos consistentemente
+        actualizarCamposArticulo(items[idx], nombreSel);
+        
+        // Actualizar interfaz
+        row.querySelector('.codigo').value = items[idx].codigo;
+        row.querySelector('.valorU').value = items[idx].valorU;
         row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
+        
         subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
         calcularTotalFinal();
       });
@@ -300,24 +336,32 @@ addItemBtn.addEventListener('click', function() {
     if (!row) return;
     const idx = Array.from(itemsBody.children).indexOf(row);
     if (idx < 0) return;
+    
+    // Actualizar valores básicos desde interfaz
     items[idx].codigo = row.querySelector('.codigo').value;
     const nombreInput = row.querySelector('.nombre-input');
     if (nombreInput) items[idx].nombre = nombreInput.value;
     items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
     let valorUraw = row.querySelector('.valorU').value.replace(/,/g, '');
     items[idx].valorU = parseInt(valorUraw) || 0;
-    // Actualizar categoria, seleccionado y valorG si corresponde
+    
+    // Usar función auxiliar para actualizar campos derivados si hay artículo válido
     if (items[idx].nombre && articulosPorNombre[items[idx].nombre]) {
-      items[idx].categoria = articulosPorNombre[items[idx].nombre][0] || '';
-      items[idx].seleccionado = articulosPorNombre[items[idx].nombre][8] || '';
-      let valorCRaw = articulosPorNombre[items[idx].nombre][7] || '0';
+      const art = articulosPorNombre[items[idx].nombre];
+      // Solo actualizar campos que vienen de Google Sheets, preservar cantidad y valorU de la interfaz
+      items[idx].categoria = art[0] || '';
+      items[idx].seleccionado = art[8] || '';
+      let valorCRaw = art[7] || '0';
       valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
       items[idx].valorC = parseInt(valorCRaw) || 0;
       items[idx].valorG = (items[idx].valorU - items[idx].valorC) * (items[idx].cantidad || 1);
     } else {
+      items[idx].categoria = '';
       items[idx].seleccionado = '';
+      items[idx].valorC = 0;
       items[idx].valorG = 0;
     }
+    
     row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
     subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
     calcularTotalFinal();
@@ -468,26 +512,29 @@ addItemBtn.addEventListener('click', function() {
         showPopup('Complete correctamente los datos de los artículos.', '❗', false);
         return;
       }
-      // Asegurar que valorC nunca sea undefined
+      
+      // FORZAR ACTUALIZACIÓN de todos los campos desde Google Sheets antes de guardar
+      if (item.nombre && articulosPorNombre[item.nombre]) {
+        const art = articulosPorNombre[item.nombre];
+        // Forzar actualización de categoria y seleccionado
+        item.categoria = art[0] || '';
+        item.seleccionado = art[8] || '';
+        // Forzar actualización de valorC
+        let valorCRaw = art[7] || '0';
+        valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+        item.valorC = parseInt(valorCRaw) || 0;
+      } else {
+        // Si no hay artículo válido, limpiar campos
+        item.categoria = '';
+        item.seleccionado = '';
+        item.valorC = 0;
+      }
+      
+      // Asegurar que valorC nunca sea undefined (fallback adicional)
       if (typeof item.valorC === 'undefined' || item.valorC === null) {
         item.valorC = 0;
       }
-      // Asegurar que categoria nunca sea undefined
-      if (typeof item.categoria === 'undefined' || item.categoria === null) {
-        if (item.nombre && articulosPorNombre[item.nombre]) {
-          item.categoria = articulosPorNombre[item.nombre][0] || '';
-        } else {
-          item.categoria = '';
-        }
-      }
-      // Asegurar que seleccionado nunca sea undefined
-      if (typeof item.seleccionado === 'undefined' || item.seleccionado === null) {
-        if (item.nombre && articulosPorNombre[item.nombre]) {
-          item.seleccionado = articulosPorNombre[item.nombre][8] || '';
-        } else {
-          item.seleccionado = '';
-        }
-      }
+      
       // Calcular valorG
       item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
     }
@@ -782,23 +829,29 @@ addItemBtn.addEventListener('click', function() {
           messageDiv.style.color = 'red';
           return;
         }
+        
+        // FORZAR ACTUALIZACIÓN de todos los campos desde Google Sheets antes de guardar
+        if (item.nombre && articulosPorNombre[item.nombre]) {
+          const art = articulosPorNombre[item.nombre];
+          // Forzar actualización de categoria y seleccionado
+          item.categoria = art[0] || '';
+          item.seleccionado = art[8] || '';
+          // Forzar actualización de valorC
+          let valorCRaw = art[7] || '0';
+          valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+          item.valorC = parseInt(valorCRaw) || 0;
+        } else {
+          // Si no hay artículo válido, limpiar campos
+          item.categoria = '';
+          item.seleccionado = '';
+          item.valorC = 0;
+        }
+        
+        // Asegurar que valorC nunca sea undefined (fallback adicional)
         if (typeof item.valorC === 'undefined' || item.valorC === null) {
           item.valorC = 0;
         }
-        // Asegurar que categoria nunca sea undefined y siempre actualizada
-        if (item.nombre && articulosPorNombre[item.nombre]) {
-          item.categoria = articulosPorNombre[item.nombre][0] || '';
-        } else {
-          item.categoria = '';
-        }
-        // Asegurar que seleccionado nunca sea undefined
-        if (typeof item.seleccionado === 'undefined' || item.seleccionado === null) {
-          if (item.nombre && articulosPorNombre[item.nombre]) {
-            item.seleccionado = articulosPorNombre[item.nombre][8] || '';
-          } else {
-            item.seleccionado = '';
-          }
-        }
+        
         // Calcular valorG
         item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
       }
@@ -1439,6 +1492,7 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
             cotizacionCierre: cotizacionCierre,
             tipo: 'SALIDA',
             pedidoId: pedidoId
+         
           };
           db.ref('movimientos/' + id).set(movimiento)
             .catch(err => {
