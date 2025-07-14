@@ -40,24 +40,7 @@
       document.getElementById('filtroTipoCliente').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') aplicarFiltros();
       });
-      document.getElementById('btnConfirmarEliminar').onclick = function() {
-        const pass = document.getElementById('inputPassword').value;
-        if (pass !== '212118') {
-          document.getElementById('msgPasswordError').style.display = 'block';
-          return;
-        }
-        if (!pedidoAEliminar) return;
-        db.ref('pedidos/' + pedidoAEliminar).remove()
-          .then(() => {
-            cerrarModalPassword();
-            setTimeout(() => renderPedidos(), 200);
-            alert('Pedido eliminado.');
-          })
-          .catch(() => {
-            cerrarModalPassword();
-            alert('Error al eliminar el pedido.');
-          });
-      };
+
     });
     function renderPedidos() {
       const tbody = document.getElementById('pedidosBody');
@@ -72,15 +55,20 @@
         keys = keys.filter(id => (pedidos[id].cliente?.tipoCliente || '') === filtroTipo);
       }
       if (keys.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">No hay pedidos que coincidan con los filtros.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6">No hay pedidos que coincidan con los filtros.</td></tr>';
         return;
       }
+      
+      // Limitar a los últimos 20 pedidos
+      keys = keys.slice(0, 20);
+      
       tbody.innerHTML = '';
       keys.forEach(id => {
         const p = pedidos[id];
         const fecha = p.fecha || '';
         const cliente = p.cliente || {};
         const tipoCliente = cliente.tipoCliente || '';
+        const vendedor = p.vendedor || 'No asignado';
         const isCancelado = (p.status || '').toUpperCase() === 'CANCELADO';
         const isBloqueado = !!p.locked;
         const pagos = p.pagos || {};
@@ -90,13 +78,13 @@
         tbody.innerHTML += `
           <tr${isCancelado ? ' style="background:#e0e0e0;color:#888;"' : ''}>
             <td>${fecha}</td>
-            <td>${cliente.nombre || ''}</td>
+            <td style="cursor:pointer;text-decoration:underline;color:#2a3d8f;" onclick="verPedido('${id}')">${cliente.nombre || ''}</td>
             <td>${tipoCliente}</td>
-            <td>${totalFinal}</td>  
+            <td>${totalFinal}</td>
+            <td>${vendedor}</td>
             <td>
               <button onclick="verPedido('${id}')">Ver</button>
               <button onclick="cancelarPedido('${id}')"${isCancelado || isBloqueado ? ' disabled style=\"background:#ccc;cursor:not-allowed;\"' : ''}>Cancelar</button>
-              <button onclick="eliminarPedido('${id}')"${isCancelado || isBloqueado ? ' disabled style=\"background:#ccc;cursor:not-allowed;\"' : ''}>Eliminar</button>
             </td>
             </tr>
         `;
@@ -119,67 +107,18 @@
         .then(() => alert('Pedido cancelado.'))
         .catch(() => alert('Error al cancelar el pedido.'));
     }
-    let pedidoAEliminar = null;
-    function eliminarPedido(id) {
-      pedidoAEliminar = id;
-      document.getElementById('inputPassword').value = '';
-      document.getElementById('msgPasswordError').style.display = 'none';
-      document.getElementById('modalPassword').style.display = 'flex';
-      document.getElementById('inputPassword').focus();
-      // Agregar listeners para Enter y Escape
-      document.addEventListener('keydown', modalKeyHandler);
-    }
-    function cerrarModalPassword() {
-      document.getElementById('modalPassword').style.display = 'none';
-      pedidoAEliminar = null;
-      // Remover listeners para evitar duplicados
-      document.removeEventListener('keydown', modalKeyHandler);
-    }
-    function modalKeyHandler(e) {
-      if (document.getElementById('modalPassword').style.display !== 'flex') return;
-      if (e.key === 'Enter') {
-        document.getElementById('btnConfirmarEliminar').click();
-        e.preventDefault();
-      } else if (e.key === 'Escape') {
-        cerrarModalPassword();
-        e.preventDefault();
-      }
-    }
   </script>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; background: #f1f1f1; }
-    main { max-width: 900px; margin: 30px auto; background: #fff; border-radius: 8px; padding: 24px; }
+    main { max-width: 1000px; margin: 30px auto; background: #fff; border-radius: 8px; padding: 24px; }
     header {background: linear-gradient(90deg, #5c5866, #989899); padding: 1.5rem 1rem 1.5rem 1rem; box-shadow: #5c5866 0px 2px 8px 0px; text-align: center;}
     header h1 {margin: 0; font-size: 2.2rem; color: #39373f; letter-spacing: 1px; font-weight: 700;}
-    table { width: 100%; min-width: 900px; border-collapse: collapse; margin-top: 20px; background: #fff; }
+    table { width: 100%; min-width: 1000px; border-collapse: collapse; margin-top: 20px; background: #fff; }
     th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
     th { background: #5c5866; color: #fff; }
     tr:nth-child(even) { background: #f9f9f9; }
     button { margin: 0 2px; padding: 6px 12px; border-radius: 4px; border: none; background: #f44336; color: #fff; cursor: pointer; }
     button:hover { background: #d8382c; }
-    /* Estilos del modal */
-    #modalPassword {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.3);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-    #modalPassword > div {
-      background: #fff;
-      border-radius: 8px;
-      padding: 24px;
-      min-width: 300px;
-      box-shadow: 0 2px 16px #0002;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
     #filtroNombre, #filtroTipoCliente {
       width: 220px; /* Puedes ajustar este valor según lo que necesites */
     }
@@ -207,26 +146,14 @@
           <th>Nombre</th>
           <th>Tipo de Cliente</th>
           <th>Total Final</th>
+          <th>Vendedor</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody id="pedidosBody">
-        <tr><td colspan="5">Cargando...</td></tr>
+        <tr><td colspan="6">Cargando...</td></tr>
       </tbody>
     </table>
   </main>
-  <!-- Modal para contraseña de eliminación -->
-  <div id="modalPassword" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:8px; padding:24px; min-width:300px; box-shadow:0 2px 16px #0002; display:flex; flex-direction:column; align-items:center;">
-      <h3 style="color:#4b2e83; margin-bottom:16px;">Confirmar eliminación</h3>
-      <p style="margin-bottom:12px; color:#333;">Ingrese la contraseña para eliminar el pedido:</p>
-      <input id="inputPassword" type="password" placeholder="Contraseña" style="padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:16px; width:100%;">
-      <div style="display:flex; gap:10px;">
-        <button id="btnConfirmarEliminar" style="background:#f44336;">Eliminar</button>
-        <button onclick="cerrarModalPassword()" style="background:#888;">Cancelar</button>
-      </div>
-      <span id="msgPasswordError" style="color:#f44336; margin-top:10px; display:none;">Contraseña incorrecta</span>
-    </div>
-  </div>
 </body>
 </html>

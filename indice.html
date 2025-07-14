@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Índice de Archivos HTML - Proyecto Web2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .files-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .file-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+            transform: translateX(5px);
+        }
+
+        .file-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-path {
+            font-size: 0.85rem;
+            color: #718096;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-files {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .no-files-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .stats {
+                justify-content: center;
+            }
+
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .file-info {
+                width: 100%;
+            }
+
+            .file-name, .file-path {
+                white-space: normal;
+                overflow: visible;
+                text-overflow: initial;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📁 Índice de Archivos HTML</h1>
+            <p>Explorador automático de archivos HTML del proyecto Web2</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar archivos HTML...">
+            </div>
+            <div class="stats">
+                <span id="fileCount">Cargando...</span>
+                <span id="lastUpdate"></span>
+            </div>
+            <button class="refresh-btn" onclick="loadHtmlFiles()">
+                🔄 Actualizar
+            </button>
+        </div>
+
+        <div class="content">
+            <div id="loadingIndicator" class="loading">
+                <div class="loading-spinner"></div>
+                <p>Escaneando archivos HTML...</p>
+            </div>
+            <div id="filesContainer" class="files-list" style="display: none;"></div>
+            <div id="noFilesMessage" class="no-files" style="display: none;">
+                <div class="no-files-icon">📄</div>
+                <h3>No se encontraron archivos HTML</h3>
+                <p>Agrega archivos .html al proyecto y actualiza la página</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lista de archivos HTML conocidos del proyecto
+        const knownHtmlFiles = [
+            'analisisFacturacion.html',
+            'consultaStock.html',
+            'controlArticulos.html',
+            'facturacion.html',
+            'historialPedidos.html',
+            'historialPedidosWeb.html',
+            'index.html',
+            'ingresoPedido.html',
+            'inventario.html',
+            'login.html',
+            'mayorista.html',
+            'panelControl.html',
+            'pedidos.html',
+            'pedidos copy.html',
+            'tablaPedidos.html'
+        ];
+
+        let allFiles = [];
+        let filteredFiles = [];
+
+        // Función para detectar archivos HTML automáticamente
+        async function detectHtmlFiles() {
+            const detectedFiles = [];
+            
+            // Intentar detectar archivos adicionales mediante fetch
+            const possibleFiles = [
+                ...knownHtmlFiles,
+                // Patrones comunes de nombres de archivos HTML
+                'admin.html',
+                'dashboard.html',
+                'configuracion.html',
+                'reportes.html',
+                'usuarios.html',
+                'productos.html',
+                'clientes.html',
+                'ventas.html',
+                'compras.html',
+                'estadisticas.html'
+            ];
+
+            for (const file of possibleFiles) {
+                try {
+                    const response = await fetch(file, { method: 'HEAD' });
+                    if (response.ok) {
+                        detectedFiles.push({
+                            name: file,
+                            path: file,
+                            exists: true
+                        });
+                    }
+                } catch (e) {
+                    // Archivo no existe o no es accesible
+                }
+            }
+
+            return detectedFiles;
+        }
+
+        // Función para cargar archivos HTML
+        async function loadHtmlFiles() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const filesContainer = document.getElementById('filesContainer');
+            const noFilesMessage = document.getElementById('noFilesMessage');
+            const fileCount = document.getElementById('fileCount');
+            const lastUpdate = document.getElementById('lastUpdate');
+
+            // Mostrar indicador de carga
+            loadingIndicator.style.display = 'block';
+            filesContainer.style.display = 'none';
+            noFilesMessage.style.display = 'none';
+
+            try {
+                // Simular un pequeño delay para mostrar el loading
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                allFiles = await detectHtmlFiles();
+                
+                // Excluir el archivo actual (indice.html) de la lista
+                allFiles = allFiles.filter(file => file.name !== 'indice.html');
+                
+                // Ordenar archivos alfabéticamente por nombre
+                allFiles.sort((a, b) => a.name.localeCompare(b.name));
+                
+                filteredFiles = [...allFiles];
+
+                // Actualizar estadísticas
+                fileCount.textContent = `${allFiles.length} archivos encontrados`;
+                lastUpdate.textContent = `Actualizado: ${new Date().toLocaleTimeString()}`;
+
+                // Ocultar loading y mostrar contenido
+                loadingIndicator.style.display = 'none';
+
+                if (allFiles.length === 0) {
+                    noFilesMessage.style.display = 'block';
+                } else {
+                    filesContainer.style.display = 'block';
+                    renderFiles(filteredFiles);
+                }
+
+            } catch (error) {
+                console.error('Error al cargar archivos:', error);
+                loadingIndicator.style.display = 'none';
+                noFilesMessage.style.display = 'block';
+            }
+        }
+
+        // Función para renderizar archivos
+        function renderFiles(files) {
+            const container = document.getElementById('filesContainer');
+            
+            if (files.length === 0) {
+                container.innerHTML = '<div class="no-files"><h3>No se encontraron archivos que coincidan con la búsqueda</h3></div>';
+                return;
+            }
+
+            container.innerHTML = files.map(file => `
+                <a href="${file.path}" target="_blank" class="file-item">
+                    <div class="file-icon">📄</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-path">${file.path}</div>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // Función de búsqueda
+        function filterFiles(searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filteredFiles = allFiles.filter(file => 
+                file.name.toLowerCase().includes(term) ||
+                file.path.toLowerCase().includes(term)
+            );
+            
+            // Mantener orden alfabético en los resultados filtrados
+            filteredFiles.sort((a, b) => a.name.localeCompare(b.name));
+            
+            renderFiles(filteredFiles);
+            
+            // Actualizar contador
+            const fileCount = document.getElementById('fileCount');
+            if (searchTerm.trim()) {
+                fileCount.textContent = `${filteredFiles.length} de ${allFiles.length} archivos`;
+            } else {
+                fileCount.textContent = `${allFiles.length} archivos encontrados`;
+            }
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            filterFiles(e.target.value);
+        });
+
+        // Cargar archivos al inicio
+        window.addEventListener('load', loadHtmlFiles);
+    </script>
+</body>
+</html>

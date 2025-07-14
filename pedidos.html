@@ -338,33 +338,36 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             status: 'DESPACHADO/ENTREGADO',
             locked: true,
             fecha: getFechaActual()
-          });
-          // === REGISTRO DE PAGOS ===
-          // Calcular subtotal (total en pesos)
-          let subtotal = 0;
-          let costos = 0;
-          const coti = getCotizacionActual();
-          if (Array.isArray(pedidoActual.items)) {
-            pedidoActual.items.forEach(it => {
-              const unitPesos = Math.round((it.valorUSD || 0) * coti);
-              subtotal += Math.round(it.cantidad * unitPesos);
-              costos += (parseFloat(it.valorC) || 0) * (parseInt(it.cantidad) || 0);
-            });
-          }
-          const ganancia = subtotal - costos;
-          // Obtener medio de pago seleccionado
-          let medioPago = 'efectivo';
-          const pagoRadio = document.querySelector('input[name="tipoPago"]:checked');
-          if (pagoRadio) {
-            medioPago = pagoRadio.value.toLowerCase();
-          }
-          // Registrar en subnodo pagos
-          await pedidoRef.child('pagos').set({
-            medioPago,
-            subtotal,
-            costos,
-            ganancia
-          });
+          });      // === REGISTRO DE PAGOS ===
+      // Calcular subtotal (total en pesos)
+      let subtotal = 0;
+      let costos = 0;
+      const coti = getCotizacionActual();
+      if (Array.isArray(pedidoActual.items)) {
+        pedidoActual.items.forEach(it => {
+          const unitPesos = Math.round((it.valorUSD || 0) * coti);
+          subtotal += Math.round(it.cantidad * unitPesos);
+          costos += (parseFloat(it.valorC) || 0) * (parseInt(it.cantidad) || 0);
+        });
+      }
+      const ganancia = subtotal - costos;
+      const costoUSD = costos / coti;
+      // Obtener medio de pago seleccionado
+      let medioPago = 'efectivo';
+      const pagoRadio = document.querySelector('input[name="tipoPago"]:checked');
+      if (pagoRadio) {
+        medioPago = pagoRadio.value.toLowerCase();
+      }
+      // Registrar en subnodo pagos
+      await pedidoRef.child('pagos').set({
+        medioPago,
+        subtotal,
+        costos,
+        ganancia,
+        totalFinal: subtotal
+      });
+      // Registrar costoUSD en el nodo principal del pedido
+      await pedidoRef.update({ costoUSD });
           // 5. Registrar movimientos de salida leyendo el pedido actualizado
           await registrarMovimientoSalidaDesdePedido(pedidoActual.id);
           // 6. Marcar que ya se registraron movimientos
@@ -1027,6 +1030,7 @@ if (admin) {
         });
       }
       const ganancia = subtotal - costos;
+      const costoUSD = costos / coti;
       // Obtener medio de pago seleccionado
       let medioPago = 'efectivo';
       const pagoRadio = document.querySelector('input[name="tipoPago"]:checked');
@@ -1038,8 +1042,11 @@ if (admin) {
         medioPago,
         subtotal,
         costos,
-        ganancia
+        ganancia,
+        totalFinal: subtotal
       });
+      // Registrar costoUSD en el nodo principal del pedido
+      await pedidoRef.update({ costoUSD });
       // 5. Registrar movimientos de salida leyendo el pedido actualizado
       await registrarMovimientoSalidaDesdePedido(pedidoActual.id);
       // 6. Marcar que ya se registraron movimientos

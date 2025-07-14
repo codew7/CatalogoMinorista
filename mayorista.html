@@ -1058,7 +1058,8 @@ continuarBtn.addEventListener('click', () => {
           direccion,
           provincia,
           dni,
-          tipoCliente: 'mayorista'
+          tipoCliente: 'mayorista',
+          registro: 'web'
         }).then(() => {
           modal.style.display = 'none';
           enviarPedidoFinal();

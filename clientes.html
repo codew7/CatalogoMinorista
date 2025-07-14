@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes</title>
+    <link rel="icon" href="faviconnegro.png" type="image/png">
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6c4eb6, #8b5fbf);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box input {
+            padding: 0.8rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            min-width: 300px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #6c4eb6;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #6c4eb6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a3d9b;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: linear-gradient(135deg, #6c4eb6, #8b5fbf);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 11.11%; /* 100% / 9 columnas = 11.11% cada una */
+        }
+
+        th.actions-header {
+            width: 60px; /* Ancho mínimo para la columna de acciones */
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+            width: 11.11%; /* Mismo ancho que los headers */
+        }
+
+        td.actions-cell {
+            width: 60px; /* Ancho mínimo para la columna de acciones */
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+
+        tr.editing {
+            background: #fff3cd !important;
+        }
+
+        tr.editing:hover {
+            background: #fff3cd !important;
+            cursor: default !important; /* Cambiar cursor en modo edición */
+        }
+
+        .editable-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid #6c4eb6;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid #6c4eb6;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: white;
+        }
+
+        .save-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-right: 0.3rem;
+        }
+
+        .save-btn:hover {
+            background: #219a52;
+        }
+
+        .cancel-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .cancel-btn:hover {
+            background: #7f8c8d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #6c4eb6;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .actions-cell {
+            text-align: center;
+            white-space: nowrap;
+            width: 60px !important; /* Forzar ancho mínimo */
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box input {
+                min-width: 100%;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 0.7rem 0.5rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .type-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .type-consumidor {
+            background: #e8f5e8;
+            color: #2d8659;
+        }
+
+        .type-mayorista {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .registro-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .registro-web {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .registro-local {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+    </style>
+</head>
+<body>
+    <!-- Firebase Auth Check -->
+    <script>
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+        
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (!user) {
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+            }
+        });
+    </script>
+
+    <div class="header">
+        <h1>🧑‍🤝‍🧑 Gestión de Clientes</h1>
+        <p>Administra la información de todos tus clientes de forma simple y eficiente</p>
+    </div>
+
+    <div class="container">
+        <!-- Estadísticas -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalClientes">0</div>
+                <div class="stat-label">Total Clientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="clientesConsumidor">0</div>
+                <div class="stat-label">Consumidores Finales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="clientesMayorista">0</div>
+                <div class="stat-label">Mayoristas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="clientesConEmail">0</div>
+                <div class="stat-label">Con Email</div>
+            </div>
+        </div>
+
+        <!-- Controles -->
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar por nombre, email, teléfono, dirección o provincia...">
+            </div>
+            <button class="btn btn-primary" onclick="agregarNuevoCliente()">
+                ➕ Agregar Cliente
+            </button>
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-container">
+            <div id="loadingDiv" class="loading">
+                <div>⏳ Cargando clientes...</div>
+            </div>
+            
+            <table id="clientesTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th>Provincia</th>
+                        <th>DNI</th>
+                        <th>Tipo Cliente</th>
+                        <th>Registro</th>
+                        <th class="actions-header"></th>
+                    </tr>
+                </thead>
+                <tbody id="clientesTableBody">
+                </tbody>
+            </table>
+
+            <div id="noDataDiv" class="no-data" style="display: none;">
+                <div>📋 No se encontraron clientes</div>
+                <p>Agrega tu primer cliente para comenzar</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let todosLosClientes = [];
+        let clientesFiltrados = [];
+        let clienteEditando = null;
+
+        // Lista de provincias argentinas
+        const provinciasArgentinas = [
+            'Buenos Aires',
+            'Catamarca',
+            'Chaco',
+            'Chubut',
+            'Córdoba',
+            'Corrientes',
+            'Entre Ríos',
+            'Formosa',
+            'Jujuy',
+            'La Pampa',
+            'La Rioja',
+            'Mendoza',
+            'Misiones',
+            'Neuquén',
+            'Río Negro',
+            'Salta',
+            'San Juan',
+            'San Luis',
+            'Santa Cruz',
+            'Santa Fe',
+            'Santiago del Estero',
+            'Tierra del Fuego',
+            'Tucumán',
+            'Ciudad Autónoma de Buenos Aires'
+        ];
+
+        // Elementos del DOM
+        const loadingDiv = document.getElementById('loadingDiv');
+        const tableDiv = document.getElementById('clientesTable');
+        const noDataDiv = document.getElementById('noDataDiv');
+        const tableBody = document.getElementById('clientesTableBody');
+        const searchInput = document.getElementById('searchInput');
+
+        // Elementos de estadísticas
+        const totalClientesEl = document.getElementById('totalClientes');
+        const clientesConsumidorEl = document.getElementById('clientesConsumidor');
+        const clientesMayoristaEl = document.getElementById('clientesMayorista');
+        const clientesConEmailEl = document.getElementById('clientesConEmail');
+
+        // Cargar datos desde Firebase
+        function cargarClientes() {
+            mostrarCarga();
+            
+            db.ref('clientes').on('value', snapshot => {
+                todosLosClientes = [];
+                
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const cliente = child.val();
+                        cliente.id = child.key;
+                        todosLosClientes.push(cliente);
+                    });
+                }
+                
+                // Ordenar por fecha de registro (más antiguos abajo, más recientes arriba)
+                todosLosClientes.sort((a, b) => {
+                    const fechaA = a.fechaRegistro || 0;
+                    const fechaB = b.fechaRegistro || 0;
+                    return fechaB - fechaA; // Orden descendente (más recientes primero)
+                });
+                
+                aplicarFiltros();
+                actualizarEstadisticas();
+                ocultarCarga();
+            }, error => {
+                console.error('Error al cargar clientes:', error);
+                ocultarCarga();
+                mostrarSinDatos();
+            });
+        }
+
+        // Aplicar filtros de búsqueda
+        function aplicarFiltros() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            
+            clientesFiltrados = todosLosClientes.filter(cliente => {
+                const nombre = (cliente.nombre || '').toLowerCase();
+                const email = (cliente.email || '').toLowerCase();
+                const telefono = (cliente.telefono || '').toLowerCase();
+                const direccion = (cliente.direccion || '').toLowerCase();
+                const provincia = (cliente.provincia || '').toLowerCase();
+                const dni = (cliente.dni || '').toLowerCase();
+                
+                return nombre.includes(searchTerm) || 
+                       email.includes(searchTerm) || 
+                       telefono.includes(searchTerm) ||
+                       direccion.includes(searchTerm) ||
+                       provincia.includes(searchTerm) ||
+                       dni.includes(searchTerm);
+            });
+            
+            renderizarTabla();
+        }
+
+        // Renderizar tabla
+        function renderizarTabla() {
+            tableBody.innerHTML = '';
+            
+            if (clientesFiltrados.length === 0) {
+                mostrarSinDatos();
+                return;
+            }
+            
+            mostrarTabla();
+            
+            clientesFiltrados.forEach(cliente => {
+                const fila = crearFilaCliente(cliente);
+                tableBody.appendChild(fila);
+            });
+        }
+
+        // Crear fila de cliente
+        function crearFilaCliente(cliente) {
+            const fila = document.createElement('tr');
+            fila.dataset.clienteId = cliente.id;
+            
+            const tipoCliente = cliente.tipoCliente || 'consumidor final';
+            const badgeClass = tipoCliente.toLowerCase().includes('mayorista') ? 'type-mayorista' : 'type-consumidor';
+            
+            // Determinar el tipo de registro
+            const registro = cliente.registro;
+            let registroTexto = 'Local';
+            let registroBadgeClass = 'registro-local';
+            
+            if (registro && registro.toLowerCase() === 'web') {
+                registroTexto = 'Web';
+                registroBadgeClass = 'registro-web';
+            }
+            
+            fila.innerHTML = `
+                <td><strong>${cliente.nombre || ''}</strong></td>
+                <td>${cliente.email || '<em>Sin email</em>'}</td>
+                <td>${cliente.telefono || '<em>Sin teléfono</em>'}</td>
+                <td>${cliente.direccion || '<em>Sin dirección</em>'}</td>
+                <td>${cliente.provincia || '<em>Sin provincia</em>'}</td>
+                <td>${cliente.dni || '<em>Sin DNI</em>'}</td>
+                <td>
+                    <span class="type-badge ${badgeClass}">
+                        ${tipoCliente}
+                    </span>
+                </td>
+                <td>
+                    <span class="registro-badge ${registroBadgeClass}">
+                        ${registroTexto}
+                    </span>
+                </td>
+                <td class="actions-cell">
+                    <button class="btn-danger tooltip" data-tooltip="Eliminar cliente" onclick="eliminarCliente('${cliente.id}', event)">
+                        ✕
+                    </button>
+                </td>
+            `;
+            
+            // Hacer la fila clickeable para editar SOLO si no está en modo edición
+            fila.addEventListener('click', (e) => {
+                // No editar si se hizo click en eliminar o si ya está editando
+                if (e.target.closest('.btn-danger') || clienteEditando === cliente.id) {
+                    return;
+                }
+                editarCliente(cliente.id);
+            });
+            
+            return fila;
+        }
+
+        // Editar cliente
+        function editarCliente(clienteId) {
+            if (clienteEditando) {
+                cancelarEdicion();
+            }
+            
+            const cliente = todosLosClientes.find(c => c.id === clienteId);
+            if (!cliente) return;
+            
+            clienteEditando = clienteId;
+            const fila = document.querySelector(`tr[data-cliente-id="${clienteId}"]`);
+            fila.classList.add('editing');
+            
+            const tipoCliente = cliente.tipoCliente || 'consumidor final';
+            
+            // Crear opciones para el select de provincias
+            let opcionesProvincias = '<option value="">Seleccionar provincia</option>';
+            provinciasArgentinas.forEach(provincia => {
+                const selected = (cliente.provincia === provincia) ? 'selected' : '';
+                opcionesProvincias += `<option value="${provincia}" ${selected}>${provincia}</option>`;
+            });
+            
+            fila.innerHTML = `
+                <td><input type="text" class="editable-input" value="${cliente.nombre || ''}" id="edit-nombre"></td>
+                <td><input type="email" class="editable-input" value="${cliente.email || ''}" id="edit-email"></td>
+                <td><input type="tel" class="editable-input" value="${cliente.telefono || ''}" id="edit-telefono"></td>
+                <td><input type="text" class="editable-input" value="${cliente.direccion || ''}" id="edit-direccion"></td>
+                <td>
+                    <select class="select-input" id="edit-provincia">
+                        ${opcionesProvincias}
+                    </select>
+                </td>
+                <td><input type="text" class="editable-input" value="${cliente.dni || ''}" id="edit-dni"></td>
+                <td>
+                    <select class="select-input" id="edit-tipoCliente">
+                        <option value="consumidor final" ${tipoCliente === 'consumidor final' ? 'selected' : ''}>Consumidor Final</option>
+                        <option value="mayorista" ${tipoCliente === 'mayorista' ? 'selected' : ''}>Mayorista</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="select-input" id="edit-registro">
+                        <option value="Local" ${(cliente.registro || 'Local') === 'Local' ? 'selected' : ''}>Local</option>
+                        <option value="Web" ${(cliente.registro || '') === 'Web' ? 'selected' : ''}>Web</option>
+                    </select>
+                </td>
+                <td class="actions-cell">
+                    <button class="save-btn" onclick="guardarEdicion('${clienteId}')">💾</button>
+                    <button class="cancel-btn" onclick="cancelarEdicion()">❌</button>
+                </td>
+            `;
+            
+            // Remover el event listener de click de la fila mientras está en edición
+            const nuevaFila = fila.cloneNode(true);
+            fila.parentNode.replaceChild(nuevaFila, fila);
+            
+            // Agregar event listeners para prevenir la propagación de eventos
+            nuevaFila.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            
+            // Prevenir que los selects se cierren
+            const selects = nuevaFila.querySelectorAll('select');
+            selects.forEach(select => {
+                select.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                });
+                select.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            });
+            
+            // Prevenir que los inputs pierdan el foco
+            const inputs = nuevaFila.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+                input.addEventListener('focus', (e) => {
+                    e.stopPropagation();
+                });
+            });
+        }
+
+        // Guardar edición
+        function guardarEdicion(clienteId) {
+            const nombre = document.getElementById('edit-nombre').value.trim();
+            const email = document.getElementById('edit-email').value.trim();
+            const telefono = document.getElementById('edit-telefono').value.trim();
+            const direccion = document.getElementById('edit-direccion').value.trim();
+            const provincia = document.getElementById('edit-provincia').value.trim();
+            const dni = document.getElementById('edit-dni').value.trim();
+            const tipoCliente = document.getElementById('edit-tipoCliente').value;
+            const registro = document.getElementById('edit-registro').value;
+            
+            if (!nombre) {
+                alert('El nombre es obligatorio');
+                return;
+            }
+            
+            const datosActualizados = {
+                nombre,
+                email,
+                telefono,
+                direccion,
+                provincia,
+                dni,
+                tipoCliente,
+                registro
+            };
+            
+            db.ref(`clientes/${clienteId}`).update(datosActualizados)
+                .then(() => {
+                    clienteEditando = null;
+                    // La tabla se actualizará automáticamente por el listener de Firebase
+                })
+                .catch(error => {
+                    console.error('Error al actualizar cliente:', error);
+                    alert('Error al guardar los cambios');
+                });
+        }
+
+        // Cancelar edición
+        function cancelarEdicion() {
+            if (!clienteEditando) return;
+            
+            clienteEditando = null;
+            renderizarTabla(); // Re-renderizar para restaurar la fila original
+        }
+
+        // Eliminar cliente
+        function eliminarCliente(clienteId, event) {
+            event.stopPropagation();
+            
+            const cliente = todosLosClientes.find(c => c.id === clienteId);
+            if (!cliente) return;
+            
+            if (confirm(`¿Estás seguro de que deseas eliminar al cliente "${cliente.nombre}"?\n\nEsta acción no se puede deshacer.`)) {
+                db.ref(`clientes/${clienteId}`).remove()
+                    .then(() => {
+                        // La tabla se actualizará automáticamente por el listener de Firebase
+                    })
+                    .catch(error => {
+                        console.error('Error al eliminar cliente:', error);
+                        alert('Error al eliminar el cliente');
+                    });
+            }
+        }
+
+        // Agregar nuevo cliente
+        function agregarNuevoCliente() {
+            if (clienteEditando) {
+                cancelarEdicion();
+            }
+            
+            const nuevoCliente = {
+                nombre: 'Nuevo Cliente',
+                email: '',
+                telefono: '',
+                direccion: '',
+                provincia: '',
+                dni: '',
+                tipoCliente: 'consumidor final',
+                fechaRegistro: Date.now() // Fecha actual en timestamp
+            };
+            
+            db.ref('clientes').push(nuevoCliente)
+                .then((ref) => {
+                    // Esperar a que se actualice la lista y luego editar
+                    setTimeout(() => {
+                        editarCliente(ref.key);
+                    }, 500);
+                })
+                .catch(error => {
+                    console.error('Error al agregar cliente:', error);
+                    alert('Error al agregar nuevo cliente');
+                });
+        }
+
+        // Actualizar estadísticas
+        function actualizarEstadisticas() {
+            const total = todosLosClientes.length;
+            const consumidores = todosLosClientes.filter(c => 
+                (c.tipoCliente || 'consumidor final').toLowerCase().includes('consumidor')).length;
+            const mayoristas = todosLosClientes.filter(c => 
+                (c.tipoCliente || '').toLowerCase().includes('mayorista')).length;
+            const conEmail = todosLosClientes.filter(c => c.email && c.email.trim() !== '').length;
+            
+            totalClientesEl.textContent = total;
+            clientesConsumidorEl.textContent = consumidores;
+            clientesMayoristaEl.textContent = mayoristas;
+            clientesConEmailEl.textContent = conEmail;
+        }
+
+        // Funciones de UI
+        function mostrarCarga() {
+            loadingDiv.style.display = 'block';
+            tableDiv.style.display = 'none';
+            noDataDiv.style.display = 'none';
+        }
+
+        function mostrarTabla() {
+            loadingDiv.style.display = 'none';
+            tableDiv.style.display = 'table';
+            noDataDiv.style.display = 'none';
+        }
+
+        function mostrarSinDatos() {
+            loadingDiv.style.display = 'none';
+            tableDiv.style.display = 'none';
+            noDataDiv.style.display = 'block';
+        }
+
+        function ocultarCarga() {
+            loadingDiv.style.display = 'none';
+        }
+
+        // Event listeners
+        searchInput.addEventListener('input', aplicarFiltros);
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarClientes();
+        });
+
+        // Manejar tecla Escape para cancelar edición
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && clienteEditando) {
+                cancelarEdicion();
+            }
+        });
+    </script>
+</body>
+</html>
