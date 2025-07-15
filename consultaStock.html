@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Stock - Inventario</title>
+    <title>Consulta de Stock</title>
+    <link rel="icon" href="faviconnegro.png" type="image/png">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
     <style>
         :root {
             --primary: #ffe066;
@@ -38,6 +49,7 @@
             padding: 1.5rem 1rem 1.5rem 1rem;
             box-shadow: #5c5866 0px 2px 8px 0px;
             text-align: center;
+            position: relative;
         }
         header h1 {
             margin: 0;
@@ -182,12 +194,61 @@
                 margin-bottom: 1rem;
             }
         }
+
+        /* Estilos para indicadores de usuario */
+        .user-status-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 1rem 0;
+        }
+
+        #adminIndicator,
+        #userIndicator {
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.6s;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        #adminIndicator.show,
+        #userIndicator.show {
+            display: block !important;
+        }
+
+        /* Estilos para botones de logout */
+        #logoutBtn:hover,
+        #logoutBtnUser:hover {
+            background: rgba(255,255,255,0.4) !important;
+            transform: translateY(-1px);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
     <header>
         <h1>📋 Consulta de Stock 🔎</h1>
         <h2 id="goInventario" style="margin:0;margin-top:0.3em;font-size:1.25rem;font-weight:500;cursor:pointer;color:#b68900;">👉 Gestión de Inventario</h2>
+        
+        <!-- Indicadores de usuario -->
+        <div id="adminIndicator" style="position: absolute; top: 15px; right: 20px; background: rgba(182, 137, 0, 0.9); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; display: none; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <i class="bi bi-shield-check"></i> Modo Administrador
+            <button id="logoutBtn" style="margin-left: 10px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 4px 8px; font-size: 0.75rem; color: white; cursor: pointer; transition: all 0.3s ease;" title="Cerrar sesión">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </div>
+        <div id="userIndicator" style="position: absolute; top: 15px; right: 20px; background: rgba(56, 176, 0, 0.9); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; display: none; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <i class="bi bi-person-check"></i> <span id="userEmail"></span>
+            <button id="logoutBtnUser" style="margin-left: 10px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 4px 8px; font-size: 0.75rem; color: white; cursor: pointer; transition: all 0.3s ease;" title="Cerrar sesión">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </div>
     </header>
     <!-- Modal para contraseña de acceso a Gestión de Inventario -->
     <div id="modalPassword" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:1000; align-items:center; justify-content:center;">
@@ -227,134 +288,276 @@
         </div>
         <div class="error" id="errorMsg" style="display:none;"></div>
     </div>
-    <script src="./config.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- Firebase Auth Check -->
     <script>
-        // Inicializar Firebase solo si no está inicializado
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        // Modal de contraseña para Gestión de Inventario
-        const goInventario = document.getElementById('goInventario');
-        const modalPassword = document.getElementById('modalPassword');
-        const inputPassword = document.getElementById('inputPassword');
-        const btnConfirmarAcceso = document.getElementById('btnConfirmarAcceso');
-        const msgPasswordError = document.getElementById('msgPasswordError');
-        goInventario.onclick = function() {
-            inputPassword.value = '';
-            msgPasswordError.style.display = 'none';
-            modalPassword.style.display = 'flex';
-            setTimeout(() => inputPassword.focus(), 100);
-        };
-        btnConfirmarAcceso.onclick = function() {
-            if (inputPassword.value === '3469') {
-                window.location.href = 'inventario.html';
-            } else {
-                msgPasswordError.style.display = 'block';
-            }
-        };
-        inputPassword.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') btnConfirmarAcceso.click();
-        });
-        function cerrarModalPassword() {
-            modalPassword.style.display = 'none';
-        }
-        // Elementos DOM
-        const tableBody = document.getElementById('tableBody');
-        const spinner = document.getElementById('spinner');
-        const errorMsg = document.getElementById('errorMsg');
-        const searchInput = document.getElementById('searchInput');
-        const clearBtn = document.getElementById('clearBtn');
-        let stockData = [];
-        let filteredData = [];
-        function showSpinner(show) {
-            spinner.style.display = show ? 'flex' : 'none';
-        }
-        function showError(msg) {
-            errorMsg.textContent = msg;
-            errorMsg.style.display = 'block';
-            showSpinner(false);
-        }
-        function clearError() {
-            errorMsg.textContent = '';
-            errorMsg.style.display = 'none';
-        }
-        function renderTable(data) {
-            tableBody.innerHTML = '';
-            if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-dark);">Sin resultados</td></tr>';
-                return;
-            }
-            data.forEach(item => {
-                let stockClass = '';
-                if (item.stock <= 0) stockClass = 'stock-zero';
-                else if (item.stock <= 5) stockClass = 'stock-low';
-                // Validar valor numérico
-                let valorUnitario = (typeof item.valor === 'number' && !isNaN(item.valor)) ? item.valor : 0;
-                tableBody.innerHTML += `
-                    <tr class="${stockClass}">
-                        <td>${item.codigo || ''}</td>
-                        <td>${item.nombre || ''}</td>
-                        <td>${typeof item.stock === 'number' ? item.stock : 0}</td>
-                        <td>$${valorUnitario.toLocaleString('es-AR', {minimumFractionDigits:2})}</td>
-                    </tr>
-                `;
-            });
-        }
-        function filterData() {
-            const q = searchInput.value.trim().toLowerCase();
-            if (!q) {
-                filteredData = [...stockData];
-            } else {
-                filteredData = stockData.filter(item => {
-                    const codigo = (item.codigo || '').toString().toLowerCase();
-                    const nombre = (item.nombre || '').toString().toLowerCase();
-                    return codigo.includes(q) || nombre.includes(q);
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Sistema de autenticación
+        let admin = false; // Declarar admin al principio para evitar errores de hoisting
+        let authResolved = false; // Flag para controlar si la autenticación se resolvió
+        
+        // Lista de emails de administradores
+        const adminEmails = ["distribuidorahomepoint@gmail.com"];
+
+        // Función para inicializar la página después de la autenticación
+        function inicializarPagina() {
+            // Si la página ya está cargada, ejecutar inmediatamente
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('Página inicializada para usuario autenticado');
+                    // Continuar con la inicialización de la página de stock
+                    inicializarStock();
                 });
+            } else {
+                console.log('Página inicializada para usuario autenticado');
+                // Continuar con la inicialización de la página de stock
+                inicializarStock();
             }
-            renderTable(filteredData);
         }
-        clearBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            filterData();
-            searchInput.focus();
+
+        // Función para redirigir a login con parámetro de retorno
+        function redirigirALogin() {
+            const currentUrl = encodeURIComponent(window.location.href);
+            window.location.href = `login.html?redirect=${currentUrl}`;
+        }
+
+        // Timeout de seguridad: verificar autenticación después de 5 segundos
+        setTimeout(() => {
+            if (!authResolved) {
+                console.warn('Timeout de autenticación - redirigiendo a login');
+                redirigirALogin();
+            }
+        }, 5000);
+
+        firebase.auth().onAuthStateChanged(user => {
+            console.log('Firebase Auth State Changed:', user ? 'Usuario autenticado' : 'No hay usuario');
+            authResolved = true; // Marcar que la autenticación se resolvió
+            
+            if (user) {
+                // Usuario autenticado
+                console.log('Usuario autenticado:', user.email);
+                
+                // Verificar si es administrador
+                if (adminEmails.includes(user.email)) {
+                    admin = true;
+                    console.log('Usuario es administrador:', user.email);
+                    
+                    // Mostrar indicador de administrador
+                    const adminIndicator = document.getElementById('adminIndicator');
+                    const userIndicator = document.getElementById('userIndicator');
+                    if (adminIndicator) {
+                        adminIndicator.style.display = 'block';
+                        adminIndicator.classList.add('show');
+                    }
+                    if (userIndicator) {
+                        userIndicator.style.display = 'none';
+                        userIndicator.classList.remove('show');
+                    }
+                } else {
+                    // Usuario normal (no administrador)
+                    admin = false;
+                    console.log('Usuario normal:', user.email);
+                    
+                    // Mostrar indicador de usuario normal
+                    const adminIndicator = document.getElementById('adminIndicator');
+                    const userIndicator = document.getElementById('userIndicator');
+                    const userEmail = document.getElementById('userEmail');
+                    
+                    if (adminIndicator) {
+                        adminIndicator.style.display = 'none';
+                        adminIndicator.classList.remove('show');
+                    }
+                    if (userIndicator) {
+                        userIndicator.style.display = 'block';
+                        userIndicator.classList.add('show');
+                    }
+                    if (userEmail) {
+                        userEmail.textContent = user.email;
+                    }
+                }
+                
+                // Usuario autenticado, inicializar página
+                console.log('Inicializando página para usuario autenticado...');
+                inicializarPagina();
+            } else {
+                // No hay usuario autenticado, redirigir a login
+                console.log('No hay usuario autenticado, redirigiendo a login...');
+                redirigirALogin();
+            }
         });
-        searchInput.addEventListener('input', filterData);
-        function listenStock() {
-            showSpinner(true);
-            clearError();
-            firebase.database().ref('movimientos').on('value', (snapshot) => {
+
+        // Función para cerrar sesión
+        function cerrarSesion() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                firebase.auth().signOut()
+                    .then(() => {
+                        console.log('Sesión cerrada exitosamente');
+                        // La redirección se manejará automáticamente por onAuthStateChanged
+                    })
+                    .catch(error => {
+                        console.error('Error al cerrar sesión:', error);
+                        alert('Error al cerrar sesión: ' + error.message);
+                    });
+            }
+        }
+
+        // Event listeners para los botones de logout
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            const logoutBtnUser = document.getElementById('logoutBtnUser');
+            
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', cerrarSesion);
+            }
+            if (logoutBtnUser) {
+                logoutBtnUser.addEventListener('click', cerrarSesion);
+            }
+        });
+    </script>
+    <!-- Fin Firebase Auth Check -->
+    
+    <script>
+        // Función para inicializar la funcionalidad de stock
+        function inicializarStock() {
+            // Modal de contraseña para Gestión de Inventario
+            const goInventario = document.getElementById('goInventario');
+            const modalPassword = document.getElementById('modalPassword');
+            const inputPassword = document.getElementById('inputPassword');
+            const btnConfirmarAcceso = document.getElementById('btnConfirmarAcceso');
+            const msgPasswordError = document.getElementById('msgPasswordError');
+            
+            goInventario.onclick = function() {
+                inputPassword.value = '';
+                msgPasswordError.style.display = 'none';
+                modalPassword.style.display = 'flex';
+                setTimeout(() => inputPassword.focus(), 100);
+            };
+            
+            btnConfirmarAcceso.onclick = function() {
+                if (inputPassword.value === '3469') {
+                    window.location.href = 'inventario.html';
+                } else {
+                    msgPasswordError.style.display = 'block';
+                }
+            };
+            
+            inputPassword.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') btnConfirmarAcceso.click();
+            });
+
+            // Elementos DOM
+            const tableBody = document.getElementById('tableBody');
+            const spinner = document.getElementById('spinner');
+            const errorMsg = document.getElementById('errorMsg');
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearBtn');
+            let stockData = [];
+            let filteredData = [];
+
+            function showSpinner(show) {
+                spinner.style.display = show ? 'flex' : 'none';
+            }
+
+            function showError(msg) {
+                errorMsg.textContent = msg;
+                errorMsg.style.display = 'block';
                 showSpinner(false);
-                if (!snapshot.exists()) {
-                    stockData = [];
-                    filterData();
+            }
+
+            function clearError() {
+                errorMsg.textContent = '';
+                errorMsg.style.display = 'none';
+            }
+
+            function renderTable(data) {
+                tableBody.innerHTML = '';
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-dark);">Sin resultados</td></tr>';
                     return;
                 }
-                const movimientos = snapshot.val();
-                const stockMap = {};
-                Object.values(movimientos).forEach(mov => {
-                    if (!stockMap[mov.codigo]) {
-                        stockMap[mov.codigo] = {
-                            codigo: mov.codigo,
-                            nombre: mov.nombre,
-                            valor: mov.valor,
-                            stock: 0
-                        };
-                    }
-                    if (mov.tipo === 'ENTRADA') {
-                        stockMap[mov.codigo].stock += Number(mov.cantidad);
-                    } else if (mov.tipo === 'SALIDA') {
-                        stockMap[mov.codigo].stock -= Number(mov.cantidad);
-                    }
+                data.forEach(item => {
+                    let stockClass = '';
+                    if (item.stock <= 0) stockClass = 'stock-zero';
+                    else if (item.stock <= 5) stockClass = 'stock-low';
+                    // Validar valor numérico
+                    let valorUnitario = (typeof item.valor === 'number' && !isNaN(item.valor)) ? item.valor : 0;
+                    tableBody.innerHTML += `
+                        <tr class="${stockClass}">
+                            <td>${item.codigo || ''}</td>
+                            <td>${item.nombre || ''}</td>
+                            <td>${typeof item.stock === 'number' ? item.stock : 0}</td>
+                            <td>$${valorUnitario.toLocaleString('es-AR', {minimumFractionDigits:2})}</td>
+                        </tr>
+                    `;
                 });
-                stockData = Object.values(stockMap).sort((a,b) => a.nombre.localeCompare(b.nombre));
+            }
+
+            function filterData() {
+                const q = searchInput.value.trim().toLowerCase();
+                if (!q) {
+                    filteredData = [...stockData];
+                } else {
+                    filteredData = stockData.filter(item => {
+                        const codigo = (item.codigo || '').toString().toLowerCase();
+                        const nombre = (item.nombre || '').toString().toLowerCase();
+                        return codigo.includes(q) || nombre.includes(q);
+                    });
+                }
+                renderTable(filteredData);
+            }
+
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
                 filterData();
-            }, (error) => {
-                showError('Error al leer datos de inventario: ' + error.message);
+                searchInput.focus();
             });
+
+            searchInput.addEventListener('input', filterData);
+
+            function listenStock() {
+                showSpinner(true);
+                clearError();
+                firebase.database().ref('movimientos').on('value', (snapshot) => {
+                    showSpinner(false);
+                    if (!snapshot.exists()) {
+                        stockData = [];
+                        filterData();
+                        return;
+                    }
+                    const movimientos = snapshot.val();
+                    const stockMap = {};
+                    Object.values(movimientos).forEach(mov => {
+                        if (!stockMap[mov.codigo]) {
+                            stockMap[mov.codigo] = {
+                                codigo: mov.codigo,
+                                nombre: mov.nombre,
+                                valor: mov.valor,
+                                stock: 0
+                            };
+                        }
+                        if (mov.tipo === 'ENTRADA') {
+                            stockMap[mov.codigo].stock += Number(mov.cantidad);
+                        } else if (mov.tipo === 'SALIDA') {
+                            stockMap[mov.codigo].stock -= Number(mov.cantidad);
+                        }
+                    });
+                    stockData = Object.values(stockMap).sort((a,b) => a.nombre.localeCompare(b.nombre));
+                    filterData();
+                }, (error) => {
+                    showError('Error al leer datos de inventario: ' + error.message);
+                });
+            }
+
+            // Inicializar la funcionalidad de stock
+            listenStock();
         }
-        listenStock();
+
+        // Función global para cerrar modal
+        function cerrarModalPassword() {
+            document.getElementById('modalPassword').style.display = 'none';
+        }
     </script>
 </body>
 </html>

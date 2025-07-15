@@ -5,32 +5,91 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Historial Pedidos Web</title>
   <link rel="icon" href="faviconnegro.png" type="image/png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
   <!-- Firebase Auth Check -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="config.js"></script>
   <script>
     firebase.initializeApp(firebaseConfig);
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (!user) {
-        window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
-      }
+    
+    // Sistema de autenticación completo
+    let admin = false;
+    let authResolved = false;
+    
+    // Lista de emails de administradores
+    const adminEmails = ["distribuidorahomepoint@gmail.com"];
+
+    // Función para redirigir a login con parámetro de retorno
+    function redirigirALogin() {
+        const currentUrl = encodeURIComponent(window.location.href);
+        window.location.href = `login.html?redirect=${currentUrl}`;
+    }
+
+    // Timeout de seguridad: verificar autenticación después de 5 segundos
+    setTimeout(() => {
+        if (!authResolved) {
+            console.log('Timeout de autenticación alcanzado, redirigiendo a login');
+            redirigirALogin();
+        }
+    }, 5000);
+
+    firebase.auth().onAuthStateChanged(user => {
+        console.log('Firebase Auth State Changed:', user ? 'Usuario autenticado' : 'No hay usuario');
+        authResolved = true;
+        
+        if (user) {
+            // Verificar si es administrador
+            admin = adminEmails.includes(user.email);
+            console.log('Usuario admin:', admin);
+            
+            // Mostrar indicador apropiado
+            mostrarIndicadorUsuario(user, admin);
+            
+            // Inicializar la página después de la autenticación
+            inicializarHistorialPedidos();
+        } else {
+            redirigirALogin();
+        }
     });
+
+    // Función para mostrar indicador de usuario
+    function mostrarIndicadorUsuario(user, esAdmin) {
+        const userIndicator = document.getElementById('userIndicator');
+        const adminIndicator = document.getElementById('adminIndicator');
+        
+        // Verificar que los elementos existan antes de manipular sus estilos
+        if (adminIndicator && userIndicator) {
+            if (esAdmin) {
+                adminIndicator.style.display = 'block';
+                userIndicator.style.display = 'none';
+            } else {
+                adminIndicator.style.display = 'none';
+                userIndicator.style.display = 'block';
+            }
+        } else {
+            console.error('No se encontraron los elementos userIndicator o adminIndicator');
+        }
+    }
+
+    // Función para cerrar sesión
+    function cerrarSesion() {
+        firebase.auth().signOut().then(() => {
+            console.log('Sesión cerrada exitosamente');
+            redirigirALogin();
+        }).catch((error) => {
+            console.error('Error al cerrar sesión:', error);
+            alert('Error al cerrar sesión. Inténtalo de nuevo.');
+        });
+    }
   </script>
   <!-- Fin Firebase Auth Check -->
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-
-    <script>
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-    </script>
-
   <style>
     body{font-family:Arial,Helvetica,sans-serif;background:#f2f2f2;padding:20px}
-    header {background: linear-gradient(90deg, #4CAF50, #69a86b); padding: 1.5rem 1rem 1.5rem 1rem; box-shadow: #5c5866 0px 2px 8px 0px; text-align: center;}
+    header {background: linear-gradient(90deg, #4CAF50, #69a86b); padding: 1.5rem 1rem 1.5rem 1rem; box-shadow: #5c5866 0px 2px 8px 0px; text-align: center; position: relative;}
     header h1 {margin: 0; font-size: 2.2rem; color: #306932; letter-spacing: 1px; font-weight: 700;}
     table{width:100%;border-collapse:collapse;background:#fff;box-shadow: #5c5866 0px 2px 8px 0px;}
     th,td{padding:8px;border:1px solid #ddd;text-align:center;}
@@ -53,11 +112,97 @@
       margin-top: 20px;
     }
 
+    /* Estilos para indicadores de usuario */
+    .user-indicator {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        padding: 8px 20px;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-indicator:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .user-indicator i {
+        font-size: 1.1rem;
+    }
+
+    .logout-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 5px;
+        margin-left: auto;
+        padding: 0;
+        box-shadow: none;
+        flex-shrink: 0;
+    }
+
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .logout-btn i {
+        font-size: 0.9rem;
+        line-height: 1;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
   </style>
 </head>
 <body>
   <header>
     <h1>Historial Pedidos Web</h1>
+    
+    <!-- Indicador de Administrador -->
+    <div id="adminIndicator" class="user-indicator" style="display: none;">
+        <i class="bi bi-shield-check"></i>
+        <span>Modo Administrador</span>
+    </div>
+    
+    <!-- Indicador de Usuario Normal -->
+    <div id="userIndicator" class="user-indicator" style="display: none;">
+        <i class="bi bi-person-circle"></i>
+        <span>Usuario</span>
+        <button class="logout-btn" onclick="cerrarSesion()" title="Cerrar Sesión">
+            <i class="bi bi-box-arrow-right"></i>
+        </button>
+    </div>
+    
      <div id="filtroStatusBtns"></div>
   </header>
   
@@ -72,7 +217,6 @@
   <th>Unidades</th>
   <th>Entrega</th>
   <th>Estado</th>
-  <th>FACT</th>
   <th>Acciones</th>
 </tr>
 
@@ -81,10 +225,12 @@
   </table>
 
 <script>
-  const tbody   = document.querySelector('#tabla tbody');
+  // Declarar variables globales y db
+  const db = firebase.database();
+  const tbody = document.querySelector('#tabla tbody');
   const filtroStatusBtns = document.getElementById('filtroStatusBtns');
 
-  let pedidos   = {};           // cache local para filtrar
+  let pedidos = {};           // cache local para filtrar
 
   // Estados posibles 
   const estados = [
@@ -98,19 +244,33 @@
   let statusSeleccionados = ['ABIERTO', 'CERRADO'];
   let entregaSeleccionada = null; // 'Retiro', 'Envio' o null
 
+  // Función para inicializar el historial de pedidos después de la autenticación
+  function inicializarHistorialPedidos() {
+    // Si la página ya está cargada, ejecutar inmediatamente
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', configurarEventListeners);
+    } else {
+      configurarEventListeners();
+    }
+  }
 
-  // listener principal
-  db.ref('pedidos').on('value', snap => {
-    pedidos = [];                        // ahora un array, no objeto
+  function configurarEventListeners() {
+    // Renderizar botones de filtro
+    renderBotonesFiltro();
+    
+    // listener principal
+    db.ref('pedidos').on('value', snap => {
+      pedidos = [];                        // ahora un array, no objeto
 
-    snap.forEach(child => {              // recorro cada nodo hijo
-    const p = child.val() || {};
-    p.id    = child.key;               // key garantizada
-    pedidos.push(p);
+      snap.forEach(child => {              // recorro cada nodo hijo
+      const p = child.val() || {};
+      p.id    = child.key;               // key garantizada
+      pedidos.push(p);
+    });
+
+    renderTabla();
   });
-
-  renderTabla();
-});
+  }
 
   function renderBotonesFiltro() {
     filtroStatusBtns.innerHTML = '';
@@ -272,7 +432,18 @@
         }
 
         /* --- 3. Nombre cliente --- */
-        tr.insertCell().textContent = p.cliente?.nombre || '—';
+        const nombreCell = tr.insertCell();
+        const nombreSpan = document.createElement('span');
+        nombreSpan.textContent = p.cliente?.nombre || '—';
+        nombreSpan.style.cursor = 'pointer';
+        nombreSpan.style.color = '#2196F3';
+        nombreSpan.style.textDecoration = 'underline';
+        nombreSpan.onclick = () => {
+          window.open(`pedidos.html?id=${p.id}&admin=true`, '_blank');
+          db.ref(`pedidos/${p.id}`).update({ adminViewed: true })
+            .catch(() => console.error('No se pudo marcar adminViewed'));
+        };
+        nombreCell.appendChild(nombreSpan);
 
         /* --- 4. Fecha corta --- */
         const fecha = new Date(p.timestamp);
@@ -309,23 +480,8 @@
         }
         tr.insertCell().textContent = estado;
 
-        /* --- 8. FACT --- */
-        const factCell = tr.insertCell();
-        factCell.textContent = (p.fact === true || p.fact === 'SI' || p.facturado === true) ? 'SI' : '';
-
         /* --- 9. Acciones --- */
         const acciones = tr.insertCell();
-        // Botón Ver
-        const btnVer = document.createElement('button');
-        btnVer.textContent = 'Ver';
-        btnVer.style.background = '#2196F3';
-        btnVer.style.color = '#fff';
-        btnVer.onclick = () => {
-          window.open(`pedidos.html?id=${p.id}&admin=true`, '_blank');
-          db.ref(`pedidos/${p.id}`).update({ adminViewed: true })
-            .catch(() => console.error('No se pudo marcar adminViewed'));
-        };
-        acciones.appendChild(btnVer);
 
         // Botón Eliminar
         const btnEliminar = document.createElement('button');
@@ -341,33 +497,6 @@
           });
         };
         acciones.appendChild(btnEliminar);
-
-        // Botón FACT
-        const btnFact = document.createElement('button');
-        btnFact.textContent = 'FACT';
-        btnFact.style.background = '#f44336';
-        btnFact.style.color = '#fff';
-        btnFact.disabled = !(estado === 'DESPACHADO/ENTREGADO' && !factCell.textContent);
-        if (btnFact.disabled) {
-          btnFact.style.opacity = 0.5;
-          btnFact.style.cursor = 'not-allowed';
-        }
-        btnFact.onclick = () => {
-          btnFact.disabled = true;
-          btnFact.textContent = '...';
-          db.ref(`pedidos/${p.id}`).update({ fact: 'SI', facturado: true })
-            .then(() => {
-              btnFact.textContent = 'FACT';
-              // Refrescar la tabla para mostrar el cambio
-              renderTabla();
-            })
-            .catch(() => {
-              alert('Error al marcar como facturado');
-              btnFact.disabled = false;
-              btnFact.textContent = 'FACT';
-            });
-        };
-        acciones.appendChild(btnFact);
 
         // Botón ENTREGADO
         const btnEntregado = document.createElement('button');
