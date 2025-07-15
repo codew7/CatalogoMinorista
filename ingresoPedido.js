@@ -76,6 +76,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
   let items = [];
 
+  // === COTIZACIÓN DÓLAR ===
+  const cotizacionValorElement = document.getElementById('cotizacionValor');
+  let cotizacionActual = null;
+
+  function cargarCotizacionDolar() {
+    if (!cotizacionValorElement) return;
+    
+    cotizacionValorElement.textContent = 'Cargando...';
+    
+    fetch('https://api.bluelytics.com.ar/v2/latest')
+      .then(response => response.json())
+      .then(data => {
+        cotizacionActual = data.blue.value_sell || data.blue.sell;
+        if (cotizacionActual) {
+          cotizacionValorElement.textContent = `$${cotizacionActual.toLocaleString('es-AR')}`;
+          cotizacionValorElement.style.color = '#28a745';
+        } else {
+          cotizacionValorElement.textContent = 'No disponible';
+          cotizacionValorElement.style.color = '#dc3545';
+        }
+      })
+      .catch(error => {
+        console.error('Error al cargar cotización:', error);
+        cotizacionValorElement.textContent = 'Error al cargar';
+        cotizacionValorElement.style.color = '#dc3545';
+      });
+  }
+
+  // Cargar cotización al inicializar
+  cargarCotizacionDolar();
+
   // === CARGA DE ARTÍCULOS DESDE GOOGLE SHEETS ===
   let articulosDisponibles = [];
   let articulosPorCodigo = {};
@@ -288,6 +319,9 @@ function getTipoCliente() {
         
         subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
         calcularTotalFinal();
+        
+        // Actualizar contadores cuando se selecciona un artículo
+        actualizarContadoresArticulos();
       });
     });
     // Evento para eliminar fila (botón eliminar)
@@ -297,6 +331,37 @@ function getTipoCliente() {
         renderItems();
       });
     });
+    
+    // Actualizar contadores de artículos
+    actualizarContadoresArticulos();
+  }
+
+  // === FUNCIÓN PARA ACTUALIZAR CONTADORES DE ARTÍCULOS ===
+  function actualizarContadoresArticulos() {
+    const contadoresElement = document.getElementById('contadoresArticulos');
+    const cantidadArticulosElement = document.getElementById('cantidadArticulos');
+    const cantidadUnidadesElement = document.getElementById('cantidadUnidades');
+    
+    if (!contadoresElement || !cantidadArticulosElement || !cantidadUnidadesElement) return;
+    
+    // Filtrar artículos que tienen nombre (están seleccionados)
+    const articulosConNombre = items.filter(item => item.nombre && item.nombre.trim() !== '');
+    
+    if (articulosConNombre.length === 0) {
+      // No hay artículos, ocultar contadores
+      contadoresElement.style.display = 'none';
+    } else {
+      // Calcular cantidades
+      const cantidadArticulosDistintos = articulosConNombre.length;
+      const cantidadUnidadesTotales = articulosConNombre.reduce((total, item) => total + (item.cantidad || 0), 0);
+      
+      // Actualizar textos
+      cantidadArticulosElement.textContent = `Artículos distintos: ${cantidadArticulosDistintos}`;
+      cantidadUnidadesElement.textContent = `Unidades totales: ${cantidadUnidadesTotales}`;
+      
+      // Mostrar contadores con flex para alineación horizontal
+      contadoresElement.style.display = 'flex';
+    }
   }
 
   // Formateo numérico para todos los campos relacionados a valores
@@ -365,6 +430,9 @@ addItemBtn.addEventListener('click', function() {
     row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
     subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
     calcularTotalFinal();
+    
+    // Actualizar contadores de artículos cuando cambian las cantidades
+    actualizarContadoresArticulos();
   });
 
   [recargoInput, descuentoInput, envioInput].forEach(input => {
@@ -1487,6 +1555,7 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
             codigo: item.codigo,
             nombre: item.nombre,
             cantidad: parseInt(item.cantidad, 10) || 0,
+           
             valorC: parseInt(item.valorC, 10) || 0,
             valorU: parseInt(item.valorU, 10) || 0,
             cotizacionCierre: cotizacionCierre,

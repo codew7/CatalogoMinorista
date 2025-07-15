@@ -72,7 +72,12 @@
 
       <!-- Artículos -->
       <section class="section" aria-labelledby="articulos-title">
-        <h2 id="articulos-title">Artículos</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 id="articulos-title" style="margin: 0;">Artículos</h2>
+          <div id="cotizacionDolar" style="font-size: 0.9rem; color: #666; font-weight: 500;">
+            Cotización Dólar: <span id="cotizacionValor">Cargando...</span>
+          </div>
+        </div>
         <table class="items-table" aria-label="Artículos de la Orden">
           <thead>
             <tr>
@@ -88,7 +93,13 @@
             <!-- Filas dinámicas -->
           </tbody>
         </table>
-        <button type="button" id="addItemBtn" class="add-btn">Agregar Artículo</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+          <button type="button" id="addItemBtn" class="add-btn">Agregar Artículo</button>
+          <div id="contadoresArticulos" style="display: none; font-size: 0.9rem; color: #666; font-weight: 500; gap: 20px; align-items: center;">
+            <span id="cantidadArticulos">Artículos distintos: 0</span>
+            <span id="cantidadUnidades">Unidades totales: 0</span>
+          </div>
+        </div>
       </section>
 
       <!-- Pagos -->
