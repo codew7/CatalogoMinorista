@@ -76,6 +76,44 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
+        .add-file-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .add-file-box input {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .add-file-box input:focus {
+            outline: none;
+            border-color: #28a745;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
         .refresh-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -124,12 +162,29 @@
             cursor: pointer;
             text-decoration: none;
             color: inherit;
+            position: relative;
         }
 
         .file-item:hover {
             border-color: #667eea;
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
             transform: translateX(5px);
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            margin-left: auto;
+        }
+
+        .remove-btn:hover {
+            background: rgba(220, 53, 69, 0.1);
+            transform: scale(1.1);
         }
 
         .file-icon {
@@ -214,6 +269,15 @@
                 align-items: stretch;
             }
 
+            .add-file-box {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .add-file-box input {
+                min-width: auto;
+            }
+
             .stats {
                 justify-content: center;
             }
@@ -233,6 +297,12 @@
                 overflow: visible;
                 text-overflow: initial;
             }
+
+            .remove-btn {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+            }
         }
     </style>
 </head>
@@ -246,6 +316,10 @@
         <div class="controls">
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="🔍 Buscar archivos HTML...">
+            </div>
+            <div class="add-file-box">
+                <input type="text" id="addFileInput" placeholder="➕ Agregar archivo (ej: nuevo.html)">
+                <button class="add-btn" onclick="addCustomFile()">Agregar</button>
             </div>
             <div class="stats">
                 <span id="fileCount">Cargando...</span>
@@ -274,6 +348,7 @@
         // Lista de archivos HTML conocidos del proyecto
         const knownHtmlFiles = [
             'analisisFacturacion.html',
+            'clientes.html',
             'consultaStock.html',
             'controlArticulos.html',
             'facturacion.html',
@@ -287,11 +362,48 @@
             'panelControl.html',
             'pedidos.html',
             'pedidos copy.html',
+            'resumenFacturacion.html',
             'tablaPedidos.html'
         ];
 
         let allFiles = [];
         let filteredFiles = [];
+        let customFiles = JSON.parse(localStorage.getItem('customHtmlFiles')) || [];
+
+        // Función para agregar archivo personalizado
+        async function addCustomFile() {
+            const input = document.getElementById('addFileInput');
+            const fileName = input.value.trim();
+            
+            if (!fileName) {
+                alert('Por favor, ingresa el nombre del archivo');
+                return;
+            }
+            
+            // Agregar .html si no lo tiene
+            const fullFileName = fileName.endsWith('.html') ? fileName : fileName + '.html';
+            
+            // Verificar si el archivo existe
+            try {
+                const response = await fetch(fullFileName, { method: 'HEAD' });
+                if (response.ok) {
+                    // Verificar si ya está en la lista
+                    if (!customFiles.includes(fullFileName) && !knownHtmlFiles.includes(fullFileName)) {
+                        customFiles.push(fullFileName);
+                        localStorage.setItem('customHtmlFiles', JSON.stringify(customFiles));
+                        input.value = '';
+                        await loadHtmlFiles(); // Recargar la lista
+                        alert(`Archivo "${fullFileName}" agregado correctamente`);
+                    } else {
+                        alert(`El archivo "${fullFileName}" ya está en la lista`);
+                    }
+                } else {
+                    alert(`El archivo "${fullFileName}" no existe o no es accesible`);
+                }
+            } catch (e) {
+                alert(`Error al verificar el archivo "${fullFileName}"`);
+            }
+        }
 
         // Función para detectar archivos HTML automáticamente
         async function detectHtmlFiles() {
@@ -300,6 +412,7 @@
             // Intentar detectar archivos adicionales mediante fetch
             const possibleFiles = [
                 ...knownHtmlFiles,
+                ...customFiles, // Incluir archivos agregados manualmente
                 // Patrones comunes de nombres de archivos HTML
                 'admin.html',
                 'dashboard.html',
@@ -307,20 +420,52 @@
                 'reportes.html',
                 'usuarios.html',
                 'productos.html',
-                'clientes.html',
                 'ventas.html',
                 'compras.html',
-                'estadisticas.html'
+                'estadisticas.html',
+                'test.html',
+                'demo.html',
+                'example.html',
+                'template.html',
+                'landing.html',
+                'home.html',
+                'about.html',
+                'contact.html',
+                'help.html',
+                'faq.html',
+                'support.html',
+                'profile.html',
+                'settings.html',
+                'backup.html',
+                'export.html',
+                'import.html',
+                'tools.html',
+                'utilities.html',
+                // Intentar con números
+                ...Array.from({length: 20}, (_, i) => `page${i + 1}.html`),
+                ...Array.from({length: 10}, (_, i) => `test${i + 1}.html`),
+                // Intentar archivos temporales comunes
+                'temp.html',
+                'tmp.html',
+                'backup.html',
+                'copy.html',
+                'new.html',
+                'old.html',
+                'draft.html'
             ];
 
-            for (const file of possibleFiles) {
+            // Crear un set para evitar duplicados
+            const uniqueFiles = [...new Set(possibleFiles)];
+
+            for (const file of uniqueFiles) {
                 try {
                     const response = await fetch(file, { method: 'HEAD' });
                     if (response.ok) {
                         detectedFiles.push({
                             name: file,
                             path: file,
-                            exists: true
+                            exists: true,
+                            isCustom: customFiles.includes(file)
                         });
                     }
                 } catch (e) {
@@ -390,11 +535,12 @@
 
             container.innerHTML = files.map(file => `
                 <a href="${file.path}" target="_blank" class="file-item">
-                    <div class="file-icon">📄</div>
+                    <div class="file-icon">${file.isCustom ? '�' : '�📄'}</div>
                     <div class="file-info">
-                        <div class="file-name">${file.name}</div>
+                        <div class="file-name">${file.name}${file.isCustom ? ' (Agregado manualmente)' : ''}</div>
                         <div class="file-path">${file.path}</div>
                     </div>
+                    ${file.isCustom ? '<button class="remove-btn" onclick="removeCustomFile(event, \'' + file.name + '\')">❌</button>' : ''}
                 </a>
             `).join('');
         }
@@ -421,9 +567,28 @@
             }
         }
 
+        // Función para remover archivo personalizado
+        async function removeCustomFile(event, fileName) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            if (confirm(`¿Estás seguro de que quieres remover "${fileName}" de la lista?`)) {
+                customFiles = customFiles.filter(file => file !== fileName);
+                localStorage.setItem('customHtmlFiles', JSON.stringify(customFiles));
+                await loadHtmlFiles(); // Recargar la lista
+            }
+        }
+
         // Event listeners
         document.getElementById('searchInput').addEventListener('input', (e) => {
             filterFiles(e.target.value);
+        });
+
+        // Permitir agregar archivo con Enter
+        document.getElementById('addFileInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addCustomFile();
+            }
         });
 
         // Cargar archivos al inicio

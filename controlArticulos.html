@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Artículos - Sistema de Gestión</title>
+    <link rel="icon" href="faviconnegro.png" type="image/png">
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
     <!-- DataTables CSS y JS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
@@ -472,6 +474,18 @@
             <div class="header">
                 <h1><i class="bi bi-box-seam"></i> Control de Artículos</h1>
                 <p>Sistema de control y análisis de artículos vendidos</p>
+                <div id="adminIndicator" style="position: absolute; top: 10px; right: 20px; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; display: none;">
+                    <i class="bi bi-shield-check"></i> Modo Administrador
+                    <button id="logoutBtn" style="margin-left: 10px; background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5); border-radius: 8px; padding: 3px 8px; font-size: 0.7rem; color: white; cursor: pointer;" title="Cerrar sesión">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </div>
+                <div id="userIndicator" style="position: absolute; top: 10px; right: 20px; background: rgba(76, 175, 80, 0.2); padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; display: none; color: white;">
+                    <i class="bi bi-person-check"></i> <span id="userEmail"></span>
+                    <button id="logoutBtnUser" style="margin-left: 10px; background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5); border-radius: 8px; padding: 3px 8px; font-size: 0.7rem; color: white; cursor: pointer;" title="Cerrar sesión">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Estadísticas -->
@@ -549,7 +563,7 @@
             <div class="table-section">
                 <div id="loadingDiv" class="loading">
                     <div class="spinner"></div>
-                    Cargando artículos...
+                    <span id="loadingText">Verificando credenciales...</span>
                 </div>
                 <div class="table-responsive" id="tableContainer" style="display: none;">
                     <table id="articulosTable" class="table table-striped table-hover">
@@ -684,6 +698,94 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
+        // Sistema de autenticación
+        let admin = false; // Declarar admin al principio para evitar errores de hoisting
+        let authResolved = false; // Flag para controlar si la autenticación se resolvió
+        
+        // Lista de emails de administradores
+        const adminEmails = ["distribuidorahomepoint@gmail.com"];
+
+        // Función para inicializar la página después de la autenticación
+        function inicializarPagina() {
+            // Si la página ya está cargada, ejecutar inmediatamente
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', cargarArticulos);
+            } else {
+                cargarArticulos();
+            }
+        }
+
+        // Función para redirigir a login con parámetro de retorno
+        function redirigirALogin() {
+            const currentUrl = encodeURIComponent(window.location.href);
+            window.location.href = `login.html?redirect=${currentUrl}`;
+        }
+
+        // Timeout de seguridad: verificar autenticación después de 5 segundos
+        setTimeout(() => {
+            if (!authResolved) {
+                console.warn('Timeout de autenticación - redirigiendo a login');
+                redirigirALogin();
+            }
+        }, 5000);
+
+        firebase.auth().onAuthStateChanged(user => {
+            console.log('Firebase Auth State Changed:', user ? 'Usuario autenticado' : 'No hay usuario');
+            authResolved = true; // Marcar que la autenticación se resolvió
+            
+            if (user) {
+                // Usuario autenticado
+                console.log('Usuario autenticado:', user.email);
+                
+                // Verificar si es administrador
+                if (adminEmails.includes(user.email)) {
+                    admin = true;
+                    console.log('Usuario es administrador:', user.email);
+                    
+                    // Mostrar indicador de administrador
+                    const adminIndicator = document.getElementById('adminIndicator');
+                    const userIndicator = document.getElementById('userIndicator');
+                    if (adminIndicator) {
+                        adminIndicator.style.display = 'block';
+                    }
+                    if (userIndicator) {
+                        userIndicator.style.display = 'none';
+                    }
+                } else {
+                    // Usuario normal (no administrador)
+                    admin = false;
+                    console.log('Usuario normal:', user.email);
+                    
+                    // Mostrar indicador de usuario normal
+                    const adminIndicator = document.getElementById('adminIndicator');
+                    const userIndicator = document.getElementById('userIndicator');
+                    const userEmail = document.getElementById('userEmail');
+                    
+                    if (adminIndicator) {
+                        adminIndicator.style.display = 'none';
+                    }
+                    if (userIndicator) {
+                        userIndicator.style.display = 'block';
+                    }
+                    if (userEmail) {
+                        userEmail.textContent = user.email;
+                    }
+                }
+                
+                // Usuario autenticado, inicializar página
+                console.log('Inicializando página para usuario autenticado...');
+                inicializarPagina();
+            } else {
+                // No hay usuario autenticado, redirigir a login
+                console.log('No hay usuario autenticado, redirigiendo a login...');
+                
+                // Pequeño delay para asegurar que Firebase Auth termine de inicializar
+                setTimeout(() => {
+                    redirigirALogin();
+                }, 500);
+            }
+        });
+        
         let todosLosArticulos = [];
         let articulosFiltrados = [];
         let dataTable;
@@ -758,6 +860,12 @@
 
         // Cargar datos desde Firebase y procesar artículos
         function cargarArticulos() {
+            console.log('cargarArticulos iniciado');
+            const loadingText = document.getElementById('loadingText');
+            if (loadingText) {
+                loadingText.textContent = 'Cargando artículos...';
+            }
+            
             loadingDiv.style.display = 'flex';
             tableContainer.style.display = 'none';
             
@@ -775,6 +883,11 @@
                             const status = (pedido.status || '').toUpperCase();
                             if (status === 'DESPACHADO/ENTREGADO') {
                                 items.forEach(item => {
+                                    // Filtrar solo artículos de pedidos con fecha válida
+                                    if (!pedido.fecha || pedido.fecha.trim() === '') {
+                                        return; // Saltar este artículo si no tiene fecha válida
+                                    }
+                                    
                                     const articulo = {
                                         pedidoId: pedidoId,
                                         fecha: pedido.fecha,
@@ -788,7 +901,8 @@
                                         cliente: pedido.cliente?.nombre || '',
                                         categoria: item.categoria && item.categoria.trim() !== '' ? item.categoria : 'Sin categoría',
                                         totalItem: (item.cantidad || 0) * (item.valorU || 0),
-                                        status: status
+                                        status: status,
+                                        locked: pedido.locked || false // Agregar información de locked
                                     };
                                     todosLosArticulos.push(articulo);
                                 });
@@ -933,18 +1047,21 @@
                 },
                 responsive: true,
                 pageLength: 25,
-                order: [[1, 'asc']], // Ordenar por fecha ascendente (columna 1 es fecha ahora)
+                order: [[1, 'desc']], // Ordenar por fecha descendente (columna 1 es fecha ahora)
                 columnDefs: [
                     { targets: [0], width: '80px' },
                     { 
                         targets: [1], 
                         width: '130px',
-                        type: 'date',
+                        type: 'num',
                         render: function(data, type, row) {
                             if (type === 'display') {
                                 return formatearFecha(data);
                             }
-                            return data ? new Date(data).getTime() : 0;
+                            if (type === 'sort' || type === 'type') {
+                                return data ? new Date(data).getTime() : 0;
+                            }
+                            return data;
                         }
                     },
                     { targets: [2], width: '100px' },
@@ -1023,6 +1140,22 @@
             const articulo = articulosFiltrados[index];
             if (!articulo) return;
 
+            // Verificar si el artículo está bloqueado y si el usuario es administrador
+            if (articulo.locked && !admin) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'warning',
+                    title: 'Artículo bloqueado - Solo administradores pueden modificarlo'
+                });
+                return;
+            }
+
             // Llenar el formulario con los datos actuales
             document.getElementById('editIndex').value = index;
             document.getElementById('editOriginalPedidoId').value = articulo.pedidoId;
@@ -1049,6 +1182,14 @@
             document.getElementById('editSeleccionado').value = articulo.seleccionado || 'NO';
             document.getElementById('editCliente').value = articulo.cliente || '';
 
+            // Agregar información visual si está bloqueado
+            const modalTitle = document.getElementById('editModalLabel');
+            if (articulo.locked) {
+                modalTitle.innerHTML = '<i class="bi bi-pencil-square"></i> Editar Artículo <i class="bi bi-lock-fill" style="color: #f39c12;" title="Registro bloqueado - Solo administradores"></i>';
+            } else {
+                modalTitle.innerHTML = '<i class="bi bi-pencil-square"></i> Editar Artículo';
+            }
+
             // Mostrar el modal
             const modal = new bootstrap.Modal(document.getElementById('editModal'));
             modal.show();
@@ -1061,6 +1202,12 @@
             if (index < 0 || index >= articulosFiltrados.length) return;
 
             const articuloEditado = articulosFiltrados[index];
+            
+            // Verificar permisos nuevamente antes de guardar
+            if (articuloEditado.locked && !admin) {
+                alert('No tienes permisos para modificar este artículo bloqueado. Solo los administradores pueden hacerlo.');
+                return;
+            }
             
             // Obtener los nuevos valores del formulario
             const nuevaFecha = document.getElementById('editFecha').value;
@@ -1178,9 +1325,14 @@
                         timer: 3000,
                         timerProgressBar: true
                     });
+                    
+                    const mensaje = articuloEditado.locked ? 
+                        'Artículo bloqueado actualizado correctamente (por administrador)' : 
+                        'Artículo actualizado correctamente';
+                    
                     Toast.fire({
                         icon: 'success',
-                        title: 'Artículo actualizado correctamente'
+                        title: mensaje
                     });
                 })
                 .catch(error => {
@@ -1194,6 +1346,21 @@
                 });
         }
 
+        // Función para cerrar sesión
+        function cerrarSesion() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                firebase.auth().signOut()
+                    .then(() => {
+                        console.log('Sesión cerrada exitosamente');
+                        // La redirección se manejará automáticamente por onAuthStateChanged
+                    })
+                    .catch(error => {
+                        console.error('Error al cerrar sesión:', error);
+                        alert('Error al cerrar sesión: ' + error.message);
+                    });
+            }
+        }
+
         // Event Listeners
         aplicarFiltrosBtn.addEventListener('click', aplicarFiltros);
         limpiarFiltrosBtn.addEventListener('click', limpiarFiltros);
@@ -1202,6 +1369,10 @@
         
         // Event listener para el botón de guardar cambios
         document.getElementById('saveChanges').addEventListener('click', guardarCambios);
+
+        // Event listeners para los botones de logout
+        document.getElementById('logoutBtn')?.addEventListener('click', cerrarSesion);
+        document.getElementById('logoutBtnUser')?.addEventListener('click', cerrarSesion);
 
         // Aplicar filtros automáticamente cuando cambien los inputs
         [filtroFechaDesde, filtroFechaHasta, filtroArticulo, filtroCategoria, filtroCodigo, filtroSeleccionado].forEach(input => {
@@ -1224,8 +1395,8 @@
             };
         }
 
-        // Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', cargarArticulos);
+        // Cargar datos al iniciar - se movió a onAuthStateChanged
+        // document.addEventListener('DOMContentLoaded', cargarArticulos);
     </script>
 </body>
 </html>

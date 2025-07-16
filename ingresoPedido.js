@@ -1271,7 +1271,7 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
       return;
     }
     // Guardar en Firebase
-    db.ref('clientes').push({ nombre, telefono: this.telefono.value.trim(), direccion: this.direccion.value.trim(), dni: this.dni.value.trim(), email: this.email.value.trim(), tipoCliente })
+    db.ref('clientes').push({ nombre, telefono: this.telefono.value.trim(), direccion: this.direccion.value.trim(), dni: this.dni.value.trim(), email: this.email.value.trim(), tipoCliente, registro: 'Local' })
       .then(() => {
         cargarClientes();
         form.nombre.value = nombre;

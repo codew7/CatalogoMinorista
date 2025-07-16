@@ -1115,6 +1115,11 @@
                 
                 function procesarFiltrosDirecto() {
                     pedidosFiltrados = todosLosPedidos.filter(pedido => {
+                        // Filtrar solo registros con fecha válida
+                        if (!pedido.fecha || pedido.fecha.trim() === '') {
+                            return false;
+                        }
+                        
                         // Pre-calcular valores para evitar accesos repetidos
                         const clienteNombre = pedido.cliente?.nombre || '';
                         const clienteTipo = pedido.cliente?.tipoCliente;
@@ -1174,6 +1179,17 @@
                         
                         for (let i = currentIndex; i < endIndex; i++) {
                             const pedido = todosLosPedidos[i];
+                            
+                            // Filtrar solo registros con fecha válida
+                            if (!pedido.fecha || pedido.fecha.trim() === '') {
+                                // Si el chunk toma demasiado tiempo, diferir
+                                if (performance.now() - chunkStartTime > maxExecutionTime) {
+                                    currentIndex = i + 1;
+                                    requestAnimationFrame(procesarChunk);
+                                    return;
+                                }
+                                continue;
+                            }
                             
                             // Aplicar filtros igual que arriba pero de manera más eficiente
                             let pasaFiltro = true;
@@ -1321,18 +1337,21 @@
                             },
                             responsive: true,
                             pageLength: 25,
-                            order: [[1, 'asc']],
+                            order: [[1, 'desc']],
                             columnDefs: [
                                 { targets: [0], width: '80px' },
                                 { 
                                     targets: [1], 
                                     width: '130px',
-                                    type: 'date',
+                                    type: 'num',
                                     render: function(data, type, row) {
                                         if (type === 'display') {
                                             return formatearFecha(data);
                                         }
-                                        return data ? new Date(data).getTime() : 0;
+                                        if (type === 'sort' || type === 'type') {
+                                            return data ? new Date(data).getTime() : 0;
+                                        }
+                                        return data;
                                     }
                                 },
                                 { targets: [2], width: '150px' },
