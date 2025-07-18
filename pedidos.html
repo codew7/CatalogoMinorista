@@ -937,15 +937,15 @@ document.getElementById('ImprimirBtn').onclick = () => {
     </div>
     <table>
       <tr>
-        <th class="cant">Cantidad</th>
         <th>Artículo</th>
+        <th class="cant">Cantidad</th>
         <th class="check"></th>
       </tr>
   `;
   pedidoActual.items.forEach(it => {
     html += `<tr>
-      <td>${it.cantidad}</td>
       <td style="text-align:left;">${it.nombre}</td>
+      <td>${it.cantidad}</td>
       <td><input type='checkbox' style='width:22px;height:22px;'></td>
     </tr>`;
   });
