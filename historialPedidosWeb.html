@@ -212,6 +212,7 @@
     <thead>
 <tr>
   <th></th>
+  <th>ID</th>
   <th>Nombre</th>
   <th>Fecha</th>
   <th>Unidades</th>
@@ -431,6 +432,12 @@
           indCell.appendChild(dot);
         }
 
+        /* --- 2. ID del pedido --- */
+        const idCell = tr.insertCell();
+        idCell.textContent = p.id || '—';
+        idCell.style.fontFamily = 'monospace';
+        idCell.style.fontSize = '0.9em';
+
         /* --- 3. Nombre cliente --- */
         const nombreCell = tr.insertCell();
         const nombreSpan = document.createElement('span');
@@ -498,35 +505,6 @@
         };
         acciones.appendChild(btnEliminar);
 
-        // Botón ENTREGADO
-        const btnEntregado = document.createElement('button');
-        btnEntregado.textContent = 'Entregado';
-        btnEntregado.style.background = '#222';
-        btnEntregado.style.color = '#fff';
-        btnEntregado.style.marginLeft = '6px';
-        // Solo habilitado si el estado es CERRADO, no cancelado, no entregado, tipoEntrega distinto de 'Retiro en local' y no vacío/nulo
-        const tipoEntregaValido = p.tipoEntrega && p.tipoEntrega !== 'Retiro en local' && p.tipoEntrega.trim() !== '';
-        btnEntregado.disabled = (estado !== 'CERRADO') || p.status === 'CANCELADO' || p.status === 'DESPACHADO/ENTREGADO' || !tipoEntregaValido;
-        btnEntregado.style.opacity = btnEntregado.disabled ? '0.5' : '1';
-        btnEntregado.onclick = async () => {
-          if (btnEntregado.disabled) return;
-          btnEntregado.disabled = true;
-          btnEntregado.textContent = '...';
-          try {
-            // Actualizar status a DESPACHADO/ENTREGADO
-            await db.ref(`pedidos/${p.id}`).update({ status: 'DESPACHADO/ENTREGADO' });
-            // Registrar movimientos de salida
-            await registrarMovimientoSalidaDesdePedido(p.id);
-            alert('Pedido despachado y movimientos registrados correctamente.');
-            renderTabla();
-          } catch (err) {
-            alert('Error al registrar movimientos o actualizar el pedido.');
-            btnEntregado.disabled = false;
-            btnEntregado.textContent = 'Entregado';
-          }
-        };
-        acciones.appendChild(btnEntregado);
-
         tbody.appendChild(tr);
       });
 }
@@ -550,39 +528,6 @@ function cancelarPedido(id, locked){
 
   db.ref(`pedidos/${id}`).remove()
     .catch(()=>alert('Error al cancelar'));
-}
-
-// === REGISTRO AUTOMÁTICO DE MOVIMIENTOS DE SALIDA (SÓLO CAMPOS BÁSICOS) ===
-/**
- * Lee el pedido actualizado y registra todos los artículos como movimientos de salida en Firebase.
- * @param {string} pedidoId - ID del pedido
- * @returns {Promise<void>}
- */
-async function registrarMovimientoSalidaDesdePedido(pedidoId) {
-  const pedidoSnap = await db.ref('pedidos/' + pedidoId).once('value');
-  const pedido = pedidoSnap.val();
-  if (!pedido || !Array.isArray(pedido.items) || !pedido.items.length) throw new Error('No hay artículos para registrar en movimientos.');
-  const movimientosRef = db.ref('movimientos');
-  const timestamp = Date.now();
-  const updates = {};
-  for (const it of pedido.items) {
-    const nombre = it.nombre || '';
-    const cantidad = it.cantidad || 0;
-    const codigo = it.codigo || '';
-    if (!nombre) continue; // No registrar si no hay nombre
-    const key = movimientosRef.push().key;
-    updates[key] = {
-      nombre,
-      cantidad,
-      codigo,
-      pedidoId,
-      timestamp,
-      tipo: 'SALIDA',
-      motivo: 'DESPACHO',
-    };
-  }
-  if (Object.keys(updates).length === 0) throw new Error('No hay artículos válidos para registrar en movimientos.');
-  await movimientosRef.update(updates);
 }
 
 </script>

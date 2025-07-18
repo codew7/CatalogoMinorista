@@ -89,6 +89,14 @@
             width: 60%;
         }
 
+        select {
+            width: 65%;
+        }
+
+        input {
+            width: 75%;
+        }
+
         button {
             width: 30%;
             background-color: #4CAF50;
@@ -106,7 +114,7 @@
             gap: 10px;
             padding: 14px;
             justify-content: center;
-            max-width: 94%;
+            max-width: 90%;
             margin: 0 auto;
         }
 
@@ -392,7 +400,7 @@
 </script>
 
 
-<header style="text-align: center; padding: 10px 20px; background-color: #FFFFFF; width: 85%; margin: 0 auto; border-radius: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden;">
+<header style="text-align: center; padding: 10px; background-color: #FFFFFF; width: 89%; margin: 0 auto; border-radius: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden;">
     <div style="white-space: nowrap; animation: marquee 15s linear infinite;">
         <h1 id="marquee-text" style="font-size: 18px; font-style: italic; margin: 0; text-align: center; display: inline-block; color: #4CAF50;"></h1>
     </div>
@@ -420,11 +428,10 @@
             <select id="categorias">
                 <option value="todos">Todas las categorías</option>
             </select>
-            <button id="novedades">Novedades</button>
+            <button id="todos">Mostrar Todos</button>
         </div>
         <div class="controls-row">
-            <input type="text" id="buscar" placeholder="Buscar artículo...">
-            <button id="todos">Mostrar Todos</button>
+            <input type="text" id="buscar" placeholder="Buscar artículo..." style="width: 100%;">
         </div>
     </div>
 
@@ -585,13 +592,12 @@
                     mostrarPagina(1, filtrados);
                 });
 
-                document.getElementById('novedades').addEventListener('click', () => {
-                    const novedades = [...productos].sort((a, b) => parseInt(b[2]) - parseInt(a[2]));
-                    actualizarPaginacion(1, novedades);
-                    cargarGrid(novedades.slice(0, ITEMS_PER_PAGE));
-                });
-
                 document.getElementById('todos').addEventListener('click', () => {
+                    // Resetear el filtro de categorías
+                    document.getElementById('categorias').value = 'todos';
+                    // Limpiar el campo de búsqueda
+                    document.getElementById('buscar').value = '';
+                    // Mostrar todos los productos
                     mostrarPagina(1);
                 });
             })
@@ -611,7 +617,10 @@
             cargarGrid(datosPagina);
             actualizarPaginacion(pagina, datos);
             
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Solo hacer scroll si no se está escribiendo en el campo de búsqueda
+            if (document.activeElement !== document.getElementById('buscar')) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
         function cargarGrid(data) {
@@ -1040,7 +1049,7 @@ continuarBtn.addEventListener('click', () => {
           provinciaInput.value = cli.provincia || '';
           dniNuevoInput.value  = cli.dni       || '';
           emailInput.value     = cli.email     || '';
-          datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni };
+          datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
           modal.style.display = 'none';
           enviarPedidoFinal();
         });
@@ -1050,7 +1059,7 @@ continuarBtn.addEventListener('click', () => {
           alert("Ingresá tu nombre.");
           return;
         }
-        datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, provincia, dni };
+        datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, provincia, dni, tipoCliente: 'mayorista' };
         db.ref('clientes').push({
           email: emailFinal,
           nombre,
@@ -1102,7 +1111,7 @@ continuarBtn.addEventListener('click', () => {
                             provinciaInput.value = cli.provincia || '';
                             dniNuevoInput.value  = cli.dni       || '';
                             emailInput.value     = cli.email     || '';
-                            datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni };
+                            datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
                             modal.style.display = 'none';
                             enviarPedidoFinal();
                         });
@@ -1138,7 +1147,7 @@ continuarBtn.addEventListener('click', () => {
                 provincia: datosExtraCliente.provincia || '',
                 dni:       String(datosExtraCliente.dni || ''),
                 email:     datosExtraCliente.email     || '',
-                tipoCliente: 'mayorista'
+                tipoCliente: datosExtraCliente.tipoCliente || 'mayorista'
             },
 
             items: carrito.map(it => ({
@@ -1200,7 +1209,8 @@ continuarBtn.addEventListener('click', () => {
                         datosExtraCliente.dni ||
                         pedido.cliente?.dni    || ''
                         ),
-            email:     datosExtraCliente.email     || pedido.cliente?.email || ''
+            email:     datosExtraCliente.email     || pedido.cliente?.email || '',
+            tipoCliente: datosExtraCliente.tipoCliente || pedido.cliente?.tipoCliente || 'mayorista'
         };
         return pedidoRef.update({
             items:   pedido.items,
@@ -1307,7 +1317,7 @@ ultimoPedidoEmailInput.addEventListener('keydown', function(e) {
 });
     </script>
 
-    <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 90%; margin: 20px auto; border-radius: 10px;">
+    <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 86%; margin: 20px auto; border-radius: 10px;">
         <img src="logo.png" alt="Logo de HomePoint" width="200" style="display: block; margin: 0 auto;">
         <h1 style="font-size: 14px; font-style: normal; margin: 0; text-align: center; font-weight: normal;"></h1>
             <span style="display: block; margin-top: 10px;"></span>
