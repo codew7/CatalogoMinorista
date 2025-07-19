@@ -637,7 +637,7 @@
             <a href="ingresoPedido.html" class="nav-card primary" tabindex="0" target="_blank">
                 <span class="nav-card-icon">📝</span>
                 <h2 class="nav-card-title">Ingreso de Pedido</h2>
-                <p class="nav-card-description">Crear nuevos pedidos</p>
+                <p class="nav-card-description">Crear nueva orden de pedido</p>
             </a>
 
             <a href="listaPedidos.html" class="nav-card gray" tabindex="0" target="_blank">
@@ -649,7 +649,7 @@
             <a href="historialPedidosWeb.html" class="nav-card secondary" tabindex="0" target="_blank">
                 <span class="nav-card-icon">🖥️</span>
                 <h2 class="nav-card-title">Pedidos Web</h2>
-                <p class="nav-card-description">Gestión de pedidos web</p>
+                <p class="nav-card-description">Gestión de pedidos ingresados por web</p>
             </a>
 
             <a href="#" class="nav-card blue" tabindex="0" onclick="abrirModal('facturacion', 'resumenFacturacion.html'); return false;">
@@ -661,7 +661,7 @@
             <!-- Segunda fila - 3 botones alineados -->
             <div class="row-2">
                 <a href="consultaStock.html" class="nav-card inventory" tabindex="0" target="_blank">
-                    <span class="nav-card-icon">📋</span>
+                    <span class="nav-card-icon">📦</span>
                     <h2 class="nav-card-title">Consulta de Stock</h2>
                     <p class="nav-card-description">Visualización y control de stock</p>
                 </a>
@@ -673,7 +673,7 @@
                 </a>
 
                 <a href="mayorista.html" class="nav-card" tabindex="0" target="_blank">
-                    <span class="nav-card-icon">📦</span>
+                    <span class="nav-card-icon">🛒</span>
                     <h2 class="nav-card-title">Catálogo Mayorista</h2>
                     <p class="nav-card-description">Consulta articulos y precios</p>
                 </a>
@@ -811,7 +811,10 @@
         function cerrarModal() {
             const modal = document.getElementById('authModal');
             modal.classList.remove('show');
-            urlDestino = '';
+            // Limpiar urlDestino después de un delay para evitar conflictos
+            setTimeout(() => {
+                urlDestino = '';
+            }, 500);
         }
 
         // Función para verificar la contraseña
@@ -824,22 +827,33 @@
             if (password === passwordCorrecta) {
                 console.log('Contraseña correcta, redirigiendo a:', urlDestino);
                 
+                // Guardar la URL antes de cualquier operación
+                const urlParaAbrir = urlDestino;
+                
                 // Mostrar mensaje de éxito
                 passwordInput.style.borderColor = '#10b981';
                 passwordInput.style.backgroundColor = '#f0fdf4';
                 passwordInput.value = '';
                 passwordInput.placeholder = 'Acceso concedido...';
                 
-                // Cerrar modal inmediatamente
+                // Ejecutar redirección inmediatamente (esto funciona)
+                if (urlParaAbrir) {
+                    try {
+                        window.open(urlParaAbrir, '_blank');
+                        console.log('Ventana abierta exitosamente');
+                    } catch (error) {
+                        console.error('Error al abrir ventana:', error);
+                        alert('Error al abrir la ventana: ' + error.message);
+                    }
+                } else {
+                    console.error('URL está vacía');
+                    alert('Error: URL de destino no válida');
+                }
+                
+                // Cerrar modal después de la redirección
                 setTimeout(() => {
                     cerrarModal();
-                }, 300);
-                
-                // Abrir la URL después de cerrar el modal
-                setTimeout(() => {
-                    // Método directo - más confiable para archivos locales
-                    window.open(urlDestino, '_blank');
-                }, 500);
+                }, 800);
                 
             } else {
                 // Efecto de error
