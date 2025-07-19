@@ -10,10 +10,29 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
+    <script src="stockManager.js"></script>
 
     <script>
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        
+        // Inicializar StockManager para administradores
+        let stockManagerInitialized = false;
+        async function initStockManager() {
+            if (!stockManagerInitialized && admin) {
+                try {
+                    await window.stockManager.initialize();
+                    stockManagerInitialized = true;
+                    console.log('StockManager inicializado para admin');
+                    // Re-renderizar items si ya están cargados
+                    if (pedidoActual && pedidoActual.items) {
+                        renderItems();
+                    }
+                } catch (error) {
+                    console.error('Error inicializando StockManager:', error);
+                }
+            }
+        }
     </script>
 
   <script>
@@ -27,6 +46,8 @@
     firebase.auth().onAuthStateChanged(user => {
       if (user && adminEmails.includes(user.email)) {
         admin = true;
+        // Inicializar StockManager para admin
+        initStockManager();
         // Si la URL no tiene ?admin=true, la agrega para mantener compatibilidad
         if (!location.search.includes('admin=true')) {
           const url = new URL(window.location.href);
@@ -123,6 +144,16 @@
     th.cant,td.cant{width:1%;white-space:nowrap;min-width:40px;}
     th.elim,td.elim{width:1%;min-width:28px;padding-left:0;padding-right:0;}
     .eliminar-articulo{background:#e53935 !important;color:#fff !important;font-size:0.9em;padding:2px 7px 2px 7px;margin:0;line-height:1;min-width:22px;min-height:22px;border-radius:50%;}
+    
+    /* Estilos para la columna de stock */
+    .stock-disponible {
+      font-weight: bold;
+      text-align: center;
+    }
+    .stock-ok { color: #4CAF50; }
+    .stock-bajo { color: #ff9800; }
+    .stock-sin { color: #e53935; }
+    .stock-loading { color: #666; }
 
     .lightbox {
       position: fixed;
@@ -276,6 +307,11 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
 
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
+      // Inicializar StockManager si no está inicializado
+      if (!stockManagerInitialized) {
+        initStockManager();
+      }
+      
       // === Botón Imprimir y Despachado/Entregado ===
       const ImprimirBtn = document.getElementById('ImprimirBtn');
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
@@ -444,19 +480,32 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
 
     /* ===== tabla base ===== */
     const tbl = document.createElement('table');
-    tbl.innerHTML = `
+    
+    // Crear header con columna de stock condicional para admin
+    let headerHTML = `
       <tr>
         <th>Código</th>
         <th>Artículo</th>
-        <th class="cant">Cant</th>
+        <th class="cant">Cant</th>`;
+    
+    // Solo mostrar columna de stock para administradores
+    if (admin) {
+      headerHTML += `<th class="cant">Stock</th>`;
+    }
+    
+    headerHTML += `
         <th>Valor</th>
         <th>Subtotal</th>
         <th class="elim"></th>
       </tr>`;
+    
+    tbl.innerHTML = headerHTML;
+    
     let total = 0;
     const coti = getCotizacionActual();
     // Bloquea si está cerrado, despachado o cancelado
     const bloqueado = pedidoActual.locked || pedidoActual.estado === 'Despachado' || pedidoActual.status === 'CANCELADO';
+    
     pedidoActual.items.forEach((it, idx) => {
       const unitPesos = Math.round((it.valorUSD || 0) * coti);
       const subtotal  = Math.round(it.cantidad * unitPesos);
@@ -492,14 +541,56 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       };
       qtyCell.appendChild(qty);
 
-      /* 3) valor unitario $ */
-      row.insertCell(3).textContent = unitPesos.toLocaleString('es-AR');
+      /* 3) STOCK DISPONIBLE (solo para admin) */
+      if (admin) {
+        const stockCell = row.insertCell(3);
+        stockCell.className = 'cant';
+        
+        // Obtener stock del StockManager
+        if (stockManagerInitialized && it.codigo) {
+          const producto = window.stockManager.getStock(it.codigo);
+          if (producto) {
+            const stockActual = producto.stock;
+            stockCell.textContent = stockActual;
+            
+            // Aplicar colores según disponibilidad
+            if (stockActual <= 0) {
+              stockCell.style.color = '#e53935';
+              stockCell.style.fontWeight = 'bold';
+              stockCell.title = 'Sin stock disponible';
+            } else if (stockActual < it.cantidad) {
+              stockCell.style.color = '#ff9800';
+              stockCell.style.fontWeight = 'bold';
+              stockCell.title = `Stock insuficiente. Disponible: ${stockActual}, Pedido: ${it.cantidad}`;
+            } else if (stockActual <= 5) {
+              stockCell.style.color = '#ff9800';
+              stockCell.title = 'Stock bajo';
+            } else {
+              stockCell.style.color = '#4CAF50';
+              stockCell.title = 'Stock disponible';
+            }
+          } else {
+            stockCell.textContent = '?';
+            stockCell.style.color = '#666';
+            stockCell.title = 'Producto no encontrado en inventario';
+          }
+        } else {
+          stockCell.textContent = '...';
+          stockCell.style.color = '#666';
+          stockCell.title = 'Cargando stock...';
+        }
+      }
 
-      /* 4) subtotal $ */
-      row.insertCell(4).textContent = subtotal.toLocaleString('es-AR');
+      /* 4) valor unitario $ */
+      const valorCell = row.insertCell(admin ? 4 : 3);
+      valorCell.textContent = unitPesos.toLocaleString('es-AR');
 
-      /* 5) botón eliminar */
-      const delCell = row.insertCell(5);
+      /* 5) subtotal $ */
+      const subtotalCell = row.insertCell(admin ? 5 : 4);
+      subtotalCell.textContent = subtotal.toLocaleString('es-AR');
+
+      /* 6) botón eliminar */
+      const delCell = row.insertCell(admin ? 6 : 5);
       delCell.className = 'elim';
       const del = document.createElement('button');
       del.textContent = 'X';

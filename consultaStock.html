@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
+    <script src="stockManager.js"></script>
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -104,9 +105,14 @@
             background: var(--primary-dark);
         }
 
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
         table {
             width: 100%;
-            min-width: 900px;
+            min-width: 1000px;
             border-collapse: collapse;
             margin-bottom: 1rem;
             background: var(--white);
@@ -275,7 +281,8 @@
                         <th>Código</th>
                         <th>Nombre</th>
                         <th>Stock Actual</th>
-                        <th>Valor Unitario</th>
+                        <th>Precio Consumidor</th>
+                        <th>Precio Mayorista</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -453,7 +460,6 @@
             const errorMsg = document.getElementById('errorMsg');
             const searchInput = document.getElementById('searchInput');
             const clearBtn = document.getElementById('clearBtn');
-            let stockData = [];
             let filteredData = [];
 
             function showSpinner(show) {
@@ -474,40 +480,36 @@
             function renderTable(data) {
                 tableBody.innerHTML = '';
                 if (data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-dark);">Sin resultados</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-dark);">Sin resultados</td></tr>';
                     return;
                 }
                 data.forEach(item => {
                     let stockClass = '';
                     if (item.stock <= 0) stockClass = 'stock-zero';
                     else if (item.stock <= 5) stockClass = 'stock-low';
-                    // Validar valor numérico
-                    let valorUnitario = (typeof item.valor === 'number' && !isNaN(item.valor)) ? item.valor : 0;
+                    
+                    let precioConsumidor = (typeof item.precioConsumidor === 'number' && !isNaN(item.precioConsumidor)) ? item.precioConsumidor : 0;
+                    let precioMayorista = (typeof item.precioMayorista === 'number' && !isNaN(item.precioMayorista)) ? item.precioMayorista : 0;
+                    
                     tableBody.innerHTML += `
                         <tr class="${stockClass}">
                             <td>${item.codigo || ''}</td>
                             <td>${item.nombre || ''}</td>
                             <td>${typeof item.stock === 'number' ? item.stock : 0}</td>
-                            <td>$${valorUnitario.toLocaleString('es-AR', {minimumFractionDigits:2})}</td>
+                            <td>$${precioConsumidor.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</td>
+                            <td>$${precioMayorista.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</td>
                         </tr>
                     `;
                 });
             }
 
             function filterData() {
-                const q = searchInput.value.trim().toLowerCase();
-                if (!q) {
-                    filteredData = [...stockData];
-                } else {
-                    filteredData = stockData.filter(item => {
-                        const codigo = (item.codigo || '').toString().toLowerCase();
-                        const nombre = (item.nombre || '').toString().toLowerCase();
-                        return codigo.includes(q) || nombre.includes(q);
-                    });
-                }
+                const query = searchInput.value.trim();
+                filteredData = window.stockManager.searchStock(query);
                 renderTable(filteredData);
             }
 
+            // Event listeners
             clearBtn.addEventListener('click', () => {
                 searchInput.value = '';
                 filterData();
@@ -516,42 +518,33 @@
 
             searchInput.addEventListener('input', filterData);
 
-            function listenStock() {
+            // Inicializar con StockManager
+            async function initializeStockData() {
                 showSpinner(true);
                 clearError();
-                firebase.database().ref('movimientos').on('value', (snapshot) => {
-                    showSpinner(false);
-                    if (!snapshot.exists()) {
-                        stockData = [];
-                        filterData();
-                        return;
-                    }
-                    const movimientos = snapshot.val();
-                    const stockMap = {};
-                    Object.values(movimientos).forEach(mov => {
-                        if (!stockMap[mov.codigo]) {
-                            stockMap[mov.codigo] = {
-                                codigo: mov.codigo,
-                                nombre: mov.nombre,
-                                valor: mov.valor,
-                                stock: 0
-                            };
-                        }
-                        if (mov.tipo === 'ENTRADA') {
-                            stockMap[mov.codigo].stock += Number(mov.cantidad);
-                        } else if (mov.tipo === 'SALIDA') {
-                            stockMap[mov.codigo].stock -= Number(mov.cantidad);
-                        }
+                
+                try {
+                    console.log('Inicializando StockManager...');
+                    await window.stockManager.initialize();
+                    
+                    // Agregar listener para actualizaciones automáticas
+                    window.stockManager.addListener((data) => {
+                        console.log('Stock actualizado:', data.length, 'productos');
+                        filterData(); // Refrescar tabla cuando cambien los datos
                     });
-                    stockData = Object.values(stockMap).sort((a,b) => a.nombre.localeCompare(b.nombre));
-                    filterData();
-                }, (error) => {
-                    showError('Error al leer datos de inventario: ' + error.message);
-                });
+                    
+                    filterData(); // Mostrar datos iniciales
+                    showSpinner(false);
+                    console.log('StockManager inicializado correctamente');
+                    
+                } catch (error) {
+                    console.error('Error inicializando StockManager:', error);
+                    showError('Error al cargar datos de inventario: ' + error.message);
+                }
             }
 
-            // Inicializar la funcionalidad de stock
-            listenStock();
+            // Inicializar
+            initializeStockData();
         }
 
         // Función global para cerrar modal

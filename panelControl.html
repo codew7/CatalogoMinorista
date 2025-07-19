@@ -69,7 +69,8 @@
         /* Header Section */
         .header {
             text-align: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
+            margin-top: 1rem;
         }
 
 
@@ -97,10 +98,10 @@
         /* Navigation Grid */
         .nav-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 2rem;
             width: 100%;
-            max-width: 800px;
+            max-width: 1000px;
             margin-bottom: 2rem;
         }
         .nav-grid .row-2 {
@@ -219,6 +220,128 @@
             color: var(--gray-800);
         }
 
+        .nav-card.blue {
+            background: linear-gradient(135deg, #2196F3 0%, #64B5F6 100%);
+            color: var(--white);
+            border: none;
+        }
+
+        .nav-card.blue .nav-card-title,
+        .nav-card.blue .nav-card-description {
+            color: var(--white);
+        }
+
+        .nav-card.orange {
+            background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+            color: var(--white);
+            border: none;
+        }
+
+        .nav-card.orange .nav-card-title,
+        .nav-card.orange .nav-card-description {
+            color: var(--white);
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-xl);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s ease;
+            text-align: center;
+            font-family: var(--font-family);
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 78, 182, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-family);
+        }
+
+        .modal-btn.primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .modal-btn.primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .modal-btn.secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .modal-btn.secondary:hover {
+            background: var(--gray-300);
+            transform: translateY(-1px);
+        }
+
         /* Footer */
         .footer {
             text-align: center;
@@ -237,6 +360,13 @@
         }
 
         /* Responsive Design */
+        @media (max-width: 1024px) {
+            .nav-grid {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 600px;
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 gap: 2rem;
@@ -312,6 +442,9 @@
         .nav-card:nth-child(3) { animation-delay: 0.3s; }
         .nav-card:nth-child(4) { animation-delay: 0.4s; }
         .nav-card:nth-child(5) { animation-delay: 0.5s; }
+        .nav-card:nth-child(6) { animation-delay: 0.6s; }
+        .nav-card:nth-child(7) { animation-delay: 0.7s; }
+        .nav-card:nth-child(8) { animation-delay: 0.8s; }
 
         @keyframes fadeInUp {
             to {
@@ -507,7 +640,7 @@
                 <p class="nav-card-description">Crear nuevos pedidos</p>
             </a>
 
-            <a href="tablaPedidos.html" class="nav-card gray" tabindex="0" target="_blank">
+            <a href="listaPedidos.html" class="nav-card gray" tabindex="0" target="_blank">
                 <span class="nav-card-icon">📋</span>
                 <h2 class="nav-card-title">Registro de Pedidos</h2>
                 <p class="nav-card-description">Consultar pedidos anteriores</p>
@@ -519,12 +652,18 @@
                 <p class="nav-card-description">Gestión de pedidos web</p>
             </a>
 
+            <a href="#" class="nav-card blue" tabindex="0" onclick="abrirModal('facturacion', 'resumenFacturacion.html'); return false;">
+                <span class="nav-card-icon">💰</span>
+                <h2 class="nav-card-title">Facturación</h2>
+                <p class="nav-card-description">Resumen y análisis de facturación</p>
+            </a>
+
             <!-- Segunda fila - 3 botones alineados -->
             <div class="row-2">
                 <a href="consultaStock.html" class="nav-card inventory" tabindex="0" target="_blank">
                     <span class="nav-card-icon">📋</span>
-                    <h2 class="nav-card-title">Inventario</h2>
-                    <p class="nav-card-description">Gestión y control de stock</p>
+                    <h2 class="nav-card-title">Consulta de Stock</h2>
+                    <p class="nav-card-description">Visualización y control de stock</p>
                 </a>
 
                 <a href="index.html" class="nav-card" tabindex="0" target="_blank">
@@ -537,6 +676,12 @@
                     <span class="nav-card-icon">📦</span>
                     <h2 class="nav-card-title">Catálogo Mayorista</h2>
                     <p class="nav-card-description">Consulta articulos y precios</p>
+                </a>
+
+                <a href="#" class="nav-card orange" tabindex="0" onclick="abrirModal('inventario', 'inventario.html'); return false;">
+                    <span class="nav-card-icon">📊</span>
+                    <h2 class="nav-card-title">Gestión Inventario</h2>
+                    <p class="nav-card-description">Control y administración de inventario</p>
                 </a>
             </div>
         </nav>
@@ -557,6 +702,21 @@
         </footer>
     </div>
 
+    <!-- Modal de autenticación -->
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Acceso Restringido</h3>
+            <p style="color: var(--gray-600); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                Ingrese la contraseña para acceder a esta sección
+            </p>
+            <input type="password" id="passwordInput" class="modal-input" placeholder="Contraseña" maxlength="20">
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="cerrarModal()">Cancelar</button>
+                <button class="modal-btn primary" onclick="verificarPassword()">Acceder</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Add keyboard navigation support
         document.addEventListener('keydown', function(e) {
@@ -572,8 +732,10 @@
         // Add click analytics (optional)
         document.querySelectorAll('.nav-card').forEach(card => {
             card.addEventListener('click', function(e) {
-                // Optional: Add analytics tracking here
-                console.log('Navegando a:', this.href);
+                // Solo hacer log si no es un card con modal
+                if (this.href && !this.href.includes('#')) {
+                    console.log('Navegando a:', this.href);
+                }
             });
         });
 
@@ -585,32 +747,35 @@
         // Add ripple effect on click
         document.querySelectorAll('.nav-card').forEach(card => {
             card.addEventListener('click', function(e) {
-                const ripple = document.createElement('span');
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                const x = e.clientX - rect.left - size / 2;
-                const y = e.clientY - rect.top - size / 2;
-                
-                ripple.style.cssText = `
-                    position: absolute;
-                    width: ${size}px;
-                    height: ${size}px;
-                    left: ${x}px;
-                    top: ${y}px;
-                    background: rgba(255, 255, 255, 0.3);
-                    border-radius: 50%;
-                    transform: scale(0);
-                    animation: ripple 0.6s linear;
-                    pointer-events: none;
-                `;
-                
-                this.style.position = 'relative';
-                this.style.overflow = 'hidden';
-                this.appendChild(ripple);
-                
-                setTimeout(() => {
-                    ripple.remove();
-                }, 600);
+                // Solo aplicar ripple effect si no se está previniendo el comportamiento por defecto
+                if (!e.defaultPrevented) {
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${x}px;
+                        top: ${y}px;
+                        background: rgba(255, 255, 255, 0.3);
+                        border-radius: 50%;
+                        transform: scale(0);
+                        animation: ripple 0.6s linear;
+                        pointer-events: none;
+                    `;
+                    
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                }
             });
         });
 
@@ -626,8 +791,79 @@
         `;
         document.head.appendChild(style);
 
-        // Event listeners para los botones de logout
+        // Variables para el modal de autenticación
+        let urlDestino = '';
+        const passwordCorrecta = '47623212';
+
+        // Función para abrir el modal
+        function abrirModal(tipo, url) {
+            console.log('Abriendo modal para:', tipo, 'URL:', url);
+            urlDestino = url;
+            const modal = document.getElementById('authModal');
+            const passwordInput = document.getElementById('passwordInput');
+            
+            modal.classList.add('show');
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+
+        // Función para cerrar el modal
+        function cerrarModal() {
+            const modal = document.getElementById('authModal');
+            modal.classList.remove('show');
+            urlDestino = '';
+        }
+
+        // Función para verificar la contraseña
+        function verificarPassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const password = passwordInput.value;
+            
+            console.log('Verificando contraseña. URL destino:', urlDestino);
+            
+            if (password === passwordCorrecta) {
+                console.log('Contraseña correcta, redirigiendo a:', urlDestino);
+                
+                // Mostrar mensaje de éxito
+                passwordInput.style.borderColor = '#10b981';
+                passwordInput.style.backgroundColor = '#f0fdf4';
+                passwordInput.value = '';
+                passwordInput.placeholder = 'Acceso concedido...';
+                
+                // Cerrar modal inmediatamente
+                setTimeout(() => {
+                    cerrarModal();
+                }, 300);
+                
+                // Abrir la URL después de cerrar el modal
+                setTimeout(() => {
+                    // Método directo - más confiable para archivos locales
+                    window.open(urlDestino, '_blank');
+                }, 500);
+                
+            } else {
+                // Efecto de error
+                passwordInput.style.borderColor = '#ef4444';
+                passwordInput.style.backgroundColor = '#fef2f2';
+                passwordInput.value = '';
+                passwordInput.placeholder = 'Contraseña incorrecta';
+                
+                setTimeout(() => {
+                    passwordInput.style.borderColor = '';
+                    passwordInput.style.backgroundColor = '';
+                    passwordInput.placeholder = 'Contraseña';
+                }, 2000);
+                
+                passwordInput.focus();
+            }
+        }
+
+        // Event listener para el modal
         document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('authModal');
+            const passwordInput = document.getElementById('passwordInput');
+            
+            // Event listeners para los botones de logout
             const logoutBtn = document.getElementById('logoutBtn');
             const logoutBtnUser = document.getElementById('logoutBtnUser');
             
@@ -637,6 +873,28 @@
             if (logoutBtnUser) {
                 logoutBtnUser.addEventListener('click', cerrarSesion);
             }
+            
+            // Cerrar modal al hacer clic fuera
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    cerrarModal();
+                }
+            });
+            
+            // Manejar tecla Enter en el input
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    verificarPassword();
+                }
+            });
+            
+            // Manejar tecla Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('show')) {
+                    cerrarModal();
+                }
+            });
         });
     </script>
 </body>
