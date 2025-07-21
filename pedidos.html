@@ -261,6 +261,10 @@
   <img id="lbImg" src="" alt="">
 </div>
 
+<!-- Datalist para autocompletar ALIAS -->
+<datalist id="aliasDatalist">
+</datalist>
+
 <script>
 let admin = false; // Declarar admin al principio para evitar errores de hoisting
 
@@ -270,6 +274,87 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
   if (!id){ document.body.innerHTML = "<p>ID inválido</p>"; throw 'no-id'; }
 
   const pedidoRef = db.ref('pedidos/'+id);
+
+  // === ALIAS: Variables y funciones ===
+  let aliasHistorial = [];
+
+  // Cargar historial de alias desde Firebase
+  function cargarHistorialAlias() {
+    db.ref('pedidos').orderByChild('timestamp').limitToLast(200).once('value').then(snap => {
+      const aliasSet = new Set(); // Para evitar duplicados
+      const pedidos = [];
+      
+      // Convertir snapshot a array y ordenar por timestamp descendente
+      snap.forEach(child => {
+        const pedido = child.val();
+        if (pedido && pedido.pagos && pedido.pagos.alias && pedido.pagos.alias.trim() !== '') {
+          pedidos.push({
+            alias: pedido.pagos.alias.trim().toUpperCase(),
+            timestamp: pedido.timestamp || 0
+          });
+        }
+      });
+      
+      // Ordenar por timestamp descendente y tomar solo los 10 más recientes únicos
+      pedidos.sort((a, b) => b.timestamp - a.timestamp);
+      
+      aliasHistorial = [];
+      pedidos.forEach(pedido => {
+        if (aliasSet.size < 10 && !aliasSet.has(pedido.alias)) {
+          aliasSet.add(pedido.alias);
+          aliasHistorial.push(pedido.alias);
+        }
+      });
+      
+      // Actualizar datalist
+      const datalistAlias = document.getElementById('aliasDatalist');
+      if (datalistAlias) {
+        datalistAlias.innerHTML = '';
+        aliasHistorial.forEach(alias => {
+          const option = document.createElement('option');
+          option.value = alias;
+          datalistAlias.appendChild(option);
+        });
+      }
+    }).catch(err => {
+      console.error('Error cargando historial de alias:', err);
+    });
+  }
+
+  // Función para mostrar/ocultar el campo ALIAS
+  function actualizarVisibilidadAlias() {
+    const aliasRow = document.getElementById('aliasRow');
+    const tipoPago = document.querySelector('input[name="tipoPago"]:checked');
+    
+    if (aliasRow) {
+      // Solo mostrar si es admin, está seleccionada Transferencia y Firebase está autenticado
+      const user = firebase.auth().currentUser;
+      if (admin && user && tipoPago && tipoPago.value === 'Transferencia') {
+        aliasRow.style.display = 'block';
+      } else {
+        aliasRow.style.display = 'none';
+      }
+    }
+  }
+
+  // Función para convertir ALIAS a mayúsculas en tiempo real
+  function configurarCampoAlias() {
+    const aliasInput = document.getElementById('alias');
+    if (aliasInput) {
+      aliasInput.addEventListener('input', function() {
+        // Guardar la posición del cursor
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        // Convertir a mayúsculas
+        this.value = this.value.toUpperCase();
+        // Restaurar la posición del cursor
+        this.setSelectionRange(start, end);
+      });
+    }
+  }
+
+  // Cargar historial de alias al inicializar
+  cargarHistorialAlias();
 
   // Al recibir el pedido, decido la cotización a usar
   pedidoRef.on('value', snap => {
@@ -337,6 +422,72 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       despachadoEntregadoBtn.onclick = async () => {
         if (pedidoActual.status === 'CANCELADO') return;
         if (despachadoEntregadoBtn.disabled) return;
+        
+        // Guardar cambios automáticamente antes de despachar
+        try {
+          // Ejecutar la misma lógica que el botón guardar
+          const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
+          const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked')?.value || 'Retiro en local';
+
+          // Validación ALIAS para Transferencia (solo si es admin)
+          let alias = '';
+          if (tipoPago === 'Transferencia' && admin) {
+            const aliasInput = document.getElementById('alias');
+            if (aliasInput && aliasInput.value.trim()) {
+              alias = aliasInput.value.trim().toUpperCase();
+            }
+          }
+
+          // Calcular campo entrega
+          let entrega = '';
+          if (tipoEntrega && tipoEntrega !== 'Retiro en local') {
+            entrega = 'Envios';
+          }
+
+          // Determinar quién modifica
+          let lastModifiedBy = 'usuario';
+          let lastModifiedEmail = '';
+          let adminViewedValue = false;
+          const user = firebase.auth().currentUser;
+          if (admin && user) {
+            lastModifiedBy = 'admin';
+            lastModifiedEmail = user.email || '';
+            adminViewedValue = true;
+          }
+
+          // Preparar datos para actualizar
+          const updateData = {
+            items: pedidoActual.items,
+            adminViewed: adminViewedValue,
+            lastUpdated: Date.now(),
+            tipoPago: tipoPago,
+            tipoEntrega: tipoEntrega,
+            entrega: entrega,
+            lastModifiedBy: lastModifiedBy,
+            lastModifiedEmail: lastModifiedEmail
+          };
+
+          // NOTA: El ALIAS se guardará en pedidos.pagos.alias más adelante
+
+          // Guardar cambios primero
+          await firebase.database().ref('pedidos/' + pedidoActual.id).update(updateData);
+          
+        } catch (error) {
+          alert('Error al guardar cambios antes del despacho: ' + error.message);
+          return;
+        }
+        
+        // Validar ALIAS obligatorio si el tipo de pago es Transferencia
+        const tipoPago = document.querySelector('input[name="tipoPago"]:checked');
+        if (tipoPago && tipoPago.value === 'Transferencia') {
+          const aliasInput = document.getElementById('alias');
+          if (!aliasInput || !aliasInput.value.trim()) {
+            alert('El campo ALIAS es obligatorio para transferencias antes de despachar el pedido.');
+            if (aliasInput) aliasInput.focus();
+            return;
+          }
+        }
+        
         despachadoEntregadoBtn.disabled = true;
         // Función para obtener la fecha en el formato de ingresoPedido.js
         function getFechaActual() {
@@ -390,18 +541,31 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       const costoUSD = costos / coti;
       // Obtener medio de pago seleccionado
       let medioPago = 'efectivo';
+      let alias = '';
       const pagoRadio = document.querySelector('input[name="tipoPago"]:checked');
       if (pagoRadio) {
         medioPago = pagoRadio.value.toLowerCase();
+        // Si es transferencia, obtener el ALIAS
+        if (pagoRadio.value === 'Transferencia') {
+          const aliasInput = document.getElementById('alias');
+          if (aliasInput && aliasInput.value.trim()) {
+            alias = aliasInput.value.trim().toUpperCase();
+          }
+        }
       }
       // Registrar en subnodo pagos
-      await pedidoRef.child('pagos').set({
+      const pagoData = {
         medioPago,
         subtotal,
         costos,
         ganancia,
         totalFinal: subtotal
-      });
+      };
+      // Agregar ALIAS al registro de pagos si existe
+      if (alias) {
+        pagoData.alias = alias;
+      }
+      await pedidoRef.child('pagos').set(pagoData);
       // Registrar costoUSD en el nodo principal del pedido
       await pedidoRef.update({ costoUSD });
           // 5. Registrar movimientos de salida leyendo el pedido actualizado
@@ -645,6 +809,12 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             </label>
           </div>
         </div>
+        <div id="aliasRow" style="display:none;margin-top:10px;">
+          <div style="display:flex;align-items:center;">
+            <div style="font-weight:bold;min-width:75px;">ALIAS</div>
+            <input type="text" id="alias" name="alias" maxlength="50" style="text-transform:uppercase;padding:5px;border:1px solid #ddd;border-radius:4px;width:200px;" list="aliasDatalist">
+          </div>
+        </div>
       `;
       totalPagoWrap.appendChild(pagoDiv);
     } else if (!totalPagoWrap.contains(pagoDiv)) {
@@ -700,6 +870,37 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       for (let r of entregaRadios) {
         r.checked = (entregaValue !== null && r.value === entregaValue);
       }
+      
+      // Cargar valor del ALIAS si existe y es admin
+      const aliasInput = document.getElementById('alias');
+      if (aliasInput && admin) {
+        if (pedidoActual.pagos && pedidoActual.pagos.alias) {
+          aliasInput.value = pedidoActual.pagos.alias;
+        } else {
+          aliasInput.value = ''; // Limpiar si no hay alias guardado
+        }
+      }
+      
+      // Actualizar visibilidad del ALIAS y configurar eventos (solo para admin)
+      if (admin) {
+        actualizarVisibilidadAlias();
+        configurarCampoAlias();
+        
+        // Asignar listeners de tipo de pago inmediatamente
+        const pagoRadiosInline = document.getElementsByName('tipoPago');
+        for (let r of pagoRadiosInline) {
+          r.removeEventListener('change', actualizarVisibilidadAlias);
+          r.addEventListener('change', actualizarVisibilidadAlias);
+        }
+      }
+      
+      // Asignar listeners de entrega inmediatamente
+      const entregaRadiosInline = document.getElementsByName('tipoEntrega');
+      for (let r of entregaRadiosInline) {
+        r.removeEventListener('change', actualizarEstadoBotonesPorEntrega);
+        r.addEventListener('change', actualizarEstadoBotonesPorEntrega);
+      }
+      
       // Llamar para actualizar el estado de los botones después de renderizar
       actualizarEstadoBotonesPorEntrega();
     }, 0);
@@ -724,6 +925,15 @@ document.getElementById('guardarBtn').onclick = () => {
   const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
   const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked')?.value || 'Retiro en local';
 
+  // Validación ALIAS para Transferencia (solo si es admin)
+  let alias = '';
+  if (tipoPago === 'Transferencia' && admin) {
+    const aliasInput = document.getElementById('alias');
+    if (aliasInput && aliasInput.value.trim()) {
+      alias = aliasInput.value.trim().toUpperCase();
+    }
+  }
+
   // Calcular campo entrega
   let entrega = '';
   if (tipoEntrega && tipoEntrega !== 'Retiro en local') {
@@ -741,20 +951,37 @@ document.getElementById('guardarBtn').onclick = () => {
     adminViewedValue = true;
   }
 
+  // Preparar datos para actualizar
+  const updateData = {
+    items:       pedidoActual.items, // lista modificada
+    adminViewed: adminViewedValue,   // ← solo true si admin
+    lastUpdated: Date.now(),         // (útil para ordenar por fecha)
+    tipoPago: tipoPago,
+    tipoEntrega: tipoEntrega,
+    entrega: entrega,
+    lastModifiedBy: lastModifiedBy,
+    lastModifiedEmail: lastModifiedEmail
+  };
+
+  // Guardar ALIAS en pedidos.pagos.alias si es transferencia y hay alias
+  let pagoUpdates = null;
+  if (tipoPago === 'Transferencia' && alias && admin) {
+    pagoUpdates = { alias: alias };
+  }
+
   /* 2. Enviamos la actualización */
-  firebase
-    .database()
-    .ref('pedidos/' + pedidoActual.id)
-    .update({
-      items:       pedidoActual.items, // lista modificada
-      adminViewed: adminViewedValue,   // ← solo true si admin
-      lastUpdated: Date.now(),         // (útil para ordenar por fecha)
-      tipoPago: tipoPago,
-      tipoEntrega: tipoEntrega,
-      entrega: entrega,
-      lastModifiedBy: lastModifiedBy,
-      lastModifiedEmail: lastModifiedEmail
-    })
+  const promises = [
+    firebase.database().ref('pedidos/' + pedidoActual.id).update(updateData)
+  ];
+  
+  // Agregar actualización de pagos si hay alias
+  if (pagoUpdates) {
+    promises.push(
+      firebase.database().ref('pedidos/' + pedidoActual.id + '/pagos').update(pagoUpdates)
+    );
+  }
+
+  Promise.all(promises)
     .then(() => alert('Pedido actualizado ✔️'))
     .catch(()  => alert('Error al guardar'));
 };
@@ -1126,10 +1353,38 @@ function asignarListenersEntrega() {
   actualizarEstadoBotonesPorEntrega();
 }
 
+// Asignar listeners a los radios de tipo de pago para ALIAS (solo admin)
+function asignarListenersTipoPago() {
+  if (!admin) return; // Solo para administradores
+  
+  const pagoRadios = document.getElementsByName('tipoPago');
+  for (let r of pagoRadios) {
+    r.removeEventListener('change', actualizarVisibilidadAlias); // Evita listeners duplicados
+    r.addEventListener('change', actualizarVisibilidadAlias);
+  }
+  // Configurar el campo ALIAS para mayúsculas
+  configurarCampoAlias();
+  // Llamar al inicio para el estado inicial
+  actualizarVisibilidadAlias();
+}
+
 // Llamar después de renderItems para asegurar que los radios existen
 const observer = new MutationObserver(() => {
+  let entregaConfigured = false;
+  let pagoConfigured = false;
+  
   if (document.getElementsByName('tipoEntrega').length > 0) {
     asignarListenersEntrega();
+    entregaConfigured = true;
+  }
+  
+  if (admin && document.getElementsByName('tipoPago').length > 0) {
+    asignarListenersTipoPago();
+    pagoConfigured = true;
+  }
+  
+  // Solo desconectar cuando ambos estén configurados (o cuando pago no sea necesario para no-admin)
+  if (entregaConfigured && (pagoConfigured || !admin)) {
     observer.disconnect();
   }
 });

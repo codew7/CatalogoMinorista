@@ -518,15 +518,7 @@ addItemBtn.addEventListener('click', function() {
   form.addEventListener('submit', function(e) {
     if (pedidoId) return; // Si es edición, no ejecutar alta
     e.preventDefault();
-    mostrarModalImprimirOrden(
-      function() {
-        generarReciboYImprimir();
-        setTimeout(() => { ingresarPedido(); }, 1000);
-      },
-      function() {
-        ingresarPedido();
-      }
-    );
+    ingresarPedido();
   });
 
   // Extraer la lógica de ingreso de pedido a una función reutilizable
@@ -554,6 +546,14 @@ addItemBtn.addEventListener('click', function() {
       showPopup('Debe seleccionar el Medio de Pago.', '❗', false);
       return;
     }
+    // Validar ALIAS si el medio de pago es Transferencia
+    if (medioPago === 'Transferencia') {
+      const alias = form.alias ? form.alias.value.trim().toUpperCase() : '';
+      if (!alias) {
+        showPopup('Debe completar el campo ALIAS para transferencias.', '❗', false);
+        return;
+      }
+    }
     if (!vendedor) {
       showPopup('Debe completar el campo Vendedor.', '❗', false);
       return;
@@ -569,6 +569,7 @@ addItemBtn.addEventListener('click', function() {
     const subtotal = parseInt(onlyDigits(form.subtotal.value), 10) || 0;
     const totalFinal = parseInt(onlyDigits(form.totalFinal.value), 10) || 0;
     const nota = form.nota ? form.nota.value.trim() : '';
+    const alias = form.alias ? form.alias.value.trim().toUpperCase() : '';
 
     if (items.length === 0) {
       showPopup('Debe agregar al menos un artículo.', '❗', false);
@@ -635,7 +636,7 @@ addItemBtn.addEventListener('click', function() {
           .reduce((acc, it) => acc + (parseInt(it.valorG) || 0), 0);
         const pedidoObj = {
           timestamp: Date.now(),
-          locked: false,
+          locked: true,
           adminViewed: true,
           cliente: { nombre, telefono, direccion, dni, email, tipoCliente },
           items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria, seleccionado: it.seleccionado, valorG: it.valorG })),
@@ -648,7 +649,8 @@ addItemBtn.addEventListener('click', function() {
             totalFinal,
             costos,
             ganancia: subtotal - costos,
-            gananciaSelec
+            gananciaSelec,
+            alias
           },
           status: 'DESPACHADO/ENTREGADO',
           cotizacionCierre: cotizacionCierre,
@@ -700,11 +702,28 @@ addItemBtn.addEventListener('click', function() {
             .then(() => {
               // Registrar movimientos de inventario usando el id generado
               registrarMovimientosInventario(items, pedidoObj.cotizacionCierre, pedidoRef.key);
-              showPopup('Pedido ingresado', '✅', true);
-              form.reset();
-              items = [];
-              renderItems();
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              // Actualizar historial de alias si se usó uno
+              if (pedidoObj.pagos && pedidoObj.pagos.alias && pedidoObj.pagos.alias.trim() !== '') {
+                cargarHistorialAlias();
+              }
+              // Mostrar modal de impresión DESPUÉS de guardar exitosamente
+              mostrarModalImprimirOrden(
+                function() { // Sí imprimir
+                  generarReciboYImprimir();
+                  showPopup('Pedido ingresado', '✅', true);
+                  form.reset();
+                  items = [];
+                  renderItems();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+                function() { // No imprimir
+                  showPopup('Pedido ingresado', '✅', true);
+                  form.reset();
+                  items = [];
+                  renderItems();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              );
             })
             .catch(err => {
               showPopup('Error al guardar el pedido.', '❌', false);
@@ -828,9 +847,10 @@ addItemBtn.addEventListener('click', function() {
       // Autocompletar nota y vendedor si existen
       if (form.nota) form.nota.value = pedido.nota || '';
       if (form.vendedor) form.vendedor.value = pedido.vendedor || '';
+      if (form.alias) form.alias.value = pedido.pagos?.alias || '';
 
-      // --- SOLO LECTURA SI locked: true ---
-      if (pedido.locked === true) {
+      // --- SOLO LECTURA SI STATUS ES CANCELADO ---
+      if (pedido.status === 'CANCELADO') {
         // Eliminar movimientos de inventario asociados a este pedido cancelado
         if (pedidoId) {
           db.ref('movimientos').orderByChild('pedidoId').equalTo(pedidoId).once('value', function(snapshot) {
@@ -876,15 +896,7 @@ addItemBtn.addEventListener('click', function() {
       e.preventDefault();
       mostrarModalPasswordEdicion(function(contrasena) {
         if (!contrasena) return; // Si se cancela, no continuar
-        mostrarModalImprimirOrden(
-          function() { // Sí imprimir
-            generarReciboYImprimir();
-            setTimeout(() => { modificarPedido(contrasena); }, 1000);
-          },
-          function() { // No imprimir
-            modificarPedido(contrasena);
-          }
-        );
+        modificarPedido(contrasena);
       });
     };
 
@@ -934,6 +946,15 @@ addItemBtn.addEventListener('click', function() {
       const envio = parseInt(onlyDigits(form.envio.value), 10) || 0;
       const nota = form.nota ? form.nota.value.trim() : '';
       const vendedor = form.vendedor ? form.vendedor.value.trim() : '';
+      const alias = form.alias ? form.alias.value.trim().toUpperCase() : '';
+      
+      // Validar ALIAS si el medio de pago es Transferencia
+      if (form.medioPago.value === 'Transferencia' && !alias) {
+        messageDiv.textContent = 'Debe completar el campo ALIAS para transferencias.';
+        messageDiv.style.color = 'red';
+        return;
+      }
+      
       // Obtener cotización blue en tiempo real
       fetch('https://api.bluelytics.com.ar/v2/latest')
         .then(r => r.json())
@@ -951,7 +972,7 @@ addItemBtn.addEventListener('click', function() {
             .reduce((acc, it) => acc + (parseInt(it.valorG) || 0), 0);
           const pedidoObj = {
             timestamp: Date.now(),
-            locked: false,
+            locked: true,
             adminViewed: true,
             cliente: { nombre: form.nombre.value.trim(), telefono: form.telefono.value.trim(), direccion: form.direccion.value.trim(), dni: form.dni.value.trim(), email: form.email.value.trim().toLowerCase(), tipoCliente: document.querySelector('input[name="tipoCliente"]:checked')?.value || '' },
             items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria, seleccionado: it.seleccionado, valorG: it.valorG })),
@@ -964,7 +985,8 @@ addItemBtn.addEventListener('click', function() {
               totalFinal,
               costos,
               ganancia: subtotal - costos,
-              gananciaSelec
+              gananciaSelec,
+              alias
             },
             status: 'DESPACHADO/ENTREGADO',
             cotizacionCierre: cotizacionCierre,
@@ -985,16 +1007,38 @@ addItemBtn.addEventListener('click', function() {
               .then(() => {
                 // Registrar movimientos de inventario también en edición
                 registrarMovimientosInventario(items, pedidoObj.cotizacionCierre, pedidoId);
-                messageDiv.textContent = 'Pedido actualizado correctamente.';
-                messageDiv.style.color = 'green';
-                setTimeout(() => {
-                  if (window.opener && !window.opener.closed) {
-                    window.opener.location.reload();
-                    window.close();
-                  } else {
-                    window.location.href = 'ingresoPedido.html';
+                // Actualizar historial de alias si se usó uno
+                if (pedidoObj.pagos && pedidoObj.pagos.alias && pedidoObj.pagos.alias.trim() !== '') {
+                  cargarHistorialAlias();
+                }
+                // Mostrar modal de impresión DESPUÉS de actualizar exitosamente
+                mostrarModalImprimirOrden(
+                  function() { // Sí imprimir
+                    generarReciboYImprimir();
+                    messageDiv.textContent = 'Pedido actualizado correctamente.';
+                    messageDiv.style.color = 'green';
+                    setTimeout(() => {
+                      if (window.opener && !window.opener.closed) {
+                        window.opener.location.reload();
+                        window.close();
+                      } else {
+                        window.location.href = 'ingresoPedido.html';
+                      }
+                    }, 1200);
+                  },
+                  function() { // No imprimir
+                    messageDiv.textContent = 'Pedido actualizado correctamente.';
+                    messageDiv.style.color = 'green';
+                    setTimeout(() => {
+                      if (window.opener && !window.opener.closed) {
+                        window.opener.location.reload();
+                        window.close();
+                      } else {
+                        window.location.href = 'ingresoPedido.html';
+                      }
+                    }, 1200);
                   }
-                }, 1200);
+                );
               })
               .catch(err => {
                 messageDiv.textContent = 'Error al actualizar el pedido.';
@@ -1140,6 +1184,66 @@ function cargarClientes() {
   });
 }
 cargarClientes();
+
+// === ALIAS: Autocompletar con historial ===
+let aliasHistorial = [];
+
+// Crear datalist para autocompletar alias
+let datalistAlias = document.getElementById('aliasDatalist');
+if (!datalistAlias) {
+  datalistAlias = document.createElement('datalist');
+  datalistAlias.id = 'aliasDatalist';
+  document.body.appendChild(datalistAlias);
+}
+
+// Configurar el campo alias para usar el datalist
+const aliasField = document.getElementById('alias');
+if (aliasField) {
+  aliasField.setAttribute('list', 'aliasDatalist');
+}
+
+// Cargar historial de alias desde Firebase
+function cargarHistorialAlias() {
+  db.ref('pedidos').orderByChild('timestamp').limitToLast(200).once('value').then(snap => {
+    const aliasSet = new Set(); // Para evitar duplicados
+    const pedidos = [];
+    
+    // Convertir snapshot a array y ordenar por timestamp descendente
+    snap.forEach(child => {
+      const pedido = child.val();
+      if (pedido && pedido.pagos && pedido.pagos.alias && pedido.pagos.alias.trim() !== '') {
+        pedidos.push({
+          alias: pedido.pagos.alias.trim().toUpperCase(),
+          timestamp: pedido.timestamp || 0
+        });
+      }
+    });
+    
+    // Ordenar por timestamp descendente y tomar solo los 10 más recientes únicos
+    pedidos.sort((a, b) => b.timestamp - a.timestamp);
+    
+    aliasHistorial = [];
+    pedidos.forEach(pedido => {
+      if (aliasSet.size < 10 && !aliasSet.has(pedido.alias)) {
+        aliasSet.add(pedido.alias);
+        aliasHistorial.push(pedido.alias);
+      }
+    });
+    
+    // Actualizar datalist
+    datalistAlias.innerHTML = '';
+    aliasHistorial.forEach(alias => {
+      const option = document.createElement('option');
+      option.value = alias;
+      datalistAlias.appendChild(option);
+    });
+  }).catch(err => {
+    console.error('Error cargando historial de alias:', err);
+  });
+}
+
+// Cargar historial de alias al inicializar
+cargarHistorialAlias();
 
 // Al salir del input nombre, validar si existe
 form.nombre.addEventListener('blur', function() {
@@ -1321,6 +1425,7 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
     const email = form.email.value.trim();
     const tipoCliente = document.querySelector('input[name="tipoCliente"]:checked')?.value || '';
     const medioPago = form.medioPago.value;
+    const alias = form.alias ? form.alias.value.trim().toUpperCase() : '';
     const subtotal = form.subtotal.value;
     const recargo = form.recargo.value;
     const descuento = form.descuento.value;
@@ -1392,13 +1497,16 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
   // Inicializar tabla vacía
   renderItems();
 
-  // Mostrar/ocultar comprobante de transferencia según medio de pago
+  // Mostrar/ocultar alias y comprobante de transferencia según medio de pago
   function actualizarVisibilidadComprobanteTransferencia() {
     const comprobanteRow = document.getElementById('comprobanteRow');
-    if (!comprobanteRow) return;
+    const aliasRow = document.getElementById('aliasRow');
+    if (!comprobanteRow || !aliasRow) return;
     if (form.medioPago.value === 'Transferencia') {
+      aliasRow.style.display = '';
       comprobanteRow.style.display = '';
     } else {
+      aliasRow.style.display = 'none';
       comprobanteRow.style.display = 'none';
     }
   }
@@ -1406,6 +1514,20 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
   actualizarVisibilidadComprobanteTransferencia();
   // Ejecutar al cambiar medio de pago
   form.medioPago.addEventListener('change', actualizarVisibilidadComprobanteTransferencia);
+
+  // === CONVERTIR ALIAS A MAYÚSCULAS ===
+  const aliasInput = document.getElementById('alias');
+  if (aliasInput) {
+    aliasInput.addEventListener('input', function() {
+      // Guardar la posición del cursor
+      const start = this.selectionStart;
+      const end = this.selectionEnd;
+      // Convertir a mayúsculas
+      this.value = this.value.toUpperCase();
+      // Restaurar la posición del cursor
+      this.setSelectionRange(start, end);
+    });
+  }
 
   // === MODAL CONTRASEÑA PARA MODIFICAR PEDIDO ===
   // Agregar estilos para el modal de contraseña (extraído del HTML de eliminación)

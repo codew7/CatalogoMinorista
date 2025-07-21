@@ -715,7 +715,7 @@
                     </div>
                     <div class="filter-group">
                         <label for="filtroCliente">Cliente</label>
-                        <input type="text" id="filtroCliente" class="form-control" placeholder="Buscar por cliente...">
+                        <input type="text" id="filtroCliente" class="form-control" placeholder="Buscar por cliente, ID pedido o email...">
                     </div>
                     <div class="filter-group">
                         <label for="filtroTipoCliente">Tipo Cliente</label>
@@ -1139,11 +1139,18 @@
                             if (fechaPedido > fechaHasta) return false;
                         }
                         
-                        // Filtro por cliente (optimizado)
+                        // Filtro por cliente (optimizado) - busca en nombre, ID y email
                         if (filtroCliente.value) {
-                            const clienteLower = clienteNombre.toLowerCase();
                             const filtroLower = filtroCliente.value.toLowerCase();
-                            if (!clienteLower.includes(filtroLower)) return false;
+                            const clienteLower = clienteNombre.toLowerCase();
+                            const pedidoId = (pedido.id || '').toLowerCase();
+                            const clienteEmail = (pedido.cliente?.email || '').toLowerCase();
+                            
+                            const coincideNombre = clienteLower.includes(filtroLower);
+                            const coincideId = pedidoId.includes(filtroLower);
+                            const coincideEmail = clienteEmail.includes(filtroLower);
+                            
+                            if (!coincideNombre && !coincideId && !coincideEmail) return false;
                         }
                         
                         // Filtro por tipo cliente
@@ -1214,9 +1221,16 @@
                             }
                             
                             if (pasaFiltro && filtroCliente.value) {
-                                const clienteLower = clienteNombre.toLowerCase();
                                 const filtroLower = filtroCliente.value.toLowerCase();
-                                pasaFiltro = clienteLower.includes(filtroLower);
+                                const clienteLower = clienteNombre.toLowerCase();
+                                const pedidoId = (pedido.id || '').toLowerCase();
+                                const clienteEmail = (pedido.cliente?.email || '').toLowerCase();
+                                
+                                const coincideNombre = clienteLower.includes(filtroLower);
+                                const coincideId = pedidoId.includes(filtroLower);
+                                const coincideEmail = clienteEmail.includes(filtroLower);
+                                
+                                pasaFiltro = coincideNombre || coincideId || coincideEmail;
                             }
                             
                             if (pasaFiltro && filtroTipoCliente.value) {
@@ -1363,7 +1377,7 @@
                             ],
                             scrollX: true,
                             fixedHeader: true,
-                            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
+                            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6">>rtip',
                             deferRender: true, // Renderizar solo las filas visibles
                             createdRow: function(row, data, dataIndex) {
                                 // Optimización: Diferir configuración de eventos

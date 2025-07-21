@@ -1037,7 +1037,7 @@
             // Normalizar fecha actual al inicio del día para comparaciones consistentes
             const ahoraInicioDelDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
             
-            Object.values(pedidos).forEach(pedido => {
+            Object.entries(pedidos).forEach(([pedidoId, pedido]) => {
                 if (!pedido.fecha) return;
                 
                 const fechaPedido = new Date(pedido.fecha);
@@ -1105,7 +1105,7 @@
                 
                 // Almacenar pedido procesado para drill-down
                 pedidosProcesados.push({
-                    id: pedido.id || 'N/A',
+                    id: pedidoId,
                     fecha: pedido.fecha,
                     fechaFormatted: fechaPedido.toLocaleDateString('es-AR'),
                     cliente: pedido.cliente?.nombre || 'Sin nombre',
@@ -1218,11 +1218,28 @@
                 }
             }
             
+            // Crear mapeo de índices antiguos a nuevos
+            const mapeoIndices = {};
+            indicesConDatos.forEach((indiceAntiguo, nuevoIndice) => {
+                mapeoIndices[indiceAntiguo] = nuevoIndice;
+            });
+            
             // Crear nuevos arrays filtrados
             const nuevosDatos = {};
             Object.keys(datosFacturacion).forEach(key => {
                 nuevosDatos[key] = indicesConDatos.map(index => datosFacturacion[key][index]);
             });
+            
+            // Actualizar pedidosProcesados con los nuevos índices
+            pedidosProcesados = pedidosProcesados.map(pedido => {
+                if (mapeoIndices.hasOwnProperty(pedido.indicePeriodo)) {
+                    return {
+                        ...pedido,
+                        indicePeriodo: mapeoIndices[pedido.indicePeriodo]
+                    };
+                }
+                return null; // Marcar para eliminar
+            }).filter(pedido => pedido !== null); // Eliminar pedidos que no están en las columnas filtradas
             
             // Actualizar datos globales
             datosFacturacion = nuevosDatos;
