@@ -546,11 +546,11 @@ addItemBtn.addEventListener('click', function() {
       showPopup('Debe seleccionar el Medio de Pago.', '❗', false);
       return;
     }
-    // Validar ALIAS si el medio de pago es Transferencia
-    if (medioPago === 'Transferencia') {
+    // Validar ALIAS si el medio de pago es Transferencia o Parcial
+    if (medioPago === 'Transferencia' || medioPago === 'Parcial') {
       const alias = form.alias ? form.alias.value.trim().toUpperCase() : '';
       if (!alias) {
-        showPopup('Debe completar el campo ALIAS para transferencias.', '❗', false);
+        showPopup('Debe completar el campo ALIAS para transferencias y pagos parciales.', '❗', false);
         return;
       }
     }
@@ -948,9 +948,9 @@ addItemBtn.addEventListener('click', function() {
       const vendedor = form.vendedor ? form.vendedor.value.trim() : '';
       const alias = form.alias ? form.alias.value.trim().toUpperCase() : '';
       
-      // Validar ALIAS si el medio de pago es Transferencia
-      if (form.medioPago.value === 'Transferencia' && !alias) {
-        messageDiv.textContent = 'Debe completar el campo ALIAS para transferencias.';
+      // Validar ALIAS si el medio de pago es Transferencia o Parcial
+      if ((form.medioPago.value === 'Transferencia' || form.medioPago.value === 'Parcial') && !alias) {
+        messageDiv.textContent = 'Debe completar el campo ALIAS para transferencias y pagos parciales.';
         messageDiv.style.color = 'red';
         return;
       }
@@ -1502,7 +1502,7 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
     const comprobanteRow = document.getElementById('comprobanteRow');
     const aliasRow = document.getElementById('aliasRow');
     if (!comprobanteRow || !aliasRow) return;
-    if (form.medioPago.value === 'Transferencia') {
+    if (form.medioPago.value === 'Transferencia' || form.medioPago.value === 'Parcial') {
       aliasRow.style.display = '';
       comprobanteRow.style.display = '';
     } else {
