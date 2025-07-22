@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Stock</title>
+    <title>Capital en Inventario</title>
     <link rel="icon" href="faviconnegro.png" type="image/png">
     
     <!-- Firebase SDK -->
@@ -104,6 +104,29 @@
             background: var(--primary-dark);
         }
 
+        .capital-summary {
+            background: linear-gradient(135deg, var(--success), #4ade80);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(56, 176, 0, 0.2);
+        }
+        
+        .capital-summary h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .capital-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
         .table-responsive {
             overflow-x: auto;
             margin-bottom: 1rem;
@@ -193,10 +216,14 @@
                 padding: 0.7rem 0.3rem;
                 font-size: 0.97rem;
             }
-            .export-btn {
-                width: 100%;
-                float: none;
-                margin-bottom: 1rem;
+            .capital-summary {
+                padding: 1rem;
+            }
+            .capital-summary h2 {
+                font-size: 1.5rem;
+            }
+            .capital-amount {
+                font-size: 2rem;
             }
         }
 
@@ -238,7 +265,7 @@
 </head>
 <body>
     <header>
-        <h1>📋 Consulta de Stock 🔎</h1>
+        <h1>💰 Capital en Inventario 📊</h1>
         
         <!-- Indicadores de usuario -->
         <div id="adminIndicator" style="position: absolute; top: 15px; right: 20px; background: rgba(182, 137, 0, 0.9); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; display: none; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
@@ -255,6 +282,12 @@
         </div>
     </header>
     <div class="container">
+        <!-- Resumen de Capital Total -->
+        <div class="capital-summary">
+            <h2><i class="bi bi-cash-stack"></i> Capital Total en Mercadería</h2>
+            <p class="capital-amount" id="totalCapital">$0</p>
+        </div>
+        
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="Buscar por código o nombre...">
             <button id="clearBtn" title="Limpiar búsqueda">✕</button>
@@ -266,8 +299,8 @@
                         <th>Código</th>
                         <th>Nombre</th>
                         <th>Stock Actual</th>
-                        <th>Precio Consumidor</th>
-                        <th>Precio Mayorista</th>
+                        <th>Costo Unitario</th>
+                        <th>Total</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -299,13 +332,13 @@
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', function() {
                     console.log('Página inicializada para usuario autenticado');
-                    // Continuar con la inicialización de la página de stock
-                    inicializarStock();
+                    // Continuar con la inicialización de la página de capital
+                    inicializarCapital();
                 });
             } else {
                 console.log('Página inicializada para usuario autenticado');
-                // Continuar con la inicialización de la página de stock
-                inicializarStock();
+                // Continuar con la inicialización de la página de capital
+                inicializarCapital();
             }
         }
 
@@ -411,14 +444,15 @@
     <!-- Fin Firebase Auth Check -->
     
     <script>
-        // Función para inicializar la funcionalidad de stock
-        function inicializarStock() {
+        // Función para inicializar la funcionalidad de capital
+        function inicializarCapital() {
             // Elementos DOM
             const tableBody = document.getElementById('tableBody');
             const spinner = document.getElementById('spinner');
             const errorMsg = document.getElementById('errorMsg');
             const searchInput = document.getElementById('searchInput');
             const clearBtn = document.getElementById('clearBtn');
+            const totalCapital = document.getElementById('totalCapital');
             let filteredData = [];
 
             function showSpinner(show) {
@@ -436,30 +470,50 @@
                 errorMsg.style.display = 'none';
             }
 
+            function calculateTotalCapital(data) {
+                let total = 0;
+                data.forEach(item => {
+                    const costoUnitario = (typeof item.costoUnitario === 'number' && !isNaN(item.costoUnitario)) ? item.costoUnitario : 0;
+                    const stock = (typeof item.stock === 'number' && !isNaN(item.stock)) ? item.stock : 0;
+                    total += costoUnitario * stock;
+                });
+                return total;
+            }
+
+            function updateTotalCapital(data) {
+                const total = calculateTotalCapital(data);
+                totalCapital.textContent = '$' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+            }
+
             function renderTable(data) {
                 tableBody.innerHTML = '';
                 if (data.length === 0) {
                     tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-dark);">Sin resultados</td></tr>';
+                    updateTotalCapital([]);
                     return;
                 }
+                
                 data.forEach(item => {
                     let stockClass = '';
                     if (item.stock <= 0) stockClass = 'stock-zero';
                     else if (item.stock <= 5) stockClass = 'stock-low';
                     
-                    let precioConsumidor = (typeof item.precioConsumidor === 'number' && !isNaN(item.precioConsumidor)) ? item.precioConsumidor : 0;
-                    let precioMayorista = (typeof item.precioMayorista === 'number' && !isNaN(item.precioMayorista)) ? item.precioMayorista : 0;
+                    let costoUnitario = (typeof item.costoUnitario === 'number' && !isNaN(item.costoUnitario)) ? item.costoUnitario : 0;
+                    let stock = (typeof item.stock === 'number' && !isNaN(item.stock)) ? item.stock : 0;
+                    let total = costoUnitario * stock;
                     
                     tableBody.innerHTML += `
                         <tr class="${stockClass}">
                             <td>${item.codigo || ''}</td>
                             <td>${item.nombre || ''}</td>
-                            <td>${typeof item.stock === 'number' ? item.stock : 0}</td>
-                            <td>$${precioConsumidor.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</td>
-                            <td>$${precioMayorista.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</td>
+                            <td>${stock}</td>
+                            <td>$${costoUnitario.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            <td>$${total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                         </tr>
                     `;
                 });
+                
+                updateTotalCapital(data);
             }
 
             function filterData() {
@@ -478,23 +532,20 @@
             searchInput.addEventListener('input', filterData);
 
             // Inicializar con StockManager
-            async function initializeStockData() {
+            async function initializeCapitalData() {
                 showSpinner(true);
                 clearError();
                 
                 try {
-                    console.log('Inicializando StockManager...');
                     await window.stockManager.initialize();
                     
                     // Agregar listener para actualizaciones automáticas
                     window.stockManager.addListener((data) => {
-                        console.log('Stock actualizado:', data.length, 'productos');
                         filterData(); // Refrescar tabla cuando cambien los datos
                     });
                     
                     filterData(); // Mostrar datos iniciales
                     showSpinner(false);
-                    console.log('StockManager inicializado correctamente');
                     
                 } catch (error) {
                     console.error('Error inicializando StockManager:', error);
@@ -503,7 +554,7 @@
             }
 
             // Inicializar
-            initializeStockData();
+            initializeCapitalData();
         }
     </script>
 </body>

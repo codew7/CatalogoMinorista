@@ -45,18 +45,16 @@ class StockManager {
                                     valor: mov.valor || 0,
                                     stock: 0,
                                     precioConsumidor: googleData.precioConsumidor || 0,
+                                    costoUnitario: googleData.costoUnitario || 0,
                                     precioMayorista: googleData.precioMayorista || 0
                                 };
-                                
-                                // Debug log
-                                if (googleData.precioConsumidor || googleData.precioMayorista) {
-                                    console.log(`Aplicando precios a ${mov.codigo}: Consumidor ${googleData.precioConsumidor}, Mayorista ${googleData.precioMayorista}`);
-                                }
                             }
                             
                             if (mov.tipo === 'ENTRADA') {
                                 stockMap[mov.codigo].stock += Number(mov.cantidad || 0);
                             } else if (mov.tipo === 'SALIDA') {
+                                stockMap[mov.codigo].stock -= Number(mov.cantidad || 0);
+                            } else if (mov.tipo === 'RETIRO') {
                                 stockMap[mov.codigo].stock -= Number(mov.cantidad || 0);
                             }
                         });
@@ -101,33 +99,30 @@ class StockManager {
             }
             
             const data = await response.json();
-            console.log('Respuesta de Google Sheets:', data);
             
             if (data.values) {
                 // Procesar datos de Google Sheets
                 data.values.forEach(row => {
                     const codigo = row[2]; // Columna C
                     if (codigo) {
-                        // Extraer y limpiar precios de columnas E y G
+                        // Extraer y limpiar precios de columnas E, G e I
                         // Formato esperado: 1,000 = mil (coma como separador de miles)
                         const precioConsumidorRaw = (row[4] || '0').toString().replace(/\$/g, '').trim();
                         const precioMayoristaRaw = (row[6] || '0').toString().replace(/\$/g, '').trim();
+                        const costoUnitarioRaw = (row[9] || '0').toString().replace(/\$/g, '').trim();
                         
                         // Convertir números con formato estadounidense (comas como separadores de miles)
                         const precioConsumidor = parseFloat(precioConsumidorRaw.replace(/,/g, '')) || 0;
+                        const costoUnitario = parseFloat(costoUnitarioRaw.replace(/,/g, '')) || 0;
                         const precioMayorista = parseFloat(precioMayoristaRaw.replace(/,/g, '')) || 0;
                         
                         this.googleSheetsData[codigo] = {
                             precioConsumidor: precioConsumidor,
+                            costoUnitario: costoUnitario,
                             precioMayorista: precioMayorista
                         };
                     }
                 });
-                console.log('Datos de Google Sheets cargados:', Object.keys(this.googleSheetsData).length, 'productos');
-                
-                // Log de algunos ejemplos para verificar
-                const ejemplos = Object.entries(this.googleSheetsData).slice(0, 3);
-                console.log('Ejemplos de precios cargados:', ejemplos);
             }
         } catch (error) {
             console.error('Error cargando datos de Google Sheets:', error);

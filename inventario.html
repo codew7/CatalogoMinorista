@@ -243,9 +243,30 @@
       align-items: center;
       gap: 0.5rem;
       justify-content: center;
+      margin-top: 0.5rem;
     }
     .btn-agregar:hover {
       background: linear-gradient(90deg, #ffe066, #ffe066cc);
+    }
+    .btn-quitar {
+      background: linear-gradient(90deg, var(--danger), #dc2626);
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 2.2rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    .btn-quitar:hover {
+      background: linear-gradient(90deg, #dc2626, #b91c1c);
     }
     .feedback {
       margin-top: 0.5rem;
@@ -333,6 +354,10 @@
     }
     .salida {
       color: var(--danger);
+      font-weight: bold;
+    }
+    .retiro {
+      color: #ff8c00;
       font-weight: bold;
     }
     .acciones-btns {
@@ -516,6 +541,13 @@
   <header>
     <h1>📋 Gestión de Inventario 📊</h1>
     
+    <!-- Botón Capitalización -->
+    <div style="position: absolute; top: 15px; left: 20px;">
+      <button onclick="window.open('capitalInventario.html', '_blank')" style="background: linear-gradient(135deg, var(--success), #4ade80); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(56, 176, 0, 0.2);" title="Ver capitalización de inventario">
+        <i class="bi bi-cash-stack"></i> Capitalización
+      </button>
+    </div>
+    
     <!-- Indicadores de usuario -->
     <div id="adminIndicator" style="position: absolute; top: 15px; right: 20px; background: rgba(182, 137, 0, 0.9); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; display: none; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
       <i class="bi bi-shield-check"></i> Modo Administrador
@@ -553,11 +585,14 @@
           <input type="text" id="codigo" readonly placeholder="Código" />
         </div>
         <div class="form-group" style="grid-column:2;grid-row:2;">
-          <label for="valorC">Valor Costo</label>
-          <input type="text" id="valorC" min="0" step="0.01" placeholder="Valor costo" inputmode="numeric" pattern="[0-9.,]*" />
+          <label for="valorUSD">Costo</label>
+          <input type="text" id="valorUSD" min="0" step="0.01" placeholder="Valor costo" inputmode="numeric" pattern="[0-9.,]*" />
         </div>
-        <div style="grid-column:1/3;grid-row:3;justify-self:stretch;">
+        <div style="grid-column:1;grid-row:3;justify-self:stretch;">
           <button type="submit" class="btn-agregar" id="btnAgregar" style="width:100%;">➕ Agregar Stock</button>
+        </div>
+        <div style="grid-column:2;grid-row:3;justify-self:stretch;">
+          <button type="button" class="btn-quitar" id="btnQuitar" style="width:100%;">➖ Quitar Stock</button>
         </div>
       </form>
       <div class="feedback" id="feedbackIngreso"></div>
@@ -572,6 +607,7 @@
             <option value="">Todos</option>
             <option value="ENTRADA">Entrada</option>
             <option value="SALIDA">Salida</option>
+            <option value="RETIRO">Retiro</option>
           </select>
         </div>
         <div>
@@ -615,42 +651,20 @@
       document.getElementById('cantidad').addEventListener('input', function() {
         if (this.value < 1) this.value = 1;
       });
-      document.getElementById('valorC').addEventListener('input', function() {
+      document.getElementById('valorUSD').addEventListener('input', function() {
         if (this.value < 0) this.value = 0;
       });
 
       // Manejo de formulario de ingreso
       document.getElementById('formIngreso').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const productoSel = document.getElementById('producto');
-        const codigo = document.getElementById('codigo').value.trim();
-        const cantidad = parseInt(document.getElementById('cantidad').value);
-        // Al registrar movimiento, guardar valorC como string (o null si vacío)
-        const valorC = document.getElementById('valorC').value === '' ? null : document.getElementById('valorC').value;
-        const nombre = productoSel.options[productoSel.selectedIndex]?.text || '';
-        if (!codigo || !nombre || isNaN(cantidad) || cantidad < 1) {
-          mostrarFeedback('Completa todos los campos correctamente', 'error');
-          return;
-        }
-        const mov = {
-          timestamp: Date.now(),
-          codigo,
-          nombre,
-          cantidad,
-          valorC,
-          tipo: 'ENTRADA'
-        };
-        try {
-          await registrarMovimiento(mov);
-          mostrarFeedback('Stock agregado exitosamente!','success');
-          document.getElementById('formIngreso').reset();
-          document.getElementById('codigo').value = '';
-          // Limpiar Select2 y imagen
-          $('#producto').val(null).trigger('change');
-          document.getElementById('imgArticulo').style.display = 'none';
-        } catch (e) {
-          mostrarFeedback('Error al registrar movimiento','error');
-        }
+        await procesarMovimiento('ENTRADA');
+      });
+
+      // Manejo del botón Quitar Stock
+      document.getElementById('btnQuitar').addEventListener('click', async function(e) {
+        e.preventDefault();
+        await procesarMovimiento('RETIRO');
       });
 
       // Filtrar movimientos por búsqueda
@@ -662,6 +676,40 @@
         paginaActual = 1;
         filtrarMovimientos();
       });
+    }
+
+    // Función para procesar movimientos (ENTRADA o RETIRO)
+    async function procesarMovimiento(tipo) {
+      const productoSel = document.getElementById('producto');
+      const codigo = document.getElementById('codigo').value.trim();
+      const cantidad = parseInt(document.getElementById('cantidad').value);
+      const nombre = productoSel.options[productoSel.selectedIndex]?.text || '';
+      
+      if (!codigo || !nombre || isNaN(cantidad) || cantidad < 1) {
+        mostrarFeedback('Completa todos los campos correctamente', 'error');
+        return;
+      }
+      
+      const mov = {
+        timestamp: Date.now(),
+        codigo,
+        nombre,
+        cantidad,
+        tipo: tipo
+      };
+      
+      try {
+        await registrarMovimiento(mov);
+        const mensaje = tipo === 'ENTRADA' ? 'Stock agregado exitosamente!' : 'Stock retirado exitosamente!';
+        mostrarFeedback(mensaje, 'success');
+        document.getElementById('formIngreso').reset();
+        document.getElementById('codigo').value = '';
+        // Limpiar Select2 y imagen
+        $('#producto').val(null).trigger('change');
+        document.getElementById('imgArticulo').style.display = 'none';
+      } catch (e) {
+        mostrarFeedback('Error al registrar movimiento', 'error');
+      }
     }
 
     // Función para inicializar Select2
@@ -688,11 +736,18 @@
         }
       });
 
+      // Enfocar automáticamente en el campo de búsqueda cuando se abre el dropdown
+      $select.on('select2:open', function() {
+        setTimeout(function() {
+          document.querySelector('.select2-search__field').focus();
+        }, 100);
+      });
+
       // Event listener para cuando se selecciona un producto
       $select.on('select2:select', function(e) {
         const opt = e.target.options[e.target.selectedIndex];
         document.getElementById('codigo').value = opt.getAttribute('data-codigo') || '';
-        document.getElementById('valorC').value = opt.getAttribute('data-valorc') || '';
+        document.getElementById('valorUSD').value = opt.getAttribute('data-valorusd') || '';
         const imgUrl = opt.getAttribute('data-imgurl') || '';
         const img = document.getElementById('imgArticulo');
         if (imgUrl) {
@@ -702,13 +757,29 @@
           img.src = 'no-disponible.png';
           img.style.display = 'block';
         }
+        
+        // Enfocar automáticamente el campo cantidad después de seleccionar un producto
+        setTimeout(function() {
+          document.getElementById('cantidad').focus();
+        }, 100);
       });
 
       // Event listener para cuando se limpia la selección
       $select.on('select2:clear', function(e) {
         document.getElementById('codigo').value = '';
-        document.getElementById('valorC').value = '';
+        document.getElementById('valorUSD').value = '';
         document.getElementById('imgArticulo').style.display = 'none';
+      });
+
+      // Event listener para abrir Select2 con la tecla TAB
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab' && !e.shiftKey) {
+          // Solo abrir si no hay otro elemento enfocado y el select2 no está ya abierto
+          if (!$select.hasClass('select2-container--open')) {
+            e.preventDefault();
+            $select.select2('open');
+          }
+        }
       });
     }
 
@@ -755,13 +826,13 @@
           let row = rows[i];
           let codigo = row[2] || '';
           let nombre = row[3] || '';
-          let valorC = row[7] ? String(row[7]).trim() : '';
+          let valorUSD = row[9] ? String(row[9]).trim() : '';
           let imgUrl = '';
           if (row[1]) {
             imgUrl = row[1].split(',')[0].trim();
           }
           if (codigo && nombre) {
-            productosArr.push({ codigo, nombre, valorC, imgUrl });
+            productosArr.push({ codigo, nombre, valorUSD, imgUrl });
           }
         }
         productos = productosArr;
@@ -770,7 +841,7 @@
         const select = document.getElementById('producto');
         select.innerHTML = '<option value="">Selecciona un producto...</option>';
         productos.forEach(prod => {
-          select.innerHTML += `<option value="${prod.codigo}" data-nombre="${prod.nombre}" data-codigo="${prod.codigo}" data-valorc="${prod.valorC}" data-imgurl="${prod.imgUrl}">${prod.nombre}</option>`;
+          select.innerHTML += `<option value="${prod.codigo}" data-nombre="${prod.nombre}" data-codigo="${prod.codigo}" data-valorusd="${prod.valorUSD}" data-imgurl="${prod.imgUrl}">${prod.nombre}</option>`;
         });
         
         // Inicializar Select2 después de cargar los productos
@@ -850,12 +921,26 @@
         </thead>
         <tbody>`;
       pageMovs.forEach(mov => {
+        let tipoClass = '';
+        let tipoTexto = '';
+        
+        if (mov.tipo === 'ENTRADA') {
+          tipoClass = 'entrada';
+          tipoTexto = '🟢 ENTRADA';
+        } else if (mov.tipo === 'SALIDA') {
+          tipoClass = 'salida';
+          tipoTexto = '🔴 SALIDA';
+        } else if (mov.tipo === 'RETIRO') {
+          tipoClass = 'retiro';
+          tipoTexto = '🟠 RETIRO';
+        }
+        
         html += `<tr>
           <td>${formatearFecha(mov.timestamp)}</td>
           <td>${mov.codigo}</td>
           <td>${mov.nombre}</td>
           <td>${mov.cantidad}</td>
-          <td class="${mov.tipo === 'ENTRADA' ? 'entrada' : 'salida'}">${mov.tipo === 'ENTRADA' ? '🟢 ENTRADA' : '🔴 SALIDA'}</td>
+          <td class="${tipoClass}">${tipoTexto}</td>
           <td>
             <div class="acciones-btns">
               <button class="btn-accion" title="Modificar" onclick="editarMovimiento('${mov._id}')">✏️</button>
