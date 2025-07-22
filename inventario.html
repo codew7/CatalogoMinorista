@@ -9,6 +9,13 @@
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  
+  <!-- jQuery y Select2 JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  
   <!-- Firebase Auth Check -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -428,6 +435,81 @@
         transform: translateY(0);
       }
     }
+
+    /* Estilos personalizados para Select2 */
+    .select2-container {
+      width: 100% !important;
+    }
+    
+    .select2-container--default .select2-selection--single {
+      background: var(--pastel2) !important;
+      border: 1.5px solid var(--border) !important;
+      border-radius: 7px !important;
+      height: 42px !important;
+      padding: 0.5rem 0.7rem !important;
+      font-size: 1rem !important;
+      color: var(--text) !important;
+      transition: border 0.2s !important;
+    }
+    
+    .select2-container--default .select2-selection--single:focus,
+    .select2-container--default.select2-container--open .select2-selection--single {
+      border-color: var(--accent) !important;
+      outline: none !important;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      color: var(--text) !important;
+      line-height: 28px !important;
+      padding-left: 0 !important;
+      padding-right: 20px !important;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 40px !important;
+      right: 8px !important;
+    }
+    
+    .select2-dropdown {
+      border: 1.5px solid var(--border) !important;
+      border-radius: 7px !important;
+      background: #fff !important;
+      box-shadow: var(--shadow) !important;
+    }
+    
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+      border: 1.5px solid var(--border) !important;
+      border-radius: 7px !important;
+      background: var(--pastel2) !important;
+      padding: 0.5rem 0.7rem !important;
+      font-size: 1rem !important;
+    }
+    
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+      border-color: var(--accent) !important;
+      outline: none !important;
+    }
+    
+    .select2-container--default .select2-results__option {
+      padding: 0.7rem !important;
+      font-size: 1rem !important;
+      color: var(--text) !important;
+    }
+    
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: var(--pastel3) !important;
+      color: var(--text) !important;
+    }
+    
+    .select2-container--default .select2-results__option[aria-selected=true] {
+      background-color: var(--primary) !important;
+      color: #b68900 !important;
+      font-weight: 600 !important;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+      color: #999 !important;
+    }
   </style>
 </head>
 <body>
@@ -524,21 +606,10 @@
     }
 
     function configurarEventListeners() {
-      // Autocompletar código y valorC al seleccionar producto
-      document.getElementById('producto').addEventListener('change', function() {
-        const opt = this.options[this.selectedIndex];
-        document.getElementById('codigo').value = opt.getAttribute('data-codigo') || '';
-        document.getElementById('valorC').value = opt.getAttribute('data-valorc') || '';
-        const imgUrl = opt.getAttribute('data-imgurl') || '';
-        const img = document.getElementById('imgArticulo');
-        if (imgUrl) {
-          img.src = imgUrl;
-          img.style.display = 'block';
-        } else {
-          img.src = 'no-disponible.png';
-          img.style.display = 'block';
-        }
-      });
+      // Inicializar select2 si aún no se ha hecho
+      if (!$('#producto').hasClass('select2-hidden-accessible')) {
+        inicializarSelect2();
+      }
 
       // Validaciones en tiempo real
       document.getElementById('cantidad').addEventListener('input', function() {
@@ -574,6 +645,9 @@
           mostrarFeedback('Stock agregado exitosamente!','success');
           document.getElementById('formIngreso').reset();
           document.getElementById('codigo').value = '';
+          // Limpiar Select2 y imagen
+          $('#producto').val(null).trigger('change');
+          document.getElementById('imgArticulo').style.display = 'none';
         } catch (e) {
           mostrarFeedback('Error al registrar movimiento','error');
         }
@@ -587,6 +661,54 @@
       document.getElementById('tipoFiltro').addEventListener('change', function() {
         paginaActual = 1;
         filtrarMovimientos();
+      });
+    }
+
+    // Función para inicializar Select2
+    function inicializarSelect2() {
+      const $select = $('#producto');
+      
+      // Destruir Select2 existente si existe
+      if ($select.hasClass('select2-hidden-accessible')) {
+        $select.select2('destroy');
+      }
+      
+      // Inicializar Select2 con configuración personalizada
+      $select.select2({
+        placeholder: 'Selecciona un producto...',
+        allowClear: true,
+        width: '100%',
+        language: {
+          noResults: function() {
+            return "No se encontraron productos";
+          },
+          searching: function() {
+            return "Buscando...";
+          }
+        }
+      });
+
+      // Event listener para cuando se selecciona un producto
+      $select.on('select2:select', function(e) {
+        const opt = e.target.options[e.target.selectedIndex];
+        document.getElementById('codigo').value = opt.getAttribute('data-codigo') || '';
+        document.getElementById('valorC').value = opt.getAttribute('data-valorc') || '';
+        const imgUrl = opt.getAttribute('data-imgurl') || '';
+        const img = document.getElementById('imgArticulo');
+        if (imgUrl) {
+          img.src = imgUrl;
+          img.style.display = 'block';
+        } else {
+          img.src = 'no-disponible.png';
+          img.style.display = 'block';
+        }
+      });
+
+      // Event listener para cuando se limpia la selección
+      $select.on('select2:clear', function(e) {
+        document.getElementById('codigo').value = '';
+        document.getElementById('valorC').value = '';
+        document.getElementById('imgArticulo').style.display = 'none';
       });
     }
 
@@ -650,6 +772,9 @@
         productos.forEach(prod => {
           select.innerHTML += `<option value="${prod.codigo}" data-nombre="${prod.nombre}" data-codigo="${prod.codigo}" data-valorc="${prod.valorC}" data-imgurl="${prod.imgUrl}">${prod.nombre}</option>`;
         });
+        
+        // Inicializar Select2 después de cargar los productos
+        inicializarSelect2();
       } catch (e) {
         document.getElementById('producto').innerHTML = '<option value="">Error al cargar productos</option>';
       }
