@@ -116,11 +116,32 @@
     function verPedido(id) {
       window.open(`ingresoPedido.html?id=${id}`, '_blank');
     }
-    function cancelarPedido(id) {
-      if (!confirm('¿Seguro que desea cancelar este pedido?')) return;
-      db.ref('pedidos/' + id).update({ status: 'CANCELADO' })
-        .then(() => alert('Pedido cancelado.'))
-        .catch(() => alert('Error al cancelar el pedido.'));
+    async function cancelarPedido(id) {
+      if (!confirm('¿Seguro que desea cancelar este pedido? Esta acción es IRREVERSIBLE y el pedido no podrá ser modificado ni reactivado.')) return;
+      
+      try {
+        // Actualizar el pedido como cancelado y bloqueado
+        await db.ref('pedidos/' + id).update({ 
+          status: 'CANCELADO', 
+          locked: true, 
+          movimientosRegistrados: false 
+        });
+        
+        // Eliminar movimientos relacionados a este pedido
+        const movimientosSnap = await db.ref('movimientos').orderByChild('pedidoId').equalTo(id).once('value');
+        const movimientos = movimientosSnap.val();
+        if (movimientos) {
+          const updates = {};
+          Object.keys(movimientos).forEach(key => {
+            updates[key] = null;
+          });
+          await db.ref('movimientos').update(updates);
+        }
+        
+        alert('Pedido cancelado. Ya no podrá ser modificado. Los movimientos asociados han sido eliminados.');
+      } catch (e) {
+        alert('Error al cancelar o eliminar movimientos');
+      }
     }
   </script>
   <style>
