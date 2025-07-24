@@ -12,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
     <script src="stockManager.js"></script>
+    <script src="stockUpdater.js"></script>
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -537,12 +538,18 @@
                 clearError();
                 
                 try {
+                    console.log('Inicializando StockManager con datos precalculados...');
                     await window.stockManager.initialize();
                     
                     // Agregar listener para actualizaciones automáticas
                     window.stockManager.addListener((data) => {
+                        console.log('Stock actualizado en capital inventario:', data.length, 'productos');
                         filterData(); // Refrescar tabla cuando cambien los datos
                     });
+                    
+                    // Mostrar información del cálculo
+                    const info = window.stockManager.getCalculationInfo();
+                    console.log('📊 Capital de inventario cargado:', info);
                     
                     filterData(); // Mostrar datos iniciales
                     showSpinner(false);

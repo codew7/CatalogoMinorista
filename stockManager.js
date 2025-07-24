@@ -5,9 +5,15 @@ class StockManager {
         this.listeners = []; // Para notificar cambios a múltiples páginas
         this.database = null;
         this.googleSheetsData = {}; // Para almacenar datos de Google Sheets
+        // Nuevas propiedades para sistema precalculado
+        this.lastCalculationTime = 0;
+        this.calculationInterval = 5 * 60 * 1000; // 5 minutos
+        this.usePreCalculated = true;
+        this.recalculationTimeout = null;
+        this.pendingChanges = 0; // Contador de cambios pendientes
     }
 
-    // Inicializar conexión con Firebase y cargar datos de Google Sheets
+    // Inicializar conexión con Firebase y cargar datos
     async initialize() {
         return new Promise(async (resolve, reject) => {
             if (this.isInitialized) {
@@ -22,62 +28,23 @@ class StockManager {
                 // Luego inicializar Firebase
                 this.database = firebase.database();
                 
-                this.database.ref('movimientos').on('value', (snapshot) => {
-                    try {
-                        if (!snapshot.exists()) {
-                            this.stockData = [];
-                            this.isInitialized = true;
-                            this.notifyListeners();
-                            resolve(this.stockData);
-                            return;
-                        }
-
-                        const movimientos = snapshot.val();
-                        const stockMap = {};
-                        
-                        // Procesar movimientos para calcular stock actual
-                        Object.values(movimientos).forEach(mov => {
-                            if (!stockMap[mov.codigo]) {
-                                const googleData = this.googleSheetsData[mov.codigo] || {};
-                                stockMap[mov.codigo] = {
-                                    codigo: mov.codigo,
-                                    nombre: mov.nombre,
-                                    valor: mov.valor || 0,
-                                    stock: 0,
-                                    precioConsumidor: googleData.precioConsumidor || 0,
-                                    costoUnitario: googleData.costoUnitario || 0,
-                                    precioMayorista: googleData.precioMayorista || 0
-                                };
-                            }
-                            
-                            if (mov.tipo === 'ENTRADA') {
-                                stockMap[mov.codigo].stock += Number(mov.cantidad || 0);
-                            } else if (mov.tipo === 'SALIDA') {
-                                stockMap[mov.codigo].stock -= Number(mov.cantidad || 0);
-                            } else if (mov.tipo === 'RETIRO') {
-                                stockMap[mov.codigo].stock -= Number(mov.cantidad || 0);
-                            }
-                        });
-
-                        // Ordenar por nombre
-                        this.stockData = Object.values(stockMap).sort((a, b) => 
-                            a.nombre.localeCompare(b.nombre)
-                        );
-                        
-                        this.isInitialized = true;
-                        this.notifyListeners();
-                        resolve(this.stockData);
-                        
-                    } catch (error) {
-                        console.error('Error procesando datos:', error);
-                        reject(error);
-                    }
-                }, (error) => {
-                    console.error('Error conectando a Firebase:', error);
-                    reject(error);
-                });
+                // Intentar cargar datos precalculados primero
+                const preCalculatedLoaded = await this.loadPreCalculatedStock();
+                
+                if (preCalculatedLoaded) {
+                    console.log('🚀 MODO PRECALCULADO: Stock cargado (' + this.stockData.length + ' productos)');
+                    // Configurar listener para detectar nuevos movimientos
+                    this.setupMovementListener();
+                    resolve(this.stockData);
+                } else {
+                    console.log('⚠️ MODO TIEMPO REAL: Calculando desde movimientos...');
+                    // Primera vez o datos corruptos, calcular desde movimientos
+                    await this.calculateFromMovements();
+                    resolve(this.stockData);
+                }
+                
             } catch (error) {
-                console.error('Error cargando datos de Google Sheets:', error);
+                console.error('Error en inicialización:', error);
                 reject(error);
             }
         });
@@ -143,13 +110,23 @@ class StockManager {
         return [...this.stockData]; // Retornar copia para evitar modificaciones
     }
 
-    // Buscar productos por código o nombre
+    // Buscar productos por código o nombre (optimizado)
     searchStock(query) {
         if (!query || query.trim() === '') {
             return this.getAllStock();
         }
 
         const q = query.toLowerCase().trim();
+        
+        // Optimización: si la consulta es muy corta, limitar resultados
+        if (q.length < 2) {
+            return this.stockData.filter(item => {
+                const codigo = (item.codigo || '').toString().toLowerCase();
+                return codigo.startsWith(q);
+            }).slice(0, 100); // Limitar a 100 resultados
+        }
+
+        // Búsqueda completa para consultas más largas
         return this.stockData.filter(item => {
             const codigo = (item.codigo || '').toString().toLowerCase();
             const nombre = (item.nombre || '').toString().toLowerCase();
@@ -207,10 +184,155 @@ class StockManager {
     }
 
     // Método para refrescar datos manualmente
-    refresh() {
+    async refresh() {
         this.isInitialized = false;
         this.googleSheetsData = {}; // Limpiar datos de Google Sheets
+        
+        // Limpiar timeouts pendientes
+        if (this.recalculationTimeout) {
+            clearTimeout(this.recalculationTimeout);
+        }
+        
         return this.initialize();
+    }
+
+    // Cargar datos precalculados desde Firebase
+    async loadPreCalculatedStock() {
+        try {
+            const snapshot = await this.database.ref('stockCalculado').once('value');
+            if (snapshot.exists()) {
+                const calculatedData = snapshot.val();
+                
+                // Verificar si data es objeto o array para compatibilidad
+                let stockData;
+                if (Array.isArray(calculatedData.data)) {
+                    // Estructura antigua (array con índices numéricos)
+                    stockData = calculatedData.data;
+                    console.log('📊 Cargando datos con estructura antigua (array)');
+                } else {
+                    // Nueva estructura (objeto con códigos como claves)
+                    stockData = Object.values(calculatedData.data || {});
+                    console.log('🎯 Cargando datos con estructura nueva (códigos como claves)');
+                }
+                
+                this.stockData = stockData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                this.lastCalculationTime = calculatedData.lastCalculated || 0;
+                this.isInitialized = true;
+                this.notifyListeners();
+                return true;
+            } else {
+                console.log('❌ No hay datos precalculados disponibles');
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ Error cargando datos precalculados:', error);
+            return false;
+        }
+    }
+
+    // Configurar listener para detectar nuevos movimientos
+    setupMovementListener() {
+        console.log('👁️ Monitoreando nuevos movimientos...');
+        this.pendingChanges = 0; // Contador de cambios pendientes
+        
+        this.database.ref('movimientos')
+            .orderByChild('timestamp')
+            .startAt(this.lastCalculationTime + 1)
+            .on('child_added', (snapshot) => {
+                this.pendingChanges++;
+                this.scheduleRecalculation();
+            });
+    }
+
+    // Programar recálculo (evita recálculos múltiples)
+    scheduleRecalculation() {
+        if (this.recalculationTimeout) {
+            clearTimeout(this.recalculationTimeout);
+        }
+        
+        this.recalculationTimeout = setTimeout(async () => {
+            if (this.pendingChanges > 0) {
+                console.log(`🔄 Procesando ${this.pendingChanges} cambios detectados...`);
+                this.pendingChanges = 0;
+                await this.calculateFromMovements();
+            }
+        }, 2000); // Esperar 2 segundos para agrupar cambios
+    }
+
+    // Calcular stock desde movimientos y guardar en Firebase
+    async calculateFromMovements() {
+        try {
+            const now = Date.now();
+            
+            const snapshot = await this.database.ref('movimientos').once('value');
+            const movimientos = snapshot.exists() ? snapshot.val() : {};
+            const stockMap = {};
+            
+            // Procesar movimientos para calcular stock actual
+            Object.values(movimientos).forEach(mov => {
+                if (!stockMap[mov.codigo]) {
+                    const googleData = this.googleSheetsData[mov.codigo] || {};
+                    stockMap[mov.codigo] = {
+                        codigo: mov.codigo,
+                        nombre: mov.nombre,
+                        valor: mov.valor || 0,
+                        stock: 0,
+                        precioConsumidor: googleData.precioConsumidor || 0,
+                        costoUnitario: googleData.costoUnitario || 0,
+                        precioMayorista: googleData.precioMayorista || 0
+                    };
+                }
+                
+                if (mov.tipo === 'ENTRADA') {
+                    stockMap[mov.codigo].stock += Number(mov.cantidad || 0);
+                } else if (mov.tipo === 'SALIDA') {
+                    stockMap[mov.codigo].stock -= Number(mov.cantidad || 0);
+                } else if (mov.tipo === 'RETIRO') {
+                    stockMap[mov.codigo].stock -= Number(mov.cantidad || 0);
+                }
+            });
+
+            // Ordenar por nombre para el array local
+            const stockArray = Object.values(stockMap).sort((a, b) => 
+                a.nombre.localeCompare(b.nombre)
+            );
+
+            // Guardar en Firebase usando códigos como claves
+            await this.database.ref('stockCalculado').set({
+                data: stockMap, // ← NUEVO: Objeto con códigos como claves
+                lastCalculated: now,
+                totalProducts: Object.keys(stockMap).length, // ← NUEVO: Contar claves del objeto
+                version: '2.0' // ← NUEVO: Incrementar versión para identificar nueva estructura
+            });
+
+            // Actualizar datos locales (mantener como array para compatibilidad)
+            this.stockData = stockArray;
+            this.lastCalculationTime = now;
+            this.isInitialized = true;
+            this.notifyListeners();
+            
+            console.log(`✅ Stock actualizado con nueva estructura: ${stockArray.length} productos`);
+            
+        } catch (error) {
+            console.error('❌ Error calculando stock:', error);
+        }
+    }
+
+    // Forzar recálculo manual
+    async forceRecalculation() {
+        console.log('🔧 Actualizando stock manualmente...');
+        this.lastCalculationTime = 0;
+        await this.calculateFromMovements();
+    }
+
+    // Obtener información del último cálculo
+    getCalculationInfo() {
+        return {
+            lastCalculated: this.lastCalculationTime,
+            lastCalculatedDate: new Date(this.lastCalculationTime).toLocaleString(),
+            totalProducts: this.stockData.length,
+            isUsingPreCalculated: this.usePreCalculated
+        };
     }
 
     // Verificar si un producto existe
