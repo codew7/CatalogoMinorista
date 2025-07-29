@@ -1,6 +1,6 @@
 class StockUpdater {
     constructor() {
-        this.updateInterval = 10 * 60 * 1000; // 10 minutos
+        this.updateInterval = 60 * 60 * 1000; // 60 minutos
         this.isRunning = false;
         this.intervalId = null;
     }
@@ -37,8 +37,8 @@ class StockUpdater {
             const now = Date.now();
             const timeSinceLastCalc = now - info.lastCalculated;
             
-            // Si han pasado más de 15 minutos, forzar actualización
-            if (timeSinceLastCalc > 15 * 60 * 1000) {
+            // Si han pasado más de 60 minutos, forzar actualización
+            if (timeSinceLastCalc > 60 * 60 * 1000) {
                 console.log('⚠️ Datos antiguos detectados, actualizando...');
                 await window.stockManager.forceRecalculation();
             }
