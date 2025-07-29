@@ -865,7 +865,8 @@
                 if (stockDisponible && stockDisponible.stock > 0) {
                     cantidadSelector.max = stockDisponible.stock;
                     cantidadSelector.title = `Máximo ${stockDisponible.stock} unidades disponibles`;
-                } else if (stockDisponible && stockDisponible.stock <= 0) {
+                } else {
+                    // Sin stock disponible o sin información de stock
                     btnCarrito.disabled = true;
                     btnCarrito.style.backgroundColor = '#cccccc';
                     btnCarrito.style.borderColor = '#cccccc';
@@ -907,7 +908,7 @@
                 btnCarrito.addEventListener('click', () => {
                     const stockDisponibleClick = stockManager.getStock(item[2]);
                     
-                    if (stockDisponibleClick && stockDisponibleClick.stock <= 0) {
+                    if (!stockDisponibleClick || stockDisponibleClick.stock <= 0) {
                         alert('Este producto no tiene stock disponible.');
                         return;
                     }
@@ -1010,19 +1011,39 @@
                                 stockInfo.innerHTML = `<span style="color: #4CAF50;">✓ Disponible</span>`;
                             }
                         } else {
-                            stockInfo.innerHTML = `<span style="color: #ff9800;">⚠</span>`;
+                            stockInfo.innerHTML = `<span style="color: #ff9800;">✗ Sin stock</span>`;
                         }
                         
                         // También actualizar los controles de cantidad si existen
                         const cantidadSelector = card.querySelector('input[type="number"]');
-                        if (cantidadSelector && stockData) {
-                            if (stockData.stock > 0) {
+                        const btnCarrito = card.querySelector('.btn-agregar-carrito');
+                        
+                        if (cantidadSelector) {
+                            if (stockData && stockData.stock > 0) {
                                 cantidadSelector.max = stockData.stock;
                                 cantidadSelector.disabled = false;
                                 cantidadSelector.title = `Máximo ${stockData.stock} unidades disponibles`;
+                                
+                                // Rehabilitar botón carrito si existe y está deshabilitado
+                                if (btnCarrito && btnCarrito.disabled) {
+                                    btnCarrito.disabled = false;
+                                    btnCarrito.style.backgroundColor = '#4CAF50';
+                                    btnCarrito.style.borderColor = '#4CAF50';
+                                    btnCarrito.style.cursor = 'pointer';
+                                    btnCarrito.title = '';
+                                }
                             } else {
                                 cantidadSelector.disabled = true;
                                 cantidadSelector.title = 'Sin stock disponible';
+                                
+                                // Deshabilitar botón carrito si existe
+                                if (btnCarrito) {
+                                    btnCarrito.disabled = true;
+                                    btnCarrito.style.backgroundColor = '#cccccc';
+                                    btnCarrito.style.borderColor = '#cccccc';
+                                    btnCarrito.style.cursor = 'not-allowed';
+                                    btnCarrito.title = 'Sin stock disponible';
+                                }
                             }
                         }
                     }

@@ -58,7 +58,7 @@
         .header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            padding: 30px;
+            padding: 10px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -209,7 +209,7 @@
             font-size: 16px;
             font-weight: 600;
             color: var(--primary-color);
-            width: 150px;
+            width: 200px;
         }
 
         .form-select:focus {
@@ -611,6 +611,280 @@
             opacity: 0.7;
         }
 
+        .header-actions {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 3;
+        }
+
+        /* Modal de Gastos */
+        .modal-gastos {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+
+        .modal-gastos-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 95%;
+            max-width: 1000px;
+            height: 95%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .modal-gastos-header {
+            background: linear-gradient(135deg, var(--warning-color), #e67e22);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-gastos-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-gastos-body {
+            padding: 30px;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .gastos-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .form-row {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-row-first {
+            grid-template-columns: 1fr 2fr 1fr 1fr;
+        }
+
+        .form-row-second {
+            grid-template-columns: 2fr 1fr;
+            align-items: end;
+        }
+
+        .form-group-nota {
+            align-self: start;
+        }
+
+        .btn-group-gastos {
+            display: flex;
+            justify-content: center;
+            align-self: end;
+            margin-top: 25px;
+        }
+
+        .btn-agregar-gasto {
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 220px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary-color);
+            transition: border-color 0.3s ease;
+            background-color: white;
+        }
+
+        /* Ocultar flechas del input number */
+        .form-group input[type="number"]::-webkit-outer-spin-button,
+        .form-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .form-group input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--warning-color);
+            box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25);
+            outline: none;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .btn-agregar-gasto {
+            background: linear-gradient(135deg, var(--warning-color), #e67e22);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-agregar-gasto:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        .gastos-lista {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .gastos-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .gastos-table thead th {
+            background: linear-gradient(135deg, var(--primary-color), #34495e);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding: 15px 10px;
+            border: none;
+            text-align: center;
+        }
+
+        .gastos-table tbody td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .gastos-table tbody tr:hover {
+            background: rgba(243, 156, 18, 0.05);
+        }
+
+        .gastos-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .gastos-concepto {
+            text-align: left !important;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .gastos-valor {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .gastos-cuenta {
+            color: var(--secondary-color);
+            font-weight: 600;
+            text-align: center !important;
+        }
+
+        .gastos-nota {
+            text-align: left !important;
+            font-style: italic;
+            color: #666;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-eliminar-gasto {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-eliminar-gasto:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .gastos-resumen {
+            background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .gastos-total {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--danger-color);
+            margin-bottom: 5px;
+        }
+
+        .gastos-periodo {
+            font-size: 1rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             .container-fluid {
                 padding: 10px;
@@ -668,6 +942,31 @@
             .facturacion-table tbody td {
                 padding: 8px 5px;
             }
+            
+            .form-row-first,
+            .form-row-second {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-actions {
+                position: static;
+                margin-top: 15px;
+                text-align: center;
+            }
+            
+            .modal-gastos-content {
+                width: 98%;
+                margin: 1% auto;
+            }
+            
+            .btn-group-gastos {
+                margin-top: 15px;
+            }
+
+            .btn-agregar-gasto {
+                height: 46px;
+                min-width: 100%;
+            }
         }
     </style>
 </head>
@@ -678,6 +977,13 @@
             <div class="header">
                 <h1><i class="bi bi-graph-up"></i> Distribuidora HomePoint</h1>
                 <p>Resumen de Facturación y Ganancia por Mes</p>
+                
+                <!-- Botón para gestionar gastos -->
+                <div class="header-actions">
+                    <button class="btn btn-outline-light" id="btnGestionarGastos">
+                        <i class="bi bi-wallet2"></i> Gestionar Gastos
+                    </button>
+                </div>
             </div>
 
             <!-- Controles -->
@@ -799,6 +1105,78 @@
         </div>
     </div>
 
+    <!-- Modal de Gestión de Gastos -->
+    <div id="modalGastos" class="modal-gastos">
+        <div class="modal-gastos-content">
+            <div class="modal-gastos-header">
+                <h2 class="modal-gastos-title">
+                    <i class="bi bi-wallet2"></i> Gestión de Gastos
+                </h2>
+                <button class="close-modal" onclick="cerrarModalGastos()">&times;</button>
+            </div>
+            <div class="modal-gastos-body">
+                <!-- Formulario para agregar gastos -->
+                <div class="gastos-form">
+                    <h3 style="margin-bottom: 20px; color: var(--primary-color);">
+                        <i class="bi bi-plus-circle"></i> Agregar Nuevo Gasto
+                    </h3>
+                    <form id="formAgregarGasto">
+                        <div class="form-row form-row-first">
+                            <div class="form-group">
+                                <label for="fechaGasto">Fecha</label>
+                                <input type="date" id="fechaGasto" name="fecha" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="conceptoGasto">Concepto</label>
+                                <input type="text" id="conceptoGasto" name="concepto" list="conceptosDatalist"
+                                       placeholder="Ej: Alquiler, Servicios, Compras..." required>
+                                <datalist id="conceptosDatalist">
+                                    <!-- Se llenará dinámicamente con conceptos anteriores -->
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="valorGasto">Valor ($)</label>
+                                <input type="number" id="valorGasto" name="valor" 
+                                       placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cuentaGasto">Cuenta</label>
+                                <select id="cuentaGasto" name="cuenta" class="form-select" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="Local">Local</option>
+                                    <option value="Envios">Envíos</option>
+                                    <option value="Ambas">Ambas (50%)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row form-row-second">
+                            <div class="form-group form-group-nota">
+                                <label for="notaGasto">Nota</label>
+                                <input type="text" id="notaGasto" name="nota" 
+                                       placeholder="Detalles adicionales sobre este gasto...">
+                            </div>
+                            <div class="btn-group-gastos">
+                                <button type="submit" class="btn-agregar-gasto">
+                                    <i class="bi bi-check-circle"></i> Agregar Gasto
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista de gastos -->
+                <div class="gastos-lista">
+                    <h3 style="padding: 20px 20px 0; margin: 10px; color: var(--primary-color);">
+                        <i class="bi bi-list-ul"></i> Listado de Gastos
+                    </h3>
+                    <div id="gastosListaContainer">
+                        <!-- La tabla se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -817,6 +1195,10 @@
         let temporalidad = 'mensual'; // Temporalidad: 'mensual', 'semanal', 'diario'
         let periodoLabels = []; // Almacena las etiquetas de los períodos actuales
         let pedidosProcesados = []; // Almacena los pedidos procesados para drill-down
+        
+        // Variables para gastos
+        let gastosData = [];
+        let gastosAgrupados = {};
         
         // Elementos del DOM
         const loadingDiv = document.getElementById('loadingDiv');
@@ -857,7 +1239,56 @@
             // Configurar botones de temporalidad
             configurarBotonesTemporalidad();
             
-            cargarDatos();
+            // Configurar gestión de gastos
+            configurarGestionGastos();
+            
+            // Cargar gastos primero, luego cargar datos
+            cargarGastosIniciales();
+        }
+
+        function cargarGastosIniciales() {
+            // Cargar gastos desde Firebase al inicio de la aplicación
+            db.ref('gastos').once('value')
+                .then(snapshot => {
+                    gastosData = [];
+                    gastosAgrupados = { Local: {}, Envios: {} };
+                    
+                    if (snapshot.exists()) {
+                        Object.entries(snapshot.val()).forEach(([gastoId, gasto]) => {
+                            gastosData.push({ id: gastoId, ...gasto });
+                        });
+                        
+                        console.log('Gastos cargados al inicio:', gastosData.length);
+                        actualizarConceptosDatalist();
+                        agruparGastosPorPeriodo(); // Agrupar gastos inmediatamente
+                    }
+                    
+                    // Después de cargar gastos, cargar los datos de facturación
+                    cargarDatos();
+                })
+                .catch(error => {
+                    console.error('Error al cargar gastos iniciales:', error);
+                    // Continuar con la carga de datos aunque falle la carga de gastos
+                    cargarDatos();
+                });
+        }
+
+        function configurarGestionGastos() {
+            const btnGestionarGastos = document.getElementById('btnGestionarGastos');
+            if (btnGestionarGastos) {
+                btnGestionarGastos.addEventListener('click', abrirModalGastos);
+            }
+            
+            const formAgregarGasto = document.getElementById('formAgregarGasto');
+            if (formAgregarGasto) {
+                formAgregarGasto.addEventListener('submit', agregarGasto);
+            }
+            
+            // Establecer fecha actual por defecto
+            const fechaGasto = document.getElementById('fechaGasto');
+            if (fechaGasto) {
+                fechaGasto.value = new Date().toISOString().split('T')[0];
+            }
         }
 
         function configurarFiltrosEntrega() {
@@ -1169,9 +1600,15 @@
                 console.log('Muestra de pedido procesado:', pedidosProcesados[0]);
             }
             
-            // Calcular Ganancia Neta como Ganancia Bruta - Ganancia Seleccionados
+            // Agregar gastos después de procesar pedidos
+            agregarGastosAProcesamiento();
+            
+            // Calcular Ganancia Neta como Ganancia Bruta - Ganancia Seleccionados - Gastos
             for (let i = 0; i < numPeriodos; i++) {
-                datosFacturacion.gananciaNeta[i] = datosFacturacion.gananciaBruta[i] - datosFacturacion.gananciaSeleccionados[i];
+                datosFacturacion.gananciaNeta[i] = 
+                    datosFacturacion.gananciaBruta[i] - 
+                    datosFacturacion.gananciaSeleccionados[i] - 
+                    datosFacturacion.gastos[i];
                 
                 // Calcular porcentajes de ganancia usando Ganancia Bruta
                 if (datosFacturacion.facturacion[i] > 0) {
@@ -1196,6 +1633,361 @@
                 filtrarColumnasConDatos();
             }
         }
+
+        // Funciones de gestión de gastos
+        function abrirModalGastos() {
+            cargarGastos();
+            document.getElementById('modalGastos').style.display = 'block';
+        }
+
+        function cerrarModalGastos() {
+            document.getElementById('modalGastos').style.display = 'none';
+        }
+
+        function cargarGastos() {
+            // Si los gastos ya están cargados, solo actualizar la interfaz
+            if (gastosData.length > 0) {
+                // Ordenar por fecha (más recientes primero)
+                gastosData.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                
+                actualizarConceptosDatalist();
+                renderizarListaGastos();
+                agruparGastosPorPeriodo();
+                return;
+            }
+            
+            // Si no están cargados, cargar desde Firebase
+            db.ref('gastos').once('value')
+                .then(snapshot => {
+                    gastosData = [];
+                    gastosAgrupados = { Local: {}, Envios: {} };
+                    
+                    if (snapshot.exists()) {
+                        Object.entries(snapshot.val()).forEach(([id, gasto]) => {
+                            gastosData.push({
+                                id: id,
+                                ...gasto
+                            });
+                        });
+                    }
+                    
+                    // Ordenar por fecha (más recientes primero)
+                    gastosData.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                    
+                    actualizarConceptosDatalist();
+                    renderizarListaGastos();
+                    agruparGastosPorPeriodo();
+                })
+                .catch(error => {
+                    console.error('Error al cargar gastos:', error);
+                    alert('Error al cargar los gastos. Inténtalo de nuevo.');
+                });
+        }
+
+        function agregarGasto(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const nuevoGasto = {
+                fecha: formData.get('fecha'),
+                concepto: formData.get('concepto'),
+                valor: parseFloat(formData.get('valor')),
+                cuenta: formData.get('cuenta'),
+                nota: formData.get('nota') || '',
+                fechaCreacion: new Date().toISOString()
+            };
+            
+            // Validaciones
+            if (!nuevoGasto.fecha || !nuevoGasto.concepto || nuevoGasto.valor <= 0 || !nuevoGasto.cuenta) {
+                alert('Por favor completa todos los campos obligatorios correctamente.');
+                return;
+            }
+            
+            // Guardar en Firebase
+            const gastosRef = db.ref('gastos').push();
+            gastosRef.set(nuevoGasto)
+                .then(() => {
+                    // Limpiar formulario
+                    limpiarFormularioGasto();
+                    
+                    // Forzar recarga completa de gastos desde Firebase
+                    gastosData = []; // Limpiar array local para forzar recarga
+                    
+                    // Recargar gastos
+                    cargarGastos();
+                    
+                    // Mostrar confirmación
+                    mostrarNotificacion('Gasto agregado correctamente', 'success');
+                    
+                    // Recargar datos de facturación para actualizar la tabla
+                    cargarDatos();
+                })
+                .catch(error => {
+                    console.error('Error al guardar gasto:', error);
+                    alert('Error al guardar el gasto. Inténtalo de nuevo.');
+                });
+        }
+
+        function eliminarGasto(gastoId) {
+            if (confirm('¿Estás seguro de que deseas eliminar este gasto?')) {
+                db.ref('gastos/' + gastoId).remove()
+                    .then(() => {
+                        // Forzar recarga completa de gastos desde Firebase
+                        gastosData = []; // Limpiar array local para forzar recarga
+                        
+                        mostrarNotificacion('Gasto eliminado correctamente', 'success');
+                        cargarGastos();
+                        cargarDatos(); // Recargar datos de facturación
+                    })
+                    .catch(error => {
+                        console.error('Error al eliminar gasto:', error);
+                        alert('Error al eliminar el gasto. Inténtalo de nuevo.');
+                    });
+            }
+        }
+
+        function limpiarFormularioGasto() {
+            document.getElementById('formAgregarGasto').reset();
+            document.getElementById('fechaGasto').value = new Date().toISOString().split('T')[0];
+        }
+
+        function actualizarConceptosDatalist() {
+            const datalist = document.getElementById('conceptosDatalist');
+            const conceptosUnicos = [...new Set(gastosData.map(gasto => gasto.concepto))];
+            
+            // Limpiar opciones existentes
+            datalist.innerHTML = '';
+            
+            // Agregar conceptos únicos ordenados alfabéticamente
+            conceptosUnicos.sort().forEach(concepto => {
+                const option = document.createElement('option');
+                option.value = concepto;
+                datalist.appendChild(option);
+            });
+        }
+
+        function renderizarListaGastos() {
+            const container = document.getElementById('gastosListaContainer');
+            
+            if (gastosData.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        <p>No hay gastos registrados aún.</p>
+                        <p>Utiliza el formulario de arriba para agregar tu primer gasto.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let tablaHTML = `
+                <table class="gastos-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th>Valor</th>
+                            <th>Cuenta</th>
+                            <th>Nota</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            gastosData.forEach(gasto => {
+                const fechaFormateada = new Date(gasto.fecha).toLocaleDateString('es-AR');
+                const cuentaDisplay = obtenerDisplayCuenta(gasto.cuenta);
+                
+                tablaHTML += `
+                    <tr>
+                        <td>${fechaFormateada}</td>
+                        <td class="gastos-concepto">${gasto.concepto}</td>
+                        <td class="gastos-valor">${formatearMoneda(gasto.valor)}</td>
+                        <td class="gastos-cuenta">${cuentaDisplay}</td>
+                        <td class="gastos-nota" title="${gasto.nota || ''}">${gasto.nota || '-'}</td>
+                        <td>
+                            <button class="btn-eliminar-gasto" onclick="eliminarGasto('${gasto.id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tablaHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tablaHTML;
+        }
+
+        function obtenerDisplayCuenta(cuenta) {
+            switch(cuenta) {
+                case 'Local': return '🏪 Local';
+                case 'Envios': return '🚚 Envíos';
+                case 'Ambas': return '🏪🚚 Ambas';
+                default: return cuenta || 'N/A';
+            }
+        }
+
+        function agruparGastosPorPeriodo() {
+            // Reinicializar gastos agrupados
+            gastosAgrupados = {
+                Local: {},
+                Envios: {}
+            };
+            
+            gastosData.forEach(gasto => {
+                const fechaGasto = new Date(gasto.fecha);
+                
+                // Agrupar según la temporalidad actual
+                let claveAgrupacion = '';
+                
+                if (temporalidad === 'mensual') {
+                    claveAgrupacion = `${fechaGasto.getFullYear()}-${fechaGasto.getMonth()}`;
+                } else if (temporalidad === 'semanal') {
+                    // Calcular semana del año
+                    const inicioAno = new Date(fechaGasto.getFullYear(), 0, 1);
+                    const diasTranscurridos = Math.floor((fechaGasto - inicioAno) / (24 * 60 * 60 * 1000));
+                    const semanaDelAno = Math.ceil((diasTranscurridos + inicioAno.getDay() + 1) / 7);
+                    claveAgrupacion = `${fechaGasto.getFullYear()}-S${semanaDelAno}`;
+                } else if (temporalidad === 'diario') {
+                    claveAgrupacion = `${fechaGasto.getFullYear()}-${fechaGasto.getMonth()}-${fechaGasto.getDate()}`;
+                }
+                
+                // Distribuir gastos según la cuenta
+                if (gasto.cuenta === 'Local') {
+                    // 100% para Local
+                    if (!gastosAgrupados.Local[claveAgrupacion]) {
+                        gastosAgrupados.Local[claveAgrupacion] = 0;
+                    }
+                    gastosAgrupados.Local[claveAgrupacion] += gasto.valor;
+                    
+                } else if (gasto.cuenta === 'Envios') {
+                    // 100% para Envíos
+                    if (!gastosAgrupados.Envios[claveAgrupacion]) {
+                        gastosAgrupados.Envios[claveAgrupacion] = 0;
+                    }
+                    gastosAgrupados.Envios[claveAgrupacion] += gasto.valor;
+                    
+                } else if (gasto.cuenta === 'Ambas') {
+                    // 50% para cada uno
+                    const valorDistribuido = gasto.valor / 2;
+                    
+                    if (!gastosAgrupados.Local[claveAgrupacion]) {
+                        gastosAgrupados.Local[claveAgrupacion] = 0;
+                    }
+                    if (!gastosAgrupados.Envios[claveAgrupacion]) {
+                        gastosAgrupados.Envios[claveAgrupacion] = 0;
+                    }
+                    
+                    gastosAgrupados.Local[claveAgrupacion] += valorDistribuido;
+                    gastosAgrupados.Envios[claveAgrupacion] += valorDistribuido;
+                }
+            });
+            
+            console.log('Gastos agrupados por período y cuenta:', gastosAgrupados);
+        }
+
+        function agregarGastosAProcesamiento() {
+            // Asegurar que los gastos estén agrupados
+            agruparGastosPorPeriodo();
+            
+            // Aplicar gastos según el filtro de entrega actual
+            if (filtroEntrega === 'todas') {
+                // Si está en "todas", sumar gastos de ambas cuentas
+                ['Local', 'Envios'].forEach(cuenta => {
+                    Object.entries(gastosAgrupados[cuenta] || {}).forEach(([claveAgrupacion, totalGastos]) => {
+                        const indicePeriodo = calcularIndicePeriodo(claveAgrupacion);
+                        if (indicePeriodo >= 0 && indicePeriodo < periodoLabels.length) {
+                            datosFacturacion.gastos[indicePeriodo] += totalGastos;
+                        }
+                    });
+                });
+            } else {
+                // Aplicar solo los gastos de la cuenta correspondiente
+                const cuentaAplicar = filtroEntrega === 'Local' ? 'Local' : 'Envios';
+                Object.entries(gastosAgrupados[cuentaAplicar] || {}).forEach(([claveAgrupacion, totalGastos]) => {
+                    const indicePeriodo = calcularIndicePeriodo(claveAgrupacion);
+                    if (indicePeriodo >= 0 && indicePeriodo < periodoLabels.length) {
+                        datosFacturacion.gastos[indicePeriodo] += totalGastos;
+                    }
+                });
+            }
+        }
+
+        function calcularIndicePeriodo(claveAgrupacion) {
+            let indicePeriodo = -1;
+            const ahora = new Date();
+            
+            if (temporalidad === 'mensual') {
+                // Formato: "YYYY-M"
+                const [ano, mes] = claveAgrupacion.split('-').map(Number);
+                const mesesDiferencia = (ahora.getFullYear() - ano) * 12 + (ahora.getMonth() - mes);
+                indicePeriodo = 11 - mesesDiferencia;
+            } else if (temporalidad === 'semanal') {
+                // Implementar lógica de semanas si es necesario
+            } else if (temporalidad === 'diario') {
+                // Implementar lógica de días si es necesario
+            }
+            
+            return indicePeriodo;
+        }
+
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            // Crear elemento de notificación
+            const notificacion = document.createElement('div');
+            notificacion.className = `alert alert-${tipo} position-fixed`;
+            notificacion.style.cssText = `
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                min-width: 300px;
+                animation: slideInRight 0.3s ease-out;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            `;
+            
+            const bgColor = tipo === 'success' ? '#d4edda' : '#f8d7da';
+            const textColor = tipo === 'success' ? '#155724' : '#721c24';
+            const borderColor = tipo === 'success' ? '#c3e6cb' : '#f5c6cb';
+            
+            notificacion.style.backgroundColor = bgColor;
+            notificacion.style.color = textColor;
+            notificacion.style.border = `1px solid ${borderColor}`;
+            
+            notificacion.innerHTML = `
+                <i class="bi bi-check-circle-fill"></i> ${mensaje}
+                <button type="button" style="background: none; border: none; float: right; font-size: 1.2rem; cursor: pointer; color: ${textColor};" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            
+            document.body.appendChild(notificacion);
+            
+            // Auto-eliminar después de 3 segundos
+            setTimeout(() => {
+                if (notificacion.parentElement) {
+                    notificacion.remove();
+                }
+            }, 3000);
+        }
+
+        // Cerrar modal de gastos con clic fuera
+        window.addEventListener('click', function(event) {
+            const modalGastos = document.getElementById('modalGastos');
+            if (event.target === modalGastos) {
+                cerrarModalGastos();
+            }
+        });
+
+        // Cerrar modal de gastos con ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                cerrarModalGastos();
+            }
+        });
 
         function filtrarColumnasConDatos() {
             // Identificar índices que tienen datos (facturación > 0)
@@ -1251,8 +2043,6 @@
             
             // Usar el campo 'entrega' de Firebase
             const entrega = pedido.entrega || '';
-            
-            console.log(`Filtro: ${filtroEntrega}, Entrega pedido: "${entrega}"`); // Debug
             
             if (filtroEntrega === 'Local') {
                 // Filtrar pedidos con entrega = "Local"
@@ -1325,7 +2115,7 @@
                 { nombre: 'Facturacion', datos: datosFacturacion.facturacion, esMoneda: true, expandible: true, color: 'facturacion' },
                 { nombre: 'Ganancia Bruta Tot.', datos: datosFacturacion.gananciaBruta, esMoneda: true, expandible: true, color: 'ganancia' },
                 { nombre: 'Ganancia Seleccionados', datos: datosFacturacion.gananciaSeleccionados, esMoneda: true, color: 'ganancia' },
-                { nombre: 'Gastos', datos: datosFacturacion.gastos, esMoneda: true, color: 'gastos' },
+                { nombre: 'Gastos', datos: datosFacturacion.gastos, esMoneda: true, expandible: true, color: 'gastos' },
                 { nombre: 'Ganancia Neta', datos: datosFacturacion.gananciaNeta, esMoneda: true, color: 'ganancia' },
                 { nombre: 'Ganancia %', datos: datosFacturacion.gananciaPercent, esMoneda: false, expandible: true, color: 'ganancia' },
                 { nombre: 'Ventas Generadas', datos: datosFacturacion.ventasGeneradas, esMoneda: false, expandible: true, color: 'facturacion' }
@@ -1342,6 +2132,8 @@
                         tr.addEventListener('click', () => toggleFacturacionDetail());
                     } else if (fila.nombre === 'Ganancia Bruta Tot.') {
                         tr.addEventListener('click', () => toggleGananciaBrutaDetail());
+                    } else if (fila.nombre === 'Gastos') {
+                        tr.addEventListener('click', () => toggleGastosDetail());
                     } else if (fila.nombre === 'Ganancia %') {
                         tr.addEventListener('click', () => toggleGananciaPorcentajeDetail());
                     } else if (fila.nombre === 'Ventas Generadas') {
@@ -1357,6 +2149,7 @@
                     let iconId = '';
                     if (fila.nombre === 'Facturacion') iconId = 'expandIconFacturacion';
                     else if (fila.nombre === 'Ganancia Bruta Tot.') iconId = 'expandIconGanancia';
+                    else if (fila.nombre === 'Gastos') iconId = 'expandIconGastos';
                     else if (fila.nombre === 'Ganancia %') iconId = 'expandIconPorcentaje';
                     else if (fila.nombre === 'Ventas Generadas') iconId = 'expandIconVentas';
                     
@@ -1377,7 +2170,11 @@
                     // Hacer la celda clickeable si tiene valor
                     if (valor > 0) {
                         td.className = 'clickable-cell';
-                        td.onclick = () => abrirReporteDetallado(fila.nombre, i, periodoLabels[i]);
+                        if (fila.nombre === 'Gastos') {
+                            td.onclick = () => abrirReporteDetallado('Gastos', i, periodoLabels[i], 'gastos');
+                        } else {
+                            td.onclick = () => abrirReporteDetallado(fila.nombre, i, periodoLabels[i]);
+                        }
                     }
                     
                     if (fila.esMoneda) {
@@ -1414,7 +2211,11 @@
                 // Hacer la columna total clickeable si tiene valor
                 if (totalFila > 0) {
                     tdTotal.className = 'clickable-cell';
-                    tdTotal.onclick = () => abrirReporteDetallado(fila.nombre, -1, 'TOTAL');
+                    if (fila.nombre === 'Gastos') {
+                        tdTotal.onclick = () => abrirReporteDetallado('Gastos', -1, 'TOTAL', 'gastos');
+                    } else {
+                        tdTotal.onclick = () => abrirReporteDetallado(fila.nombre, -1, 'TOTAL');
+                    }
                 }
                 
                 if (fila.esMoneda) {
@@ -1887,6 +2688,11 @@
             }
         }
 
+        function toggleGastosDetail() {
+            // Para gastos, simplemente abrir el reporte detallado
+            abrirReporteDetallado('Gastos', -1, 'TOTAL', 'gastos');
+        }
+
         function toggleGananciaBrutaDetail() {
             const expandIcon = document.getElementById('expandIconGanancia');
             const detailConsumidor = document.getElementById('detailConsumidor');
@@ -2024,6 +2830,13 @@
         // Funciones del modal de reporte
         function abrirReporteDetallado(tipoFila, indicePeriodo, periodoLabel, filtroEspecial = null) {
             console.log('Abriendo reporte:', { tipoFila, indicePeriodo, periodoLabel, filtroEspecial });
+            
+            // Caso especial para gastos
+            if (filtroEspecial === 'gastos') {
+                abrirReporteGastos(indicePeriodo, periodoLabel);
+                return;
+            }
+            
             console.log('Total pedidos procesados:', pedidosProcesados.length);
             
             // Filtrar pedidos según los criterios
@@ -2118,6 +2931,154 @@
                     <div class="reporte-stat-label">% Ganancia</div>
                 </div>
             `;
+        }
+
+        function abrirReporteGastos(indicePeriodo, periodoLabel) {
+            // Filtrar gastos según el período y filtro de entrega
+            let gastosFiltrados = gastosData.filter(gasto => {
+                const fechaGasto = new Date(gasto.fecha);
+                
+                // Si es un período específico, filtrar por ese período
+                if (indicePeriodo !== -1) {
+                    let claveAgrupacion = '';
+                    
+                    if (temporalidad === 'mensual') {
+                        claveAgrupacion = `${fechaGasto.getFullYear()}-${fechaGasto.getMonth()}`;
+                    } else if (temporalidad === 'semanal') {
+                        const inicioAno = new Date(fechaGasto.getFullYear(), 0, 1);
+                        const diasTranscurridos = Math.floor((fechaGasto - inicioAno) / (24 * 60 * 60 * 1000));
+                        const semanaDelAno = Math.ceil((diasTranscurridos + inicioAno.getDay() + 1) / 7);
+                        claveAgrupacion = `${fechaGasto.getFullYear()}-S${semanaDelAno}`;
+                    } else if (temporalidad === 'diario') {
+                        claveAgrupacion = `${fechaGasto.getFullYear()}-${fechaGasto.getMonth()}-${fechaGasto.getDate()}`;
+                    }
+                    
+                    const indicePeriodoGasto = calcularIndicePeriodo(claveAgrupacion);
+                    if (indicePeriodoGasto !== indicePeriodo) {
+                        return false;
+                    }
+                }
+                
+                // Aplicar filtro de entrega
+                if (filtroEntrega !== 'todas') {
+                    if (filtroEntrega === 'Local' && gasto.cuenta !== 'Local' && gasto.cuenta !== 'Ambas') {
+                        return false;
+                    }
+                    if (filtroEntrega === 'Envios' && gasto.cuenta !== 'Envios' && gasto.cuenta !== 'Ambas') {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Configurar título del modal
+            let titulo = `Gastos - ${periodoLabel}`;
+            if (temporalidad === 'mensual') titulo += ` ${yearSelect.value}`;
+            if (filtroEntrega !== 'todas') titulo += ` (${filtroEntrega})`;
+            
+            document.getElementById('modalTitle').textContent = titulo;
+            
+            // Generar estadísticas de gastos
+            generarEstadisticasGastos(gastosFiltrados);
+            
+            // Generar tabla de gastos
+            generarTablaGastos(gastosFiltrados);
+            
+            // Mostrar modal
+            document.getElementById('modalReporte').style.display = 'block';
+        }
+
+        function generarEstadisticasGastos(gastos) {
+            const stats = {
+                totalGastos: gastos.length,
+                totalValor: gastos.reduce((sum, g) => sum + g.valor, 0),
+                promedioGasto: gastos.length > 0 ? gastos.reduce((sum, g) => sum + g.valor, 0) / gastos.length : 0,
+                gastosPorCuenta: {
+                    Local: gastos.filter(g => g.cuenta === 'Local').reduce((sum, g) => sum + g.valor, 0),
+                    Envios: gastos.filter(g => g.cuenta === 'Envios').reduce((sum, g) => sum + g.valor, 0),
+                    Ambas: gastos.filter(g => g.cuenta === 'Ambas').reduce((sum, g) => sum + g.valor, 0)
+                }
+            };
+            
+            const statsContainer = document.getElementById('reporteStats');
+            statsContainer.innerHTML = `
+                <div class="reporte-stat-card">
+                    <div class="reporte-stat-number">${stats.totalGastos}</div>
+                    <div class="reporte-stat-label">Total Gastos</div>
+                </div>
+                <div class="reporte-stat-card">
+                    <div class="reporte-stat-number">${formatearMoneda(stats.totalValor)}</div>
+                    <div class="reporte-stat-label">Valor Total</div>
+                </div>
+                <div class="reporte-stat-card">
+                    <div class="reporte-stat-number">${formatearMoneda(stats.promedioGasto)}</div>
+                    <div class="reporte-stat-label">Promedio por Gasto</div>
+                </div>
+                <div class="reporte-stat-card">
+                    <div class="reporte-stat-number">${formatearMoneda(stats.gastosPorCuenta.Local)}</div>
+                    <div class="reporte-stat-label">🏪 Local</div>
+                </div>
+                <div class="reporte-stat-card">
+                    <div class="reporte-stat-number">${formatearMoneda(stats.gastosPorCuenta.Envios)}</div>
+                    <div class="reporte-stat-label">🚚 Envíos</div>
+                </div>
+                <div class="reporte-stat-card">
+                    <div class="reporte-stat-number">${formatearMoneda(stats.gastosPorCuenta.Ambas)}</div>
+                    <div class="reporte-stat-label">🏪🚚 Ambas</div>
+                </div>
+            `;
+        }
+
+        function generarTablaGastos(gastos) {
+            if (gastos.length === 0) {
+                document.getElementById('reporteTablaContainer').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        <p>No hay gastos que coincidan con los criterios seleccionados.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Ordenar gastos por fecha (más recientes primero)
+            gastos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            let tablaHTML = `
+                <table class="reporte-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th>Valor</th>
+                            <th>Cuenta</th>
+                            <th>Nota</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            gastos.forEach(gasto => {
+                const fechaFormateada = new Date(gasto.fecha).toLocaleDateString('es-AR');
+                const cuentaDisplay = obtenerDisplayCuenta(gasto.cuenta);
+                
+                tablaHTML += `
+                    <tr>
+                        <td>${fechaFormateada}</td>
+                        <td style="text-align: left; font-weight: 600;">${gasto.concepto}</td>
+                        <td style="color: #e74c3c; font-weight: 600;">${formatearMoneda(gasto.valor)}</td>
+                        <td style="text-align: center;">${cuentaDisplay}</td>
+                        <td style="text-align: left; font-style: italic; color: #666;">${gasto.nota || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            tablaHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('reporteTablaContainer').innerHTML = tablaHTML;
         }
 
         function generarTablaReporte(pedidos) {

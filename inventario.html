@@ -535,6 +535,14 @@
     .select2-container--default .select2-selection--single .select2-selection__placeholder {
       color: #999 !important;
     }
+
+    /* Ocultar flechas de input number */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
   </style>
 </head>
 <body>
@@ -649,7 +657,10 @@
 
       // Validaciones en tiempo real
       document.getElementById('cantidad').addEventListener('input', function() {
-        if (this.value < 1) this.value = 1;
+        // Permitir campo vacío pero no valores negativos o cero
+        if (this.value !== '' && (this.value < 1 || this.value == 0)) {
+          this.value = 1;
+        }
       });
       document.getElementById('valorUSD').addEventListener('input', function() {
         if (this.value < 0) this.value = 0;
