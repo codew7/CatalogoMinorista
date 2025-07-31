@@ -595,29 +595,16 @@
 
         const loadingMessage = document.getElementById('loading-message');
 
-        // Inicializar el stock manager con sistema precalculado
+
+        // Inicializar el stock manager solo una vez, sin listener en tiempo real
         async function inicializarStockManager() {
             try {
                 console.log('Inicializando StockManager...');
                 await stockManager.initialize();
-                
-                // Agregar listener para actualizaciones automáticas
-                stockManager.addListener((data) => {
-                    console.log('Stock actualizado en mayorista');
-                    // Recargar información de stock en productos ya mostrados
-                    refreshStockInfo();
-                });
-                
                 console.log('✅ Sistema de stock listo');
-                
             } catch (error) {
                 console.error('Error inicializando stock manager:', error);
             }
-        }
-
-        // Función para actualizar stock en productos ya mostrados
-        function actualizarStockEnProductos() {
-            refreshStockInfo();
         }
 
         // Inicializar stock manager
@@ -696,14 +683,30 @@
             const fin = inicio + ITEMS_PER_PAGE;
             const datosPagina = datos.slice(inicio, fin);
 
-            cargarGrid(datosPagina);
-            actualizarPaginacion(pagina, datos);
-            
+            // Consultar solo el stock de los productos visibles en la página actual
+            const codigosPagina = datosPagina.map(item => item[2]);
+            // Si el stockManager tiene un método batch, úsalo, si no, refresca solo visibles
+            if (typeof stockManager.getStockBatch === 'function') {
+                stockManager.getStockBatch(codigosPagina).then(() => {
+                    cargarGrid(datosPagina);
+                    actualizarPaginacion(pagina, datos);
+                });
+            } else {
+                cargarGrid(datosPagina);
+                actualizarPaginacion(pagina, datos);
+            }
+
             // Solo hacer scroll si no se está escribiendo en el campo de búsqueda
             if (document.activeElement !== document.getElementById('buscar')) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
+        // Desconectar listeners de stockManager al cerrar la página
+        window.addEventListener('beforeunload', () => {
+            if (typeof stockManager.removeAllListeners === 'function') {
+                stockManager.removeAllListeners();
+            }
+        });
 
         function cargarGrid(data) {
             const grid = document.getElementById('catalogo');
@@ -1263,7 +1266,7 @@ function validarPedidoAbierto(email, callback) {
       let pedidoId = null;
       snap.forEach(child => {
         const pedido = child.val();
-        if ((pedido.estado === 'ABIERTO' || pedido.locked === false) && !abierto) {
+        if (pedido.estado === 'ABIERTO' && !abierto) {
           abierto = pedido;
           pedidoId = pedido.id || child.key;
         }

@@ -1684,11 +1684,11 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
           console.error('Error eliminando movimientos previos:', err, updates);
         });
       }
-      // 2. Registrar los nuevos movimientos
+            // 2. Registrar los nuevos movimientos
       items.forEach((item) => {
         try {
           if (!item || !item.codigo || !item.nombre || !item.cantidad || !item.valorU) return;
-          const timestamp = new Date().toISOString();
+          const timestamp = Date.now();
           const now = new Date();
           const pad = n => n.toString().padStart(2, '0');
           const id = `mov_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}_${item.codigo}_${pedidoId}`;
@@ -1697,13 +1697,11 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
             codigo: item.codigo,
             nombre: item.nombre,
             cantidad: parseInt(item.cantidad, 10) || 0,
-           
             valorC: parseInt(item.valorC, 10) || 0,
             valorU: parseInt(item.valorU, 10) || 0,
             cotizacionCierre: cotizacionCierre,
             tipo: 'SALIDA',
             pedidoId: pedidoId
-         
           };
           db.ref('movimientos/' + id).set(movimiento)
             .catch(err => {

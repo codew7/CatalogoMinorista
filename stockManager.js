@@ -13,24 +13,57 @@ class StockManager {
         this.pendingChanges = 0; // Contador de cambios pendientes
     }
 
+    // Obtener el stock de un lote de productos por sus códigos (batch)
+    // Actualiza this.stockData solo con los productos solicitados
+    async getStockBatch(codigos = []) {
+        if (!Array.isArray(codigos) || codigos.length === 0) return [];
+        // Si ya está inicializado y los productos están en stockData, no hace nada
+        if (this.isInitialized && codigos.every(cod => this.getStock(cod))) {
+            return codigos.map(cod => this.getStock(cod));
+        }
+        // Si no está inicializado, inicializa primero
+        if (!this.isInitialized) {
+            await this.initialize();
+        }
+        // Si ya están todos, retorna
+        if (codigos.every(cod => this.getStock(cod))) {
+            return codigos.map(cod => this.getStock(cod));
+        }
+        // Si falta alguno, consulta stockCalculado en Firebase solo para esos códigos
+        const snapshot = await this.database.ref('stockCalculado/data').once('value');
+        if (!snapshot.exists()) return [];
+        const data = snapshot.val();
+        // Actualiza this.stockData solo con los productos batch
+        let actualizados = [];
+        codigos.forEach(cod => {
+            if (data[cod]) {
+                // Buscar si ya existe en this.stockData
+                const idx = this.stockData.findIndex(item => item.codigo == cod);
+                if (idx >= 0) {
+                    this.stockData[idx] = { ...data[cod] };
+                } else {
+                    this.stockData.push({ ...data[cod] });
+                }
+                actualizados.push(data[cod]);
+            }
+        });
+        return actualizados;
+    }
+
+    // Eliminar todos los listeners registrados (para optimización en páginas)
+    removeAllListeners() {
+        this.listeners = [];
+    }
     // Inicializar conexión con Firebase y cargar datos
     async initialize() {
         return new Promise(async (resolve, reject) => {
-            if (this.isInitialized) {
-                resolve(this.stockData);
-                return;
-            }
-
             try {
                 // Primero cargar datos de Google Sheets
                 await this.loadGoogleSheetsData();
-                
                 // Luego inicializar Firebase
                 this.database = firebase.database();
-                
                 // Intentar cargar datos precalculados primero
                 const preCalculatedLoaded = await this.loadPreCalculatedStock();
-                
                 if (preCalculatedLoaded) {
                     console.log('🚀 MODO PRECALCULADO: Stock cargado (' + this.stockData.length + ' productos)');
                     // Configurar listener para detectar nuevos movimientos
@@ -42,7 +75,6 @@ class StockManager {
                     await this.calculateFromMovements();
                     resolve(this.stockData);
                 }
-                
             } catch (error) {
                 console.error('Error en inicialización:', error);
                 reject(error);
@@ -259,17 +291,41 @@ class StockManager {
         }, 2000); // Esperar 2 segundos para agrupar cambios
     }
 
-    // Calcular stock desde movimientos y guardar en Firebase
+    // Calcular stock incrementalmente desde movimientos nuevos y guardar en Firebase
     async calculateFromMovements() {
         try {
             const now = Date.now();
-            
-            const snapshot = await this.database.ref('movimientos').once('value');
-            const movimientos = snapshot.exists() ? snapshot.val() : {};
-            const stockMap = {};
-            
-            // Procesar movimientos para calcular stock actual
+            // 1. Cargar stock actual desde stockCalculado (si existe)
+            let stockMap = {};
+            let lastCalc = this.lastCalculationTime || 0;
+            const stockSnap = await this.database.ref('stockCalculado').once('value');
+            if (stockSnap.exists()) {
+                const stockData = stockSnap.val();
+                if (stockData && stockData.data) {
+                    // Puede ser objeto o array
+                    if (Array.isArray(stockData.data)) {
+                        stockData.data.forEach(item => {
+                            stockMap[item.codigo] = { ...item };
+                        });
+                    } else {
+                        Object.values(stockData.data).forEach(item => {
+                            stockMap[item.codigo] = { ...item };
+                        });
+                    }
+                    lastCalc = stockData.lastCalculated || lastCalc;
+                }
+            }
+
+
+
+            // 2. Obtener solo movimientos nuevos (timestamp > lastCalc)
+            const movSnap = await this.database.ref('movimientos').orderByChild('timestamp').startAt(lastCalc + 1).once('value');
+            const movimientos = movSnap.exists() ? movSnap.val() : {};
+
+            // 3. Procesar solo movimientos nuevos
+            let movimientosProcesados = 0;
             Object.values(movimientos).forEach(mov => {
+                movimientosProcesados++;
                 if (!stockMap[mov.codigo]) {
                     const googleData = this.googleSheetsData[mov.codigo] || {};
                     stockMap[mov.codigo] = {
@@ -282,39 +338,39 @@ class StockManager {
                         precioMayorista: googleData.precioMayorista || 0
                     };
                 }
-                
                 if (mov.tipo === 'ENTRADA') {
                     stockMap[mov.codigo].stock += Number(mov.cantidad || 0);
-                } else if (mov.tipo === 'SALIDA') {
-                    stockMap[mov.codigo].stock -= Number(mov.cantidad || 0);
-                } else if (mov.tipo === 'RETIRO') {
+                } else if (mov.tipo === 'SALIDA' || mov.tipo === 'RETIRO') {
                     stockMap[mov.codigo].stock -= Number(mov.cantidad || 0);
                 }
             });
 
-            // Ordenar por nombre para el array local
-            const stockArray = Object.values(stockMap).sort((a, b) => 
-                a.nombre.localeCompare(b.nombre)
-            );
+            // Si no hay movimientos nuevos, no actualizar lastCalculated ni guardar en Firebase
+            if (movimientosProcesados === 0) {
+                console.log('ℹ️ No hay movimientos nuevos. Stock no actualizado.');
+                return;
+            }
 
-            // Guardar en Firebase usando códigos como claves
+            // 4. Ordenar por nombre para el array local
+            const stockArray = Object.values(stockMap).sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+            // 5. Guardar en Firebase usando códigos como claves
             await this.database.ref('stockCalculado').set({
-                data: stockMap, // ← NUEVO: Objeto con códigos como claves
+                data: stockMap,
                 lastCalculated: now,
-                totalProducts: Object.keys(stockMap).length, // ← NUEVO: Contar claves del objeto
-                version: '2.0' // ← NUEVO: Incrementar versión para identificar nueva estructura
+                totalProducts: Object.keys(stockMap).length,
+                version: '2.0'
             });
 
-            // Actualizar datos locales (mantener como array para compatibilidad)
+            // 6. Actualizar datos locales
             this.stockData = stockArray;
             this.lastCalculationTime = now;
             this.isInitialized = true;
             this.notifyListeners();
-            
-            console.log(`✅ Stock actualizado con nueva estructura: ${stockArray.length} productos`);
-            
+
+            console.log(`✅ Stock actualizado incrementalmente: ${stockArray.length} productos (solo movimientos nuevos)`);
         } catch (error) {
-            console.error('❌ Error calculando stock:', error);
+            console.error('❌ Error calculando stock incremental:', error);
         }
     }
 

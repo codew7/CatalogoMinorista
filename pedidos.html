@@ -392,11 +392,11 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
 
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
-      // Inicializar StockManager si no está inicializado
+      // Inicializar StockManager solo una vez
       if (!stockManagerInitialized) {
         initStockManager();
       }
-      
+
       // === Botón Imprimir y Despachado/Entregado ===
       const ImprimirBtn = document.getElementById('ImprimirBtn');
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
@@ -422,7 +422,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       despachadoEntregadoBtn.onclick = async () => {
         if (pedidoActual.status === 'CANCELADO') return;
         if (despachadoEntregadoBtn.disabled) return;
-        
+
         // Guardar cambios automáticamente antes de despachar
         try {
           // Ejecutar la misma lógica que el botón guardar
@@ -471,12 +471,12 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
 
           // Guardar cambios primero
           await firebase.database().ref('pedidos/' + pedidoActual.id).update(updateData);
-          
+
         } catch (error) {
           alert('Error al guardar cambios antes del despacho: ' + error.message);
           return;
         }
-        
+
         // Validar ALIAS obligatorio si el tipo de pago es Transferencia
         const tipoPago = document.querySelector('input[name="tipoPago"]:checked');
         if (tipoPago && tipoPago.value === 'Transferencia') {
@@ -487,7 +487,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             return;
           }
         }
-        
+
         despachadoEntregadoBtn.disabled = true;
         // Función para obtener la fecha en el formato de ingresoPedido.js
         function getFechaActual() {
@@ -581,6 +581,25 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
           despachadoEntregadoBtn.disabled = false;
         }
       };
+      // --- FIN botón despachado ---
+
+      // --- STOCK BATCH PARA ADMIN ---
+      // Solo para admin: obtener stock de los productos del pedido en lote (sin listeners)
+      if (window.stockManager && typeof window.stockManager.getStockBatch === 'function') {
+        // Obtener los códigos de los productos del pedido
+        const codigosPedido = (pedidoActual.items || []).map(it => it.codigo).filter(Boolean);
+        // Llamar a getStockBatch solo una vez por render
+        window.stockManager.getStockBatch(codigosPedido).then(() => {
+          // Forzar re-render para mostrar el stock actualizado
+          renderItems();
+        });
+      }
+      // Limpiar listeners de stockManager al descargar la página
+      window.addEventListener('beforeunload', () => {
+        if (window.stockManager && typeof window.stockManager.removeAllListeners === 'function') {
+          window.stockManager.removeAllListeners();
+        }
+      });
     }
     // Mostrar estado
     if (pedidoActual.status === 'DESPACHADO/ENTREGADO') {
@@ -705,45 +724,43 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       };
       qtyCell.appendChild(qty);
 
-      /* 3) STOCK DISPONIBLE (solo para admin) */
-      if (admin) {
-        const stockCell = row.insertCell(3);
-        stockCell.className = 'cant';
-        
-        // Obtener stock del StockManager
-        if (stockManagerInitialized && it.codigo) {
-          const producto = window.stockManager.getStock(it.codigo);
-          if (producto) {
-            const stockActual = producto.stock;
-            stockCell.textContent = stockActual;
-            
-            // Aplicar colores según disponibilidad
-            if (stockActual <= 0) {
-              stockCell.style.color = '#e53935';
-              stockCell.style.fontWeight = 'bold';
-              stockCell.title = 'Sin stock disponible';
-            } else if (stockActual < it.cantidad) {
-              stockCell.style.color = '#ff9800';
-              stockCell.style.fontWeight = 'bold';
-              stockCell.title = `Stock insuficiente. Disponible: ${stockActual}, Pedido: ${it.cantidad}`;
-            } else if (stockActual <= 5) {
-              stockCell.style.color = '#ff9800';
-              stockCell.title = 'Stock bajo';
-            } else {
-              stockCell.style.color = '#4CAF50';
-              stockCell.title = 'Stock disponible';
-            }
+    /* 3) STOCK DISPONIBLE (solo para admin, sin listeners en tiempo real) */
+    if (admin) {
+      const stockCell = row.insertCell(3);
+      stockCell.className = 'cant';
+      // Obtener stock del StockManager (sin listeners)
+      if (window.stockManager && typeof window.stockManager.getStock === 'function' && it.codigo) {
+        const producto = window.stockManager.getStock(it.codigo);
+        if (producto && typeof producto.stock !== 'undefined') {
+          const stockActual = producto.stock;
+          stockCell.textContent = stockActual;
+          // Aplicar colores según disponibilidad
+          if (stockActual <= 0) {
+            stockCell.style.color = '#e53935';
+            stockCell.style.fontWeight = 'bold';
+            stockCell.title = 'Sin stock disponible';
+          } else if (stockActual < it.cantidad) {
+            stockCell.style.color = '#ff9800';
+            stockCell.style.fontWeight = 'bold';
+            stockCell.title = `Stock insuficiente. Disponible: ${stockActual}, Pedido: ${it.cantidad}`;
+          } else if (stockActual <= 5) {
+            stockCell.style.color = '#ff9800';
+            stockCell.title = 'Stock bajo';
           } else {
-            stockCell.textContent = '?';
-            stockCell.style.color = '#666';
-            stockCell.title = 'Producto no encontrado en inventario';
+            stockCell.style.color = '#4CAF50';
+            stockCell.title = 'Stock disponible';
           }
         } else {
           stockCell.textContent = '...';
           stockCell.style.color = '#666';
           stockCell.title = 'Cargando stock...';
         }
+      } else {
+        stockCell.textContent = '...';
+        stockCell.style.color = '#666';
+        stockCell.title = 'Cargando stock...';
       }
+    }
 
       /* 4) valor unitario $ */
       const valorCell = row.insertCell(admin ? 4 : 3);
