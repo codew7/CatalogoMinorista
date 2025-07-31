@@ -322,6 +322,14 @@ function getTipoCliente() {
         
         // Actualizar contadores cuando se selecciona un artículo
         actualizarContadoresArticulos();
+        // Enfocar campo cantidad y posicionar cursor al final
+        const cantidadInput = row.querySelector('.cantidad');
+        if (cantidadInput) {
+          cantidadInput.focus();
+          // Mover el cursor al final del valor
+          const val = cantidadInput.value;
+          cantidadInput.setSelectionRange(val.length, val.length);
+        }
       });
     });
     // Evento para eliminar fila (botón eliminar)

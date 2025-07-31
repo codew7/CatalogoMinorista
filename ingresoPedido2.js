@@ -1,4 +1,4 @@
-// Script para ingresoPedido%.html: manejo de formulario, artículos dinámicos y registro en Firebase
+// Script para ingresoPedido2.html: manejo de formulario, artículos dinámicos y registro en Firebase
 
 document.addEventListener('DOMContentLoaded', function() {
   // --- TAB = Agregar Artículo ---
@@ -703,7 +703,7 @@ addItemBtn.addEventListener('click', function() {
                     window.opener.location.reload();
                     window.close();
                   } else {
-                    window.location.href = 'ingresoPedido%.html';
+                    window.location.href = 'ingresoPedido2.html';
                   }
                 }, 1200);
               })
@@ -1042,7 +1042,7 @@ addItemBtn.addEventListener('click', function() {
                         window.opener.location.reload();
                         window.close();
                       } else {
-                        window.location.href = 'ingresoPedido%.html';
+                        window.location.href = 'ingresoPedido2.html';
                       }
                     }, 1200);
                   },
@@ -1054,7 +1054,7 @@ addItemBtn.addEventListener('click', function() {
                         window.opener.location.reload();
                         window.close();
                       } else {
-                        window.location.href = 'ingresoPedido%.html';
+                        window.location.href = 'ingresoPedido2.html';
                       }
                     }, 1200);
                   }
