@@ -1266,7 +1266,7 @@ function validarPedidoAbierto(email, callback) {
       let pedidoId = null;
       snap.forEach(child => {
         const pedido = child.val();
-        if (pedido.estado === 'ABIERTO' && !abierto) {
+        if (pedido.status === 'ABIERTO' && !abierto) {
           abierto = pedido;
           pedidoId = pedido.id || child.key;
         }
@@ -1432,7 +1432,8 @@ continuarBtn.addEventListener('click', () => {
             timestamp: Date.now(),
             locked:    false,
             adminViewed: false,
-            createdby: "web", 
+            createdby: "web",
+            status:    'ABIERTO',
 
             cliente: {
                 nombre:    datosExtraCliente.nombre    || '',
