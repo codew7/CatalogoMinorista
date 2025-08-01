@@ -620,6 +620,7 @@
         </div>
         <div>
           <span style="font-size:1.1rem;">📊 Historial de Movimientos</span>
+          <button id="btnCargarTodos" style="margin-left:15px;padding:4px 12px;font-size:0.95rem;border-radius:7px;background:var(--primary);color:#b68900;border:none;cursor:pointer;">Cargar Todos</button>
         </div>
       </div>
       <div id="tablaContainer">
@@ -645,11 +646,18 @@
 
       // Resto de la funcionalidad de inventario
       cargarProductos();
-      cargarMovimientos();
+      cargarMovimientos(false); // Solo movimientos del día por defecto
       configurarEventListeners();
     }
 
     function configurarEventListeners() {
+      // Botón Cargar Todos
+      const btnCargarTodos = document.getElementById('btnCargarTodos');
+      if (btnCargarTodos) {
+        btnCargarTodos.addEventListener('click', function() {
+          cargarMovimientos(true);
+        });
+      }
       // Inicializar select2 si aún no se ha hecho
       if (!$('#producto').hasClass('select2-hidden-accessible')) {
         inicializarSelect2();
@@ -868,20 +876,26 @@
       await ref.set(mov);
     }
 
-    // Cargar movimientos desde Firebase
-    function cargarMovimientos() {
+    // Cargar movimientos desde Firebase (solo del día o todos)
+    function cargarMovimientos(cargarTodos = false) {
       mostrarLoadingTabla();
-      db.ref('movimientos').on('value', snap => {
+      let ref = db.ref('movimientos');
+      if (!cargarTodos) {
+        // Calcular timestamp de inicio y fin del día actual (zona local)
+        const ahora = new Date();
+        const inicioDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0, 0).getTime();
+        const finDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59, 999).getTime();
+        ref = ref.orderByChild('timestamp').startAt(inicioDia).endAt(finDia);
+      }
+      ref.once('value', snap => {
         movimientos = [];
         snap.forEach(child => {
           let mov = { ...child.val(), _id: child.key };
           // Normalizar timestamp: si es string, intentar convertir a número
           if (typeof mov.timestamp === 'string') {
-            // Si es un número en string
             if (!isNaN(Number(mov.timestamp))) {
               mov.timestamp = Number(mov.timestamp);
             } else {
-              // Si es una fecha en string, convertir a timestamp
               let d = new Date(mov.timestamp);
               mov.timestamp = isNaN(d.getTime()) ? 0 : d.getTime();
             }

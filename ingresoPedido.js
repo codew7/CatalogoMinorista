@@ -1685,9 +1685,6 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
             codigo: item.codigo,
             nombre: item.nombre,
             cantidad: parseInt(item.cantidad, 10) || 0,
-            valorC: parseInt(item.valorC, 10) || 0,
-            valorU: parseInt(item.valorU, 10) || 0,
-            cotizacionCierre: cotizacionCierre,
             tipo: 'SALIDA',
             pedidoId: pedidoId
           };
