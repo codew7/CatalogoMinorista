@@ -322,7 +322,6 @@ class StockManager {
             if (stockSnap.exists()) {
                 const stockData = stockSnap.val();
                 if (stockData && stockData.data) {
-                    // Puede ser objeto o array
                     if (Array.isArray(stockData.data)) {
                         stockData.data.forEach(item => {
                             stockMap[item.codigo] = { ...item };
@@ -336,31 +335,18 @@ class StockManager {
                 }
             }
 
-            // 2. Obtener solo movimientos nuevos con buffer de tiempo
-            const bufferTime = 1000; // 1 segundo de buffer
-            const movSnap = await this.database.ref('movimientos')
-                .orderByChild('timestamp')
-                .startAt(lastCalc + bufferTime)
-                .once('value');
+            // 2. Obtener solo movimientos nuevos (timestamp > lastCalc)
+            const movSnap = await this.database.ref('movimientos').orderByChild('timestamp').startAt(lastCalc + 1).once('value');
             const movimientos = movSnap.exists() ? movSnap.val() : {};
+            const movimientosArray = Object.values(movimientos).filter(mov => mov.timestamp > lastCalc);
 
-            // 3. Filtrar y procesar solo movimientos realmente nuevos
-            const movimientosArray = Object.values(movimientos);
-            const movimientosNuevos = movimientosArray.filter(mov => mov.timestamp > lastCalc + bufferTime);
-            
-            console.log(`📊 Total movimientos encontrados: ${movimientosArray.length}`);
-            console.log(`🆕 Movimientos nuevos a procesar: ${movimientosNuevos.length}`);
-            console.log(`⏰ Último cálculo: ${new Date(lastCalc).toLocaleString()}`);
-            
-            if (movimientosNuevos.length === 0) {
+            if (movimientosArray.length === 0) {
                 console.log('ℹ️ No hay movimientos nuevos. Stock no actualizado.');
                 return;
             }
 
-            // 4. Procesar movimientos nuevos
-            movimientosNuevos.forEach(mov => {
-                console.log(`🔄 Procesando: ${mov.codigo} - ${mov.tipo} - ${mov.cantidad} (${new Date(mov.timestamp).toLocaleString()})`);
-                
+            // 3. Procesar solo movimientos nuevos
+            movimientosArray.forEach(mov => {
                 if (!stockMap[mov.codigo]) {
                     const googleData = this.googleSheetsData[mov.codigo] || {};
                     stockMap[mov.codigo] = {
@@ -373,7 +359,6 @@ class StockManager {
                         precioMayorista: googleData.precioMayorista || 0
                     };
                 }
-                
                 if (mov.tipo === 'ENTRADA') {
                     stockMap[mov.codigo].stock += Number(mov.cantidad || 0);
                 } else if (mov.tipo === 'SALIDA' || mov.tipo === 'RETIRO') {
@@ -381,10 +366,10 @@ class StockManager {
                 }
             });
 
-            // 5. Ordenar por nombre para el array local
+            // 4. Ordenar por nombre para el array local
             const stockArray = Object.values(stockMap).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-            // 6. Guardar en Firebase usando códigos como claves
+            // 5. Guardar en Firebase usando códigos como claves
             await this.database.ref('stockCalculado').set({
                 data: stockMap,
                 lastCalculated: now,
@@ -392,13 +377,13 @@ class StockManager {
                 version: '2.0'
             });
 
-            // 7. Actualizar datos locales
+            // 6. Actualizar datos locales
             this.stockData = stockArray;
             this.lastCalculationTime = now;
             this.isInitialized = true;
             this.notifyListeners();
 
-            console.log(`✅ Stock actualizado: ${stockArray.length} productos (${movimientosNuevos.length} movimientos procesados)`);
+            console.log(`✅ Stock actualizado incrementalmente: ${stockArray.length} productos (${movimientosArray.length} movimientos nuevos procesados)`);
         } catch (error) {
             console.error('❌ Error calculando stock incremental:', error);
         }
