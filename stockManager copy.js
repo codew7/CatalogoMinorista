@@ -11,7 +11,6 @@ class StockManager {
         this.usePreCalculated = true;
         this.recalculationTimeout = null;
         this.pendingChanges = 0; // Contador de cambios pendientes
-        this.movementListener = null; // Referencia al listener de movimientos
     }
 
     // Obtener el stock de un lote de productos por sus códigos (batch)
@@ -221,13 +220,10 @@ class StockManager {
         this.isInitialized = false;
         this.googleSheetsData = {}; // Limpiar datos de Google Sheets
         
-        // Limpiar timeouts pendientes y listeners
+        // Limpiar timeouts pendientes
         if (this.recalculationTimeout) {
             clearTimeout(this.recalculationTimeout);
         }
-        
-        // Limpiar listeners para evitar duplicados
-        this.cleanupListeners();
         
         return this.initialize();
     }
@@ -269,31 +265,15 @@ class StockManager {
     // Configurar listener para detectar nuevos movimientos
     setupMovementListener() {
         console.log('👁️ Monitoreando nuevos movimientos...');
-        this.pendingChanges = 0;
+        this.pendingChanges = 0; // Contador de cambios pendientes
         
-        // Desconectar listener anterior si existe
-        if (this.movementListener) {
-            this.database.ref('movimientos').off('child_added', this.movementListener);
-        }
-        
-        // Crear nuevo listener con filtro más estricto
-        this.movementListener = (snapshot) => {
-            const movimiento = snapshot.val();
-            // Solo procesar si el timestamp es significativamente mayor (buffer de 1 segundo)
-            if (movimiento && movimiento.timestamp > (this.lastCalculationTime + 1000)) {
-                console.log(`🆕 Nuevo movimiento detectado: ${movimiento.codigo} - ${movimiento.tipo} (${new Date(movimiento.timestamp).toLocaleString()})`);
-                this.pendingChanges++;
-                this.scheduleRecalculation();
-            } else {
-                console.log(`⏭️ Movimiento omitido (ya procesado): ${movimiento.codigo} - ${new Date(movimiento.timestamp).toLocaleString()}`);
-            }
-        };
-        
-        // Usar un buffer de tiempo más amplio para evitar procesamiento duplicado
         this.database.ref('movimientos')
             .orderByChild('timestamp')
-            .startAt(this.lastCalculationTime + 1000) // Buffer de 1 segundo
-            .on('child_added', this.movementListener);
+            .startAt(this.lastCalculationTime + 1)
+            .on('child_added', (snapshot) => {
+                this.pendingChanges++;
+                this.scheduleRecalculation();
+            });
     }
 
     // Programar recálculo (evita recálculos múltiples)
@@ -336,31 +316,16 @@ class StockManager {
                 }
             }
 
-            // 2. Obtener solo movimientos nuevos con buffer de tiempo
-            const bufferTime = 1000; // 1 segundo de buffer
-            const movSnap = await this.database.ref('movimientos')
-                .orderByChild('timestamp')
-                .startAt(lastCalc + bufferTime)
-                .once('value');
+
+
+            // 2. Obtener solo movimientos nuevos (timestamp > lastCalc)
+            const movSnap = await this.database.ref('movimientos').orderByChild('timestamp').startAt(lastCalc + 1).once('value');
             const movimientos = movSnap.exists() ? movSnap.val() : {};
 
-            // 3. Filtrar y procesar solo movimientos realmente nuevos
-            const movimientosArray = Object.values(movimientos);
-            const movimientosNuevos = movimientosArray.filter(mov => mov.timestamp > lastCalc + bufferTime);
-            
-            console.log(`📊 Total movimientos encontrados: ${movimientosArray.length}`);
-            console.log(`🆕 Movimientos nuevos a procesar: ${movimientosNuevos.length}`);
-            console.log(`⏰ Último cálculo: ${new Date(lastCalc).toLocaleString()}`);
-            
-            if (movimientosNuevos.length === 0) {
-                console.log('ℹ️ No hay movimientos nuevos. Stock no actualizado.');
-                return;
-            }
-
-            // 4. Procesar movimientos nuevos
-            movimientosNuevos.forEach(mov => {
-                console.log(`🔄 Procesando: ${mov.codigo} - ${mov.tipo} - ${mov.cantidad} (${new Date(mov.timestamp).toLocaleString()})`);
-                
+            // 3. Procesar solo movimientos nuevos
+            let movimientosProcesados = 0;
+            Object.values(movimientos).forEach(mov => {
+                movimientosProcesados++;
                 if (!stockMap[mov.codigo]) {
                     const googleData = this.googleSheetsData[mov.codigo] || {};
                     stockMap[mov.codigo] = {
@@ -373,7 +338,6 @@ class StockManager {
                         precioMayorista: googleData.precioMayorista || 0
                     };
                 }
-                
                 if (mov.tipo === 'ENTRADA') {
                     stockMap[mov.codigo].stock += Number(mov.cantidad || 0);
                 } else if (mov.tipo === 'SALIDA' || mov.tipo === 'RETIRO') {
@@ -381,10 +345,16 @@ class StockManager {
                 }
             });
 
-            // 5. Ordenar por nombre para el array local
+            // Si no hay movimientos nuevos, no actualizar lastCalculated ni guardar en Firebase
+            if (movimientosProcesados === 0) {
+                console.log('ℹ️ No hay movimientos nuevos. Stock no actualizado.');
+                return;
+            }
+
+            // 4. Ordenar por nombre para el array local
             const stockArray = Object.values(stockMap).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-            // 6. Guardar en Firebase usando códigos como claves
+            // 5. Guardar en Firebase usando códigos como claves
             await this.database.ref('stockCalculado').set({
                 data: stockMap,
                 lastCalculated: now,
@@ -392,13 +362,13 @@ class StockManager {
                 version: '2.0'
             });
 
-            // 7. Actualizar datos locales
+            // 6. Actualizar datos locales
             this.stockData = stockArray;
             this.lastCalculationTime = now;
             this.isInitialized = true;
             this.notifyListeners();
 
-            console.log(`✅ Stock actualizado: ${stockArray.length} productos (${movimientosNuevos.length} movimientos procesados)`);
+            console.log(`✅ Stock actualizado incrementalmente: ${stockArray.length} productos (solo movimientos nuevos)`);
         } catch (error) {
             console.error('❌ Error calculando stock incremental:', error);
         }
@@ -411,121 +381,97 @@ class StockManager {
         await this.calculateFromMovements();
     }
 
-    // Método para recálculo completo desde cero
-    async fullRecalculation() {
-        console.log('🔧 Iniciando recálculo completo desde cero...');
-        
-        // Desconectar listeners activos
-        if (this.movementListener) {
-            this.database.ref('movimientos').off('child_added', this.movementListener);
-            this.movementListener = null;
-        }
-        
-        // Limpiar datos locales
-        this.stockData = [];
-        this.lastCalculationTime = 0;
-        this.isInitialized = false;
-        
-        // Eliminar datos precalculados en Firebase
-        await this.database.ref('stockCalculado').remove();
-        
-        // Recalcular desde todos los movimientos
-        await this.calculateFromMovements();
-        
-        // Reconfigurar listener
-        this.setupMovementListener();
-        
-        console.log('✅ Recálculo completo terminado');
-        return this.stockData;
-    }
-
-    // Limpiar todos los listeners de Firebase
-    cleanupListeners() {
-        if (this.movementListener) {
-            this.database.ref('movimientos').off('child_added', this.movementListener);
-            this.movementListener = null;
-        }
-        if (this.recalculationTimeout) {
-            clearTimeout(this.recalculationTimeout);
-            this.recalculationTimeout = null;
-        }
-        console.log('🧹 Listeners limpiados');
-    }
-
     // Obtener información del último cálculo
     getCalculationInfo() {
         return {
             lastCalculated: this.lastCalculationTime,
             lastCalculatedDate: new Date(this.lastCalculationTime).toLocaleString(),
             totalProducts: this.stockData.length,
-            isUsingPreCalculated: this.usePreCalculated,
-            pendingChanges: this.pendingChanges,
-            hasMovementListener: !!this.movementListener
+            isUsingPreCalculated: this.usePreCalculated
         };
     }
 
-    // Método de debugging para verificar la sincronización
-    async debugMovements(codigo = null) {
-        try {
-            console.log('🔍 INICIANDO DEBUG DE MOVIMIENTOS');
-            console.log('📅 Último cálculo:', new Date(this.lastCalculationTime).toLocaleString());
+    // Verificar si un producto existe
+    productExists(codigo) {
+        return !!this.getStock(codigo);
+    }
+
+    // Obtener productos ordenados por diferentes criterios
+    getSortedStock(sortBy = 'nombre', order = 'asc') {
+        const data = [...this.stockData];
+        
+        return data.sort((a, b) => {
+            let valueA, valueB;
             
-            // Obtener stock calculado
-            const stockSnap = await this.database.ref('stockCalculado').once('value');
-            const stockCalculado = stockSnap.exists() ? stockSnap.val() : null;
-            
-            // Obtener todos los movimientos
-            const movSnap = await this.database.ref('movimientos').once('value');
-            const movimientos = movSnap.exists() ? Object.values(movSnap.val()) : [];
-            
-            if (codigo) {
-                // Debug específico para un código
-                const movimientosCodigo = movimientos.filter(mov => mov.codigo === codigo);
-                const stockProducto = stockCalculado?.data?.[codigo];
-                
-                console.log(`📦 PRODUCTO ${codigo}:`);
-                console.log('Stock calculado:', stockProducto?.stock || 'No encontrado');
-                console.log('Movimientos encontrados:', movimientosCodigo.length);
-                
-                let stockManual = 0;
-                movimientosCodigo
-                    .sort((a, b) => a.timestamp - b.timestamp)
-                    .forEach(mov => {
-                        if (mov.tipo === 'ENTRADA') {
-                            stockManual += Number(mov.cantidad || 0);
-                        } else if (mov.tipo === 'SALIDA' || mov.tipo === 'RETIRO') {
-                            stockManual -= Number(mov.cantidad || 0);
-                        }
-                        console.log(`📊 ${new Date(mov.timestamp).toLocaleString()} - ${mov.tipo} - ${mov.cantidad} - Stock acumulado: ${stockManual}`);
-                    });
-                
-                console.log(`✅ Stock manual calculado: ${stockManual}`);
-                console.log(`🎯 Stock en sistema: ${stockProducto?.stock || 0}`);
-                console.log(`${stockManual === (stockProducto?.stock || 0) ? '✅ COINCIDEN' : '❌ NO COINCIDEN'}`);
-            } else {
-                // Debug general
-                console.log('📊 Total movimientos:', movimientos.length);
-                console.log('📦 Total productos en stock:', stockCalculado?.totalProducts || 0);
-                console.log('⏰ Última actualización:', new Date(stockCalculado?.lastCalculated || 0).toLocaleString());
-                
-                // Verificar movimientos posteriores al último cálculo
-                const movimientosPosteriores = movimientos.filter(mov => 
-                    mov.timestamp > (this.lastCalculationTime + 1000)
-                );
-                console.log('🔄 Movimientos pendientes:', movimientosPosteriores.length);
-                
-                if (movimientosPosteriores.length > 0) {
-                    console.log('📋 Movimientos pendientes:');
-                    movimientosPosteriores.forEach(mov => {
-                        console.log(`- ${mov.codigo} - ${mov.tipo} - ${mov.cantidad} (${new Date(mov.timestamp).toLocaleString()})`);
-                    });
-                }
+            switch(sortBy) {
+                case 'codigo':
+                    valueA = a.codigo.toString();
+                    valueB = b.codigo.toString();
+                    break;
+                case 'stock':
+                    valueA = a.stock;
+                    valueB = b.stock;
+                    break;
+                case 'valor':
+                    valueA = a.valor;
+                    valueB = b.valor;
+                    break;
+                default: // 'nombre'
+                    valueA = a.nombre;
+                    valueB = b.nombre;
             }
             
-            console.log('🔍 DEBUG COMPLETADO');
-        } catch (error) {
-            console.error('❌ Error en debug:', error);
-        }
+            if (order === 'desc') {
+                return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+            } else {
+                return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+            }
+        });
+    }
+
+    // Filtrar productos por rango de stock
+    getStockByRange(min = 0, max = Infinity) {
+        return this.stockData.filter(item => item.stock >= min && item.stock <= max);
+    }
+
+    // Obtener valor total del inventario
+    getTotalInventoryValue() {
+        return this.stockData.reduce((sum, item) => {
+            return sum + (item.stock * item.valor);
+        }, 0);
+    }
+
+    // Busqueda avanzada con múltiples criterios
+    advancedSearch(criteria) {
+        return this.stockData.filter(item => {
+            let matches = true;
+            
+            if (criteria.codigo) {
+                matches = matches && item.codigo.toString().toLowerCase().includes(criteria.codigo.toLowerCase());
+            }
+            
+            if (criteria.nombre) {
+                matches = matches && item.nombre.toLowerCase().includes(criteria.nombre.toLowerCase());
+            }
+            
+            if (criteria.minStock !== undefined) {
+                matches = matches && item.stock >= criteria.minStock;
+            }
+            
+            if (criteria.maxStock !== undefined) {
+                matches = matches && item.stock <= criteria.maxStock;
+            }
+            
+            if (criteria.minValue !== undefined) {
+                matches = matches && item.valor >= criteria.minValue;
+            }
+            
+            if (criteria.maxValue !== undefined) {
+                matches = matches && item.valor <= criteria.maxValue;
+            }
+            
+            return matches;
+        });
     }
 }
 
