@@ -220,8 +220,8 @@ function getTipoCliente() {
     // Asignar categoria desde columna A (índice 0) - SIEMPRE
     item.categoria = art[0] || '';
     
-    // Asignar seleccionado desde columna I (índice 8) - SIEMPRE
-    item.seleccionado = art[8] || '';
+    // Asignar seleccionado desde columna J (índice 9) - SIEMPRE
+    item.seleccionado = art[9] || '';
     
     // Calcular valorG
     item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
@@ -434,7 +434,7 @@ addItemBtn.addEventListener('click', function() {
     if (items[idx].nombre && articulosPorNombre[items[idx].nombre]) {
       const art = articulosPorNombre[items[idx].nombre];
       items[idx].categoria = art[0] || '';
-      items[idx].seleccionado = art[8] || '';
+      items[idx].seleccionado = art[9] || '';
       let valorCRaw = art[7] || '0';
       valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
       items[idx].valorC = parseInt(valorCRaw) || 0;
@@ -607,7 +607,7 @@ addItemBtn.addEventListener('click', function() {
         const art = articulosPorNombre[item.nombre];
         // Forzar actualización de categoria y seleccionado
         item.categoria = art[0] || '';
-        item.seleccionado = art[8] || '';
+        item.seleccionado = art[9] || '';
         // Forzar actualización de valorC
         let valorCRaw = art[7] || '0';
         valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
@@ -852,7 +852,7 @@ addItemBtn.addEventListener('click', function() {
         valorU: it.valorU || 0,
         valorC: typeof it.valorC !== 'undefined' ? it.valorC : 0,
         categoria: typeof it.categoria !== 'undefined' ? it.categoria : '',
-        seleccionado: typeof it.seleccionado !== 'undefined' ? it.seleccionado : (it.nombre && articulosPorNombre[it.nombre] ? articulosPorNombre[it.nombre][8] || '' : ''),
+        seleccionado: typeof it.seleccionado !== 'undefined' ? it.seleccionado : (it.nombre && articulosPorNombre[it.nombre] ? articulosPorNombre[it.nombre][9] || '' : ''),
         valorG: typeof it.valorG !== 'undefined' ? it.valorG : (typeof it.valorU !== 'undefined' && typeof it.valorC !== 'undefined' ? it.valorU - it.valorC : 0)
       }));
       renderItems();
@@ -935,7 +935,7 @@ addItemBtn.addEventListener('click', function() {
           const art = articulosPorNombre[item.nombre];
           // Forzar actualización de categoria y seleccionado
           item.categoria = art[0] || '';
-          item.seleccionado = art[8] || '';
+          item.seleccionado = art[9] || '';
           // Forzar actualización de valorC
           let valorCRaw = art[7] || '0';
           valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');

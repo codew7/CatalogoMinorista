@@ -220,8 +220,8 @@ function getTipoCliente() {
     // Asignar categoria desde columna A (índice 0) - SIEMPRE
     item.categoria = art[0] || '';
     
-    // Asignar seleccionado desde columna I (índice 8) - SIEMPRE
-    item.seleccionado = art[8] || '';
+    // Asignar seleccionado desde columna J (índice 9) - SIEMPRE
+    item.seleccionado = art[9] || '';
     
     // Calcular valorG
     item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
@@ -595,7 +595,7 @@ addItemBtn.addEventListener('click', function() {
         const art = articulosPorNombre[item.nombre];
         // Forzar actualización de categoria y seleccionado
         item.categoria = art[0] || '';
-        item.seleccionado = art[8] || '';
+        item.seleccionado = art[9] || '';
         // Forzar actualización de valorC
         let valorCRaw = art[7] || '0';
         valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
@@ -923,7 +923,7 @@ addItemBtn.addEventListener('click', function() {
           const art = articulosPorNombre[item.nombre];
           // Forzar actualización de categoria y seleccionado
           item.categoria = art[0] || '';
-          item.seleccionado = art[8] || '';
+          item.seleccionado = art[9] || '';
           // Forzar actualización de valorC
           let valorCRaw = art[7] || '0';
           valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
