@@ -565,7 +565,7 @@
                     capitalData = values.slice(1).map(row => ({
                         codigo: row[2] || '',
                         nombre: row[3] || '',
-                        costoUnitario: Number((row[9] || '0').replace(/,/g, '')),
+                        costoUnitario: Number((row[8] || '0').replace(/,/g, '')),
                         stock: Number(row[10]) || 0
                     }));
                     // Ordenar alfabéticamente por nombre
