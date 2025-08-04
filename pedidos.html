@@ -10,29 +10,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
-    <script src="stockManager.js"></script>
 
     <script>
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
-        // Inicializar StockManager para administradores
-        let stockManagerInitialized = false;
-        async function initStockManager() {
-            if (!stockManagerInitialized && admin) {
-                try {
-                    await window.stockManager.initialize();
-                    stockManagerInitialized = true;
-                    console.log('StockManager inicializado para admin');
-                    // Re-renderizar items si ya están cargados
-                    if (pedidoActual && pedidoActual.items) {
-                        renderItems();
-                    }
-                } catch (error) {
-                    console.error('Error inicializando StockManager:', error);
-                }
-            }
-        }
     </script>
 
   <script>
@@ -46,14 +27,11 @@
     firebase.auth().onAuthStateChanged(user => {
       if (user && adminEmails.includes(user.email)) {
         admin = true;
-        // Inicializar StockManager para admin
-        initStockManager();
-        // Si la URL no tiene ?admin=true, la agrega para mantener compatibilidad
         if (!location.search.includes('admin=true')) {
           const url = new URL(window.location.href);
           url.searchParams.set('admin', 'true');
           window.location.replace(url.toString());
-          return; // IMPORTANTE: no seguir ejecutando código si se recarga
+          return;
         }
       }
       // Solo ejecutar el fetch de cotización cuando la URL ya es la correcta
@@ -145,7 +123,6 @@
     th.elim,td.elim{width:1%;min-width:28px;padding-left:0;padding-right:0;}
     .eliminar-articulo{background:#e53935 !important;color:#fff !important;font-size:0.9em;padding:2px 7px 2px 7px;margin:0;line-height:1;min-width:22px;min-height:22px;border-radius:50%;}
     
-    /* Estilos para la columna de stock */
     .stock-disponible {
       font-weight: bold;
       text-align: center;
@@ -163,7 +140,6 @@
       align-items: center;
       background: rgba(0,0,0,.8);
       z-index: 4000;
-      /* Centrado absoluto */
       width: 100vw;
       height: 100vh;
     }
@@ -195,7 +171,6 @@
       color: #fff !important;
     }
 
-    /* Unifica el tamaño de todos los botones de acción inferiores */
     .accion-btn, #accionesAdmin button {
       min-width: 160px;
       max-width: 160px;
@@ -207,7 +182,7 @@
       text-align: center;
       display: inline-block;
     }
-    /* Asegura que los contenedores de botones no excedan el ancho del body */
+
     .acciones-botones, #accionesAdmin, .accion-btn-contenedor {
       max-width: 100%;
       width: 100%;
@@ -217,7 +192,7 @@
       justify-content: center;
       margin: 0 auto;
     }
-    /* Ajusta los botones para que no se desborden */
+
     .acciones-botones button, #accionesAdmin button, .accion-btn-contenedor button, .accion-btn {
       flex: 1 1 160px;
       max-width: 16px;
@@ -392,11 +367,6 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
 
     // Mostrar botón Imprimir Rótulo solo para admin
     if (admin) {
-      // Inicializar StockManager solo una vez
-      if (!stockManagerInitialized) {
-        initStockManager();
-      }
-
       // === Botón Imprimir y Despachado/Entregado ===
       const ImprimirBtn = document.getElementById('ImprimirBtn');
       const despachadoEntregadoBtn = document.getElementById('despachadoEntregadoBtn');
@@ -467,8 +437,6 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             lastModifiedEmail: lastModifiedEmail
           };
 
-          // NOTA: El ALIAS se guardará en pedidos.pagos.alias más adelante
-
           // Guardar cambios primero
           await firebase.database().ref('pedidos/' + pedidoActual.id).update(updateData);
 
@@ -478,8 +446,8 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
         }
 
         // Validar ALIAS obligatorio si el tipo de pago es Transferencia
-        const tipoPago = document.querySelector('input[name="tipoPago"]:checked');
-        if (tipoPago && tipoPago.value === 'Transferencia') {
+        const tipoPagoRadio = document.querySelector('input[name="tipoPago"]:checked');
+        if (tipoPagoRadio && tipoPagoRadio.value === 'Transferencia') {
           const aliasInput = document.getElementById('alias');
           if (!aliasInput || !aliasInput.value.trim()) {
             alert('El campo ALIAS es obligatorio para transferencias antes de despachar el pedido.');
@@ -525,49 +493,44 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             status: 'DESPACHADO/ENTREGADO',
             locked: true,
             fecha: getFechaActual()
-          });      // === REGISTRO DE PAGOS ===
-      // Calcular subtotal (total en pesos)
-      let subtotal = 0;
-      let costos = 0;
-      const coti = getCotizacionActual();
-      if (Array.isArray(pedidoActual.items)) {
-        pedidoActual.items.forEach(it => {
-          const unitPesos = Math.round((it.valorUSD || 0) * coti);
-          subtotal += Math.round(it.cantidad * unitPesos);
-          costos += (parseFloat(it.valorC) || 0) * (parseInt(it.cantidad) || 0);
-        });
-      }
-      const ganancia = subtotal - costos;
-      const costoUSD = costos / coti;
-      // Obtener medio de pago seleccionado
-      let medioPago = 'efectivo';
-      let alias = '';
-      const pagoRadio = document.querySelector('input[name="tipoPago"]:checked');
-      if (pagoRadio) {
-        medioPago = pagoRadio.value.toLowerCase();
-        // Si es transferencia, obtener el ALIAS
-        if (pagoRadio.value === 'Transferencia') {
-          const aliasInput = document.getElementById('alias');
-          if (aliasInput && aliasInput.value.trim()) {
-            alias = aliasInput.value.trim().toUpperCase();
+          });
+          // === REGISTRO DE PAGOS ===
+          let subtotal = 0;
+          let costos = 0;
+          const coti = getCotizacionActual();
+          if (Array.isArray(pedidoActual.items)) {
+            pedidoActual.items.forEach(it => {
+              const unitPesos = Math.round((it.valorUSD || 0) * coti);
+              subtotal += Math.round(it.cantidad * unitPesos);
+              costos += (parseFloat(it.valorC) || 0) * (parseInt(it.cantidad) || 0);
+            });
           }
-        }
-      }
-      // Registrar en subnodo pagos
-      const pagoData = {
-        medioPago,
-        subtotal,
-        costos,
-        ganancia,
-        totalFinal: subtotal
-      };
-      // Agregar ALIAS al registro de pagos si existe
-      if (alias) {
-        pagoData.alias = alias;
-      }
-      await pedidoRef.child('pagos').set(pagoData);
-      // Registrar costoUSD en el nodo principal del pedido
-      await pedidoRef.update({ costoUSD });
+          const ganancia = subtotal - costos;
+          const costoUSD = costos / coti;
+          let medioPago = 'efectivo';
+          let alias = '';
+          const pagoRadio = document.querySelector('input[name="tipoPago"]:checked');
+          if (pagoRadio) {
+            medioPago = pagoRadio.value.toLowerCase();
+            if (pagoRadio.value === 'Transferencia') {
+              const aliasInput = document.getElementById('alias');
+              if (aliasInput && aliasInput.value.trim()) {
+                alias = aliasInput.value.trim().toUpperCase();
+              }
+            }
+          }
+          const pagoData = {
+            medioPago,
+            subtotal,
+            costos,
+            ganancia,
+            totalFinal: subtotal
+          };
+          if (alias) {
+            pagoData.alias = alias;
+          }
+          await pedidoRef.child('pagos').set(pagoData);
+          await pedidoRef.update({ costoUSD });
           // 5. Registrar movimientos de salida leyendo el pedido actualizado
           await registrarMovimientoSalidaDesdePedido(pedidoActual.id);
           // 6. Marcar que ya se registraron movimientos
@@ -582,24 +545,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
         }
       };
       // --- FIN botón despachado ---
-
-      // --- STOCK BATCH PARA ADMIN ---
-      // Solo para admin: obtener stock de los productos del pedido en lote (sin listeners)
-      if (window.stockManager && typeof window.stockManager.getStockBatch === 'function') {
-        // Obtener los códigos de los productos del pedido
-        const codigosPedido = (pedidoActual.items || []).map(it => it.codigo).filter(Boolean);
-        // Llamar a getStockBatch solo una vez por render
-        window.stockManager.getStockBatch(codigosPedido).then(() => {
-          // Forzar re-render para mostrar el stock actualizado
-          renderItems();
-        });
-      }
-      // Limpiar listeners de stockManager al descargar la página
-      window.addEventListener('beforeunload', () => {
-        if (window.stockManager && typeof window.stockManager.removeAllListeners === 'function') {
-          window.stockManager.removeAllListeners();
-        }
-      });
+      // --- STOCK: El stock se consulta desde Google Sheets columna K ---
     }
     // Mostrar estado
     if (pedidoActual.status === 'DESPACHADO/ENTREGADO') {
@@ -724,43 +670,42 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       };
       qtyCell.appendChild(qty);
 
-    /* 3) STOCK DISPONIBLE (solo para admin, sin listeners en tiempo real) */
-    if (admin) {
-      const stockCell = row.insertCell(3);
-      stockCell.className = 'cant';
-      // Obtener stock del StockManager (sin listeners)
-      if (window.stockManager && typeof window.stockManager.getStock === 'function' && it.codigo) {
-        const producto = window.stockManager.getStock(it.codigo);
-        if (producto && typeof producto.stock !== 'undefined') {
-          const stockActual = producto.stock;
-          stockCell.textContent = stockActual;
-          // Aplicar colores según disponibilidad
-          if (stockActual <= 0) {
-            stockCell.style.color = '#e53935';
-            stockCell.style.fontWeight = 'bold';
-            stockCell.title = 'Sin stock disponible';
-          } else if (stockActual < it.cantidad) {
-            stockCell.style.color = '#ff9800';
-            stockCell.style.fontWeight = 'bold';
-            stockCell.title = `Stock insuficiente. Disponible: ${stockActual}, Pedido: ${it.cantidad}`;
-          } else if (stockActual <= 5) {
-            stockCell.style.color = '#ff9800';
-            stockCell.title = 'Stock bajo';
+      /* 3) STOCK DISPONIBLE (solo para admin, consultado desde Google Sheets columna K) */
+      if (admin) {
+        const stockCell = row.insertCell(3);
+        stockCell.className = 'cant';
+        // Consultar stock desde Google Sheets
+        if (window.sheetStockMap && it.codigo) {
+          const stockActual = window.sheetStockMap[it.codigo];
+          if (typeof stockActual !== 'undefined') {
+            stockCell.textContent = stockActual;
+            // Aplicar colores según disponibilidad
+            if (stockActual <= 0) {
+              stockCell.style.color = '#e53935';
+              stockCell.style.fontWeight = 'bold';
+              stockCell.title = 'Sin stock disponible';
+            } else if (stockActual < it.cantidad) {
+              stockCell.style.color = '#ff9800';
+              stockCell.style.fontWeight = 'bold';
+              stockCell.title = `Stock insuficiente. Disponible: ${stockActual}, Pedido: ${it.cantidad}`;
+            } else if (stockActual <= 5) {
+              stockCell.style.color = '#ff9800';
+              stockCell.title = 'Stock bajo';
+            } else {
+              stockCell.style.color = '#4CAF50';
+              stockCell.title = 'Stock disponible';
+            }
           } else {
-            stockCell.style.color = '#4CAF50';
-            stockCell.title = 'Stock disponible';
+            stockCell.textContent = '...';
+            stockCell.style.color = '#666';
+            stockCell.title = 'Cargando stock...';
           }
         } else {
           stockCell.textContent = '...';
           stockCell.style.color = '#666';
           stockCell.title = 'Cargando stock...';
         }
-      } else {
-        stockCell.textContent = '...';
-        stockCell.style.color = '#666';
-        stockCell.title = 'Cargando stock...';
       }
-    }
 
       /* 4) valor unitario $ */
       const valorCell = row.insertCell(admin ? 4 : 3);
@@ -1088,6 +1033,8 @@ document.getElementById('cerrarBtn').onclick = () => {
 const mapImg = {};
 
 /* Lo llenamos apenas cargamos los datos de Sheets */
+// También se crea un mapa para stock por código desde columna K
+window.sheetStockMap = {};
 fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
   .then(r=>r.json())
   .then(({values})=>{
@@ -1095,6 +1042,13 @@ fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPRE
       const nombre = row[3];
       const url    = row[1] || '';
       mapImg[nombre] = url.split(',').map(u=>u.trim()).filter(Boolean);
+      // Columna K = índice 10 (A=0, B=1, ..., K=10)
+      const codigo = row[2];
+      const stockK = row[10];
+      if (codigo && typeof stockK !== 'undefined') {
+        // Convierte a número si es posible
+        window.sheetStockMap[codigo] = parseInt(stockK, 10) || 0;
+      }
     });
   });
 

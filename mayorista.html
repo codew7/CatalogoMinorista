@@ -32,8 +32,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="config.js"></script>
-    <script src="stockManager.js"></script>
-    <script src="stockUpdater.js"></script>
+    <!-- Eliminado stockManager.js y stockUpdater.js -->
 
     <script>
         firebase.initializeApp(firebaseConfig);
@@ -596,19 +595,7 @@
         const loadingMessage = document.getElementById('loading-message');
 
 
-        // Inicializar el stock manager solo una vez, sin listener en tiempo real
-        async function inicializarStockManager() {
-            try {
-                console.log('Inicializando StockManager...');
-                await stockManager.initialize();
-                console.log('✅ Sistema de stock listo');
-            } catch (error) {
-                console.error('Error inicializando stock manager:', error);
-            }
-        }
-
-        // Inicializar stock manager
-        inicializarStockManager();
+        // Eliminada inicialización de stockManager
 
         fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
             .then(response => {
@@ -683,18 +670,9 @@
             const fin = inicio + ITEMS_PER_PAGE;
             const datosPagina = datos.slice(inicio, fin);
 
-            // Consultar solo el stock de los productos visibles en la página actual
-            const codigosPagina = datosPagina.map(item => item[2]);
-            // Si el stockManager tiene un método batch, úsalo, si no, refresca solo visibles
-            if (typeof stockManager.getStockBatch === 'function') {
-                stockManager.getStockBatch(codigosPagina).then(() => {
-                    cargarGrid(datosPagina);
-                    actualizarPaginacion(pagina, datos);
-                });
-            } else {
-                cargarGrid(datosPagina);
-                actualizarPaginacion(pagina, datos);
-            }
+            // Ya no se consulta stockManager, solo cargar grid y paginación
+            cargarGrid(datosPagina);
+            actualizarPaginacion(pagina, datos);
 
             // Solo hacer scroll si no se está escribiendo en el campo de búsqueda
             if (document.activeElement !== document.getElementById('buscar')) {
@@ -726,11 +704,10 @@
                 if (isValidImageUrl(item[1])) {
                     let imageUrls = [];
                     if (item[1].indexOf(',') !== -1) {
-                    imageUrls = item[1].split(',').map(url => url.trim());
+                        imageUrls = item[1].split(',').map(url => url.trim());
                     } else {
-                    imageUrls.push(item[1]);
+                        imageUrls.push(item[1]);
                     }
-                    
                     const img = document.createElement('img');
                     img.src = imageUrls[0];
                     img.loading = 'lazy'; // Agregar lazy loading
@@ -754,15 +731,17 @@
                 info.textContent = `Código: ${item[2]}`;
                 card.appendChild(info);
 
-                // 4. Disponibilidad de stock
+                // 4. Disponibilidad de stock (ahora desde columna K, item[10])
                 const stockInfo = document.createElement('div');
                 stockInfo.classList.add('stock-info');
                 stockInfo.style.margin = '5px 0';
                 stockInfo.style.fontWeight = 'bold';
-                
-                const stockData = stockManager.getStock(item[2]);
-                if (stockData) {
-                    const stock = stockData.stock;
+
+                let stock = 0;
+                if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
+                    stock = parseInt(item[10]);
+                }
+                if (!isNaN(stock)) {
                     if (stock <= 0) {
                         stockInfo.innerHTML = `<span style="color: #ff9800;">✗ Sin stock</span>`;
                     } else if (stock <= 10) {
@@ -863,11 +842,10 @@
                 btnCarrito.style.transition = 'all 0.3s ease';
                 btnCarrito.classList.add('btn-agregar-carrito');
 
-                // Establecer máximo basado en stock disponible
-                const stockDisponible = stockManager.getStock(item[2]);
-                if (stockDisponible && stockDisponible.stock > 0) {
-                    cantidadSelector.max = stockDisponible.stock;
-                    cantidadSelector.title = `Máximo ${stockDisponible.stock} unidades disponibles`;
+                // Establecer máximo basado en stock disponible (desde columna K)
+                if (!isNaN(stock) && stock > 0) {
+                    cantidadSelector.max = stock;
+                    cantidadSelector.title = `Máximo ${stock} unidades disponibles`;
                 } else {
                     // Sin stock disponible o sin información de stock
                     btnCarrito.disabled = true;
@@ -909,13 +887,15 @@
 
                 // Evento click del botón carrito
                 btnCarrito.addEventListener('click', () => {
-                    const stockDisponibleClick = stockManager.getStock(item[2]);
-                    
-                    if (!stockDisponibleClick || stockDisponibleClick.stock <= 0) {
+                    // Consultar stock desde columna K
+                    let stockDisponibleClick = 0;
+                    if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
+                        stockDisponibleClick = parseInt(item[10]);
+                    }
+                    if (isNaN(stockDisponibleClick) || stockDisponibleClick <= 0) {
                         alert('Este producto no tiene stock disponible.');
                         return;
                     }
-                    
                     // Agregar al carrito y mostrar control
                     cantidadSelector.value = '1';
                     actualizarArticuloEnCarrito();
@@ -924,14 +904,16 @@
 
                 // Eventos de los botones de cantidad
                 btnIncrementar.addEventListener('click', () => {
-                    const stockDisponibleClick = stockManager.getStock(item[2]);
+                    // Consultar stock desde columna K
+                    let stockDisponibleClick = 0;
+                    if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
+                        stockDisponibleClick = parseInt(item[10]);
+                    }
                     const cantidad = parseInt(cantidadSelector.value);
-                    
-                    if (stockDisponibleClick && cantidad >= stockDisponibleClick.stock) {
-                        alert(`Stock insuficiente. Solo hay ${stockDisponibleClick.stock} unidades disponibles.`);
+                    if (!isNaN(stockDisponibleClick) && cantidad >= stockDisponibleClick) {
+                        alert(`Stock insuficiente. Solo hay ${stockDisponibleClick} unidades disponibles.`);
                         return;
                     }
-                    
                     cantidadSelector.value = cantidad + 1;
                     actualizarArticuloEnCarrito();
                 });
@@ -971,15 +953,16 @@
                 // Evento change del input de cantidad
                 cantidadSelector.addEventListener('change', () => {
                     const cantidad = parseInt(cantidadSelector.value);
-                    const stockDisponibleClick = stockManager.getStock(item[2]);
-                    
+                    let stockDisponibleClick = 0;
+                    if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
+                        stockDisponibleClick = parseInt(item[10]);
+                    }
                     if (cantidad <= 0) {
                         cantidadSelector.value = '1';
-                    } else if (stockDisponibleClick && cantidad > stockDisponibleClick.stock) {
-                        alert(`Stock insuficiente. Solo hay ${stockDisponibleClick.stock} unidades disponibles.`);
-                        cantidadSelector.value = stockDisponibleClick.stock;
+                    } else if (!isNaN(stockDisponibleClick) && cantidad > stockDisponibleClick) {
+                        alert(`Stock insuficiente. Solo hay ${stockDisponibleClick} unidades disponibles.`);
+                        cantidadSelector.value = stockDisponibleClick;
                     }
-                    
                     actualizarArticuloEnCarrito();
                 });
 
@@ -1001,11 +984,14 @@
                     // Obtener el código del artículo desde el input hidden
                     const hiddenInput = card.querySelector('input[type="hidden"]');
                     if (hiddenInput) {
+                        // Buscar el producto en la lista global productos
                         const codigo = hiddenInput.value;
-                        const stockData = stockManager.getStock(codigo);
-                        
-                        if (stockData) {
-                            const stock = stockData.stock;
+                        const producto = productos.find(item => item[2] === codigo);
+                        let stock = 0;
+                        if (producto && producto[10] !== undefined && producto[10] !== null && producto[10] !== "") {
+                            stock = parseInt(producto[10]);
+                        }
+                        if (!isNaN(stock)) {
                             if (stock <= 0) {
                                 stockInfo.innerHTML = `<span style="color: #ff9800;">✗ Sin stock</span>`;
                             } else if (stock <= 10) {
@@ -1016,17 +1002,17 @@
                         } else {
                             stockInfo.innerHTML = `<span style="color: #ff9800;">✗ Sin stock</span>`;
                         }
-                        
+
                         // También actualizar los controles de cantidad si existen
                         const cantidadSelector = card.querySelector('input[type="number"]');
                         const btnCarrito = card.querySelector('.btn-agregar-carrito');
-                        
+
                         if (cantidadSelector) {
-                            if (stockData && stockData.stock > 0) {
-                                cantidadSelector.max = stockData.stock;
+                            if (!isNaN(stock) && stock > 0) {
+                                cantidadSelector.max = stock;
                                 cantidadSelector.disabled = false;
-                                cantidadSelector.title = `Máximo ${stockData.stock} unidades disponibles`;
-                                
+                                cantidadSelector.title = `Máximo ${stock} unidades disponibles`;
+
                                 // Rehabilitar botón carrito si existe y está deshabilitado
                                 if (btnCarrito && btnCarrito.disabled) {
                                     btnCarrito.disabled = false;
@@ -1038,7 +1024,7 @@
                             } else {
                                 cantidadSelector.disabled = true;
                                 cantidadSelector.title = 'Sin stock disponible';
-                                
+
                                 // Deshabilitar botón carrito si existe
                                 if (btnCarrito) {
                                     btnCarrito.disabled = true;

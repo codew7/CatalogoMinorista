@@ -11,8 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
-    <script src="stockManager.js"></script>
-    <script src="stockUpdater.js"></script>
+    <!-- Eliminados stockManager.js y stockUpdater.js -->
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -445,7 +444,7 @@
     <!-- Fin Firebase Auth Check -->
     
     <script>
-        // Función para inicializar la funcionalidad de capital
+        // Nueva función para inicializar la funcionalidad de capital usando Google Sheets
         function inicializarCapital() {
             // Elementos DOM
             const tableBody = document.getElementById('tableBody');
@@ -454,6 +453,7 @@
             const searchInput = document.getElementById('searchInput');
             const clearBtn = document.getElementById('clearBtn');
             const totalCapital = document.getElementById('totalCapital');
+            let capitalData = [];
             let filteredData = [];
 
             function showSpinner(show) {
@@ -493,16 +493,16 @@
                     updateTotalCapital([]);
                     return;
                 }
-                
+
                 data.forEach(item => {
                     let stockClass = '';
                     if (item.stock <= 0) stockClass = 'stock-zero';
                     else if (item.stock <= 5) stockClass = 'stock-low';
-                    
+
                     let costoUnitario = (typeof item.costoUnitario === 'number' && !isNaN(item.costoUnitario)) ? item.costoUnitario : 0;
                     let stock = (typeof item.stock === 'number' && !isNaN(item.stock)) ? item.stock : 0;
-                    let total = costoUnitario * stock;
-                    
+                    let total = stock < 0 ? 0 : costoUnitario * stock;
+
                     tableBody.innerHTML += `
                         <tr class="${stockClass}">
                             <td>${item.codigo || ''}</td>
@@ -513,14 +513,27 @@
                         </tr>
                     `;
                 });
-                
+
                 updateTotalCapital(data);
             }
 
+            let searchTimeout;
+
             function filterData() {
-                const query = searchInput.value.trim();
-                filteredData = window.stockManager.searchStock(query);
+                const query = searchInput.value.trim().toLowerCase();
+                filteredData = capitalData.filter(item => {
+                    return (item.codigo && item.codigo.toLowerCase().includes(query)) ||
+                           (item.nombre && item.nombre.toLowerCase().includes(query));
+                });
                 renderTable(filteredData);
+            }
+
+            // Debouncing para búsqueda
+            function debouncedFilterData() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filterData();
+                }, 300);
             }
 
             // Event listeners
@@ -530,38 +543,44 @@
                 searchInput.focus();
             });
 
-            searchInput.addEventListener('input', filterData);
+            searchInput.addEventListener('input', debouncedFilterData);
 
-            // Inicializar con StockManager
-            async function initializeCapitalData() {
+            // Consulta a Google Sheets
+            async function fetchCapitalData() {
                 showSpinner(true);
                 clearError();
-                
                 try {
-                    console.log('Inicializando StockManager con datos precalculados...');
-                    await window.stockManager.initialize();
-                    
-                    // Agregar listener para actualizaciones automáticas
-                    window.stockManager.addListener((data) => {
-                        console.log('Stock actualizado en capital inventario:', data.length, 'productos');
-                        filterData(); // Refrescar tabla cuando cambien los datos
-                    });
-                    
-                    // Mostrar información del cálculo
-                    const info = window.stockManager.getCalculationInfo();
-                    console.log('📊 Capital de inventario cargado:', info);
-                    
-                    filterData(); // Mostrar datos iniciales
+                    // Configuración de Sheets (reutilizar config.js)
+                    const SHEETS_ID = typeof GOOGLE_SHEETS_CONFIG !== 'undefined' ? GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID : '';
+                    const RANGE = typeof GOOGLE_SHEETS_CONFIG !== 'undefined' ? GOOGLE_SHEETS_CONFIG.RANGO : '';
+                    const API_KEY = typeof GOOGLE_SHEETS_CONFIG !== 'undefined' ? GOOGLE_SHEETS_CONFIG.API_KEY : '';
+                    if (!SHEETS_ID || !RANGE || !API_KEY) throw new Error('Faltan datos de configuración de Google Sheets');
+
+                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_ID}/values/${RANGE}?key=${API_KEY}`;
+                    const response = await fetch(url);
+                    const { values } = await response.json();
+                    if (!values || !values.length) throw new Error('No se encontraron datos en Sheets');
+
+                    // Asumimos que la primera fila es el header
+                    capitalData = values.slice(1).map(row => ({
+                        codigo: row[2] || '',
+                        nombre: row[3] || '',
+                        costoUnitario: Number((row[9] || '0').replace(/,/g, '')),
+                        stock: Number(row[10]) || 0
+                    }));
+                    // Ordenar alfabéticamente por nombre
+                    capitalData.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+
+                    filterData();
                     showSpinner(false);
-                    
                 } catch (error) {
-                    console.error('Error inicializando StockManager:', error);
+                    console.error('Error al cargar datos de inventario:', error);
                     showError('Error al cargar datos de inventario: ' + error.message);
                 }
             }
 
             // Inicializar
-            initializeCapitalData();
+            fetchCapitalData();
         }
     </script>
 </body>
