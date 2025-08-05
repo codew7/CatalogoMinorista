@@ -65,7 +65,7 @@ html, body {
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 2rem auto;
   background: var(--white);
   border-radius: var(--radius);
@@ -235,5 +235,35 @@ input[type="radio"]:checked {
   .items-table th, .items-table td {
     font-size: 0.95rem;
     padding: 0.3rem;
+  }
+}
+
+/* === Estilos para columna de imágenes === */
+.items-table th:first-child,
+.items-table td:first-child {
+  width: 60px;
+  text-align: center;
+  padding: 0.3rem;
+}
+
+.articulo-img {
+  transition: transform 0.2s ease-in-out;
+  border: 1px solid #ddd;
+}
+
+.articulo-img:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive para imágenes en dispositivos móviles */
+@media (max-width: 768px) {
+  .items-table th:first-child,
+  .items-table td:first-child {
+    width: 45px;
+  }
+  
+  .articulo-img {
+    width: 40px !important;
+    height: 40px !important;
   }
 }

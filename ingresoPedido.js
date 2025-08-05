@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // La declaración de form, addItemBtn, itemsBody ya existe más abajo
   // Por lo tanto, solo inicializar bloqueables después de esas declaraciones
   // (El resto del código sigue igual hasta la declaración de form, itemsBody, addItemBtn)
+  // === OPTIMIZACIÓN: TAB HANDLER CON THROTTLING ===
+  let tabHandlerTimeout;
   document.addEventListener('keydown', function(e) {
     // Solo si es TAB, sin Shift, y no en textarea ni en select2 search
     if (e.key === 'Tab' && !e.shiftKey) {
@@ -21,12 +23,19 @@ document.addEventListener('DOMContentLoaded', function() {
       )) {
         return;
       }
+      
       e.preventDefault();
-      // Simular click en el botón Agregar Artículo
-      const btn = document.getElementById('addItemBtn');
-      if (btn && !btn.disabled) btn.click();
+      
+      // Usar throttling para evitar múltiples ejecuciones rápidas
+      clearTimeout(tabHandlerTimeout);
+      tabHandlerTimeout = setTimeout(() => {
+        const btn = document.getElementById('addItemBtn');
+        if (btn && !btn.disabled) {
+          btn.click();
+        }
+      }, 50);
     }
-  });
+  }, { passive: false }); // Especificar passive: false para preventDefault
   // Firebase ya está inicializado en el HTML
 
   // Elementos del DOM
@@ -160,6 +169,11 @@ document.addEventListener('DOMContentLoaded', function() {
         articulosPorCodigo[item[2]] = item;
         articulosPorNombre[item[3]] = item;
       });
+      
+      // Invalidar cache al cargar nuevos artículos
+      articulosOrdenadosCache = null;
+      optionsHtmlCache = '';
+      
       // Actualizar items existentes con datos frescos de Google Sheets
       actualizarTodosLosItems();
       // Habilitar controles después de cargar
@@ -177,6 +191,20 @@ document.addEventListener('DOMContentLoaded', function() {
   styleCargando.innerHTML = `
     .cargando-articulos { opacity: 0.6 !important; cursor: not-allowed !important; }
     .cargando-articulos-body { cursor: progress !important; }
+    .optimizing-table { opacity: 0.8; pointer-events: none; }
+    .optimizing-table::after { 
+      content: 'Optimizando tabla...'; 
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%); 
+      background: rgba(255,255,255,0.9); 
+      padding: 10px 20px; 
+      border-radius: 4px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-weight: bold;
+      z-index: 1000;
+    }
   `;
   document.head.appendChild(styleCargando);
 
@@ -185,6 +213,126 @@ function getTipoCliente() {
   const sel = document.querySelector('input[name="tipoCliente"]:checked');
   return sel ? sel.value : 'consumidor final';
 }
+
+  // === FUNCIÓN PARA OBTENER LA PRIMERA IMAGEN DE UN ARTÍCULO ===
+  function obtenerPrimeraImagen(nombreArticulo) {
+    if (!nombreArticulo || !articulosPorNombre[nombreArticulo]) {
+      return '';
+    }
+    const art = articulosPorNombre[nombreArticulo];
+    const imagenesStr = art[1] || ''; // Columna B (índice 1)
+    if (!imagenesStr) return '';
+    
+    // Dividir por comas y tomar la primera imagen
+    const imagenes = imagenesStr.split(',');
+    return imagenes[0]?.trim() || '';
+  }
+
+  // === FUNCIÓN PARA CREAR EFECTO HOVER DE IMAGEN (OPTIMIZADA) ===
+  let allHoverDivs = new Map(); // Para gestionar todos los hover divs
+  
+  function crearHoverImagen(imgElement, imagenUrl) {
+    if (!imagenUrl) return;
+    
+    let hoverDiv = null;
+    const hoverKey = Math.random().toString(36).substring(7); // ID único
+    
+    function showHover() {
+      // Crear div flotante si no existe
+      if (!hoverDiv) {
+        hoverDiv = document.createElement('div');
+        hoverDiv.style.position = 'fixed';
+        hoverDiv.style.zIndex = '10000';
+        hoverDiv.style.backgroundColor = 'white';
+        hoverDiv.style.border = '2px solid #ccc';
+        hoverDiv.style.borderRadius = '8px';
+        hoverDiv.style.padding = '5px';
+        hoverDiv.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)';
+        hoverDiv.style.pointerEvents = 'none';
+        hoverDiv.style.display = 'none';
+        
+        const hoverImg = document.createElement('img');
+        hoverImg.src = imagenUrl;
+        hoverImg.style.width = '150px';
+        hoverImg.style.height = '150px';
+        hoverImg.style.objectFit = 'cover';
+        hoverImg.style.display = 'block';
+        hoverImg.style.borderRadius = '4px';
+        
+        // Manejar error de carga de imagen grande
+        hoverImg.onerror = function() {
+          hoverDiv.innerHTML = '<div style="width:150px;height:150px;display:flex;align-items:center;justify-content:center;color:#666;font-size:14px;">Imagen no disponible</div>';
+        };
+        
+        hoverDiv.appendChild(hoverImg);
+        document.body.appendChild(hoverDiv);
+        
+        // Registrar en el mapa para limpieza posterior
+        allHoverDivs.set(hoverKey, hoverDiv);
+      }
+      
+      // Posicionar cerca del mouse, ajustando para no salirse de la pantalla
+      const rect = imgElement.getBoundingClientRect();
+      let left = rect.right + 10;
+      let top = rect.top - 75;
+      
+      // Ajustar si se sale de la pantalla por la derecha
+      if (left + 160 > window.innerWidth) {
+        left = rect.left - 160;
+      }
+      
+      // Ajustar si se sale de la pantalla por arriba
+      if (top < 0) {
+        top = 10;
+      }
+      
+      // Ajustar si se sale de la pantalla por abajo
+      if (top + 160 > window.innerHeight) {
+        top = window.innerHeight - 170;
+      }
+      
+      hoverDiv.style.left = left + 'px';
+      hoverDiv.style.top = top + 'px';
+      hoverDiv.style.display = 'block';
+    }
+    
+    function hideHover() {
+      if (hoverDiv) {
+        hoverDiv.style.display = 'none';
+      }
+    }
+    
+    // Event listeners con throttling
+    let mouseEnterTimeout;
+    imgElement.addEventListener('mouseenter', function(e) {
+      clearTimeout(mouseEnterTimeout);
+      mouseEnterTimeout = setTimeout(showHover, 100); // Pequeño delay para evitar hover accidental
+    });
+    
+    imgElement.addEventListener('mouseleave', function() {
+      clearTimeout(mouseEnterTimeout);
+      hideHover();
+    });
+    
+    // Retornar función de limpieza para llamar manualmente
+    return function cleanup() {
+      clearTimeout(mouseEnterTimeout);
+      if (hoverDiv && hoverDiv.parentNode) {
+        hoverDiv.parentNode.removeChild(hoverDiv);
+        allHoverDivs.delete(hoverKey);
+      }
+    };
+  }
+  
+  // Función global para limpiar todos los hover divs huérfanos
+  function cleanupAllHovers() {
+    allHoverDivs.forEach((hoverDiv, key) => {
+      if (hoverDiv && hoverDiv.parentNode) {
+        hoverDiv.parentNode.removeChild(hoverDiv);
+      }
+    });
+    allHoverDivs.clear();
+  }
 
   // === FUNCIÓN AUXILIAR PARA ACTUALIZAR CAMPOS DE ARTÍCULO ===
   function actualizarCamposArticulo(item, nombre) {
@@ -226,122 +374,349 @@ function getTipoCliente() {
     // Calcular valorG
     item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
     
-    // Debug log para verificar que los campos se están asignando correctamente
-    console.log(`Artículo actualizado: ${nombre} -> categoria: "${item.categoria}", seleccionado: "${item.seleccionado}"`);
   }
 
-  function renderItems() {
-    itemsBody.innerHTML = '';
-    let subtotal = 0;
-    // Obtener tipo de cliente actual
-    const currentTipo = getTipoCliente();
-    // Ordenar artículos alfabéticamente por nombre antes de renderizar
-    const articulosOrdenados = [...articulosDisponibles].sort((a, b) => {
-      const nombreA = (a[3] || '').toLowerCase();
-      const nombreB = (b[3] || '').toLowerCase();
-      return nombreA.localeCompare(nombreB, 'es');
-    });
-    items.forEach((item, idx) => {
-      const row = document.createElement('tr');
-      let options = '<option value="">Seleccione artículo</option>';
-      articulosOrdenados.forEach(art => {
-        options += `<option value="${art[3]}" data-codigo="${art[2]}" data-precio="${art[6] || art[5] || ''}">${art[3]}</option>`;
-      });
-      row.innerHTML = `
-        <td><input type="text" value="${item.codigo || ''}" class="codigo" maxlength="20" style="width:80px" readonly></td>
-        <td>
-          <select class="nombre-select" data-idx="${idx}" style="width:220px">
-            <option value="">Seleccione artículo</option>
-            ${articulosOrdenados.map(art => `<option value="${art[3]}"${item.nombre === art[3] ? ' selected' : ''}>${art[3]}</option>`).join('')}
-          </select>
-        </td>
-        <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
-        <td><input type="text" value="${item.valorU}" class="valorU" min="0" step="1" style="width:80px"></td>
-        <td class="valorTotal">${(item.cantidad * item.valorU).toLocaleString('es-AR', {maximumFractionDigits:0})}</td>
-        <td><button type="button" class="remove-btn" data-idx="${idx}" style="background:#d32f2f;color:#fff;border:none;border-radius:4px;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Eliminar"><span style="font-weight:bold;font-size:20px;line-height:1;">&times;</span></button></td>
-      `;
-      itemsBody.appendChild(row);
-      // Inicializar Select2 en el select de artículo
-      var $select = $(row).find('.nombre-select');
-      $select.select2({
-        placeholder: 'Seleccione artículo',
-        width: '95%'
-      });
-      $select.on('select2:select', function(e) {
-        this.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-      // Si es la última fila agregada y se acaba de agregar, abrir Select2 automáticamente
-      if (idx === items.length - 1 && window._abrirSelect2NuevaFila) {
-        setTimeout(function() {
-          $select.select2('open');
-          // Forzar foco en el input de búsqueda de Select2
-          setTimeout(function() {
-            var $search = $('.select2-container--open .select2-search__field');
-            if ($search.length) $search[0].focus();
-          }, 50);
-        }, 0);
-      }
-      // --- Actualizar todos los campos del artículo si hay uno seleccionado ---
-      if (item.nombre && articulosPorNombre[item.nombre]) {
-        // Usar función auxiliar para garantizar consistencia
-        const cantidadOriginal = item.cantidad; // Preservar cantidad
-        const valorUOriginal = item.valorU; // Preservar valorU si ya estaba definido
-        actualizarCamposArticulo(item, item.nombre);
-        // Restaurar cantidad y valorU originales si existían
-        if (cantidadOriginal) item.cantidad = cantidadOriginal;
-        if (valorUOriginal) item.valorU = valorUOriginal;
-        // Recalcular valorG con valores actuales
-        item.valorG = (item.valorU - item.valorC) * (item.cantidad || 1);
-        // Actualizar interfaz
-        row.querySelector('.valorU').value = item.valorU;
-        row.querySelector('.valorTotal').textContent = (item.cantidad * item.valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
-      }
-      subtotal += item.cantidad * item.valorU;
-    });
-    subtotalInput.value = subtotal.toLocaleString('es-AR', {maximumFractionDigits:0});
-    calcularTotalFinal();
-    recalcularYActualizarRecargoSiMedioPago();
-    calcularCostos();
+  // === CACHE PARA OPTIMIZACIÓN ===
+  let articulosOrdenadosCache = null;
+  let optionsHtmlCache = '';
 
-    // Eventos para autocompletar y mostrar selección
-    itemsBody.querySelectorAll('.nombre-select').forEach((select, idx) => {
-      select.addEventListener('change', function() {
-        const nombreSel = this.value;
-        const row = this.closest('tr');
+  function getArticulosOrdenados() {
+    if (!articulosOrdenadosCache) {
+      articulosOrdenadosCache = [...articulosDisponibles].sort((a, b) => {
+        const nombreA = (a[3] || '').toLowerCase();
+        const nombreB = (b[3] || '').toLowerCase();
+        return nombreA.localeCompare(nombreB, 'es');
+      });
+      // Generar HTML de opciones una sola vez
+      optionsHtmlCache = '<option value="">Seleccione artículo</option>' + 
+        articulosOrdenadosCache.map(art => 
+          `<option value="${art[3]}" data-codigo="${art[2]}" data-precio="${art[6] || art[5] || ''}">${art[3]}</option>`
+        ).join('');
+    }
+    return articulosOrdenadosCache;
+  }
+
+  // === OPTIMIZACIÓN: CREAR UNA SOLA FILA ===
+  function createRowElement(item, idx) {
+    const articulosOrdenados = getArticulosOrdenados();
+    const primeraImagen = obtenerPrimeraImagen(item.nombre);
+    
+    const row = document.createElement('tr');
+    row.setAttribute('data-idx', idx);
+    
+    row.innerHTML = `
+      <td style="text-align:center;">
+        ${primeraImagen ? `<img src="${primeraImagen}" class="articulo-img" style="width:50px;height:50px;object-fit:cover;border-radius:4px;cursor:pointer;" alt="Imagen del artículo" onerror="this.style.display='none'">` : '<span style="color:#ccc;">Sin img</span>'}
+      </td>
+      <td><input type="text" value="${item.codigo || ''}" class="codigo" maxlength="20" style="width:80px" readonly></td>
+      <td>
+        <select class="nombre-select" data-idx="${idx}" style="width:220px">
+          ${optionsHtmlCache}
+        </select>
+      </td>
+      <td><input type="number" value="${item.cantidad}" class="cantidad" min="1" style="width:60px"></td>
+      <td><input type="text" value="${item.valorU}" class="valorU" min="0" step="1" style="width:80px"></td>
+      <td class="valorTotal">${(item.cantidad * item.valorU).toLocaleString('es-AR', {maximumFractionDigits:0})}</td>
+      <td><button type="button" class="remove-btn" data-idx="${idx}" style="background:#d32f2f;color:#fff;border:none;border-radius:4px;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Eliminar"><span style="font-weight:bold;font-size:20px;line-height:1;">&times;</span></button></td>
+    `;
+
+    // Seleccionar la opción correcta
+    if (item.nombre) {
+      const select = row.querySelector('.nombre-select');
+      select.value = item.nombre;
+    }
+
+    return row;
+  }
+
+  // === OPTIMIZACIÓN: SETUP DE EVENT LISTENERS PARA UNA FILA ===
+  function setupRowEventListeners(row, idx) {
+    const select = row.querySelector('.nombre-select');
+    const removeBtn = row.querySelector('.remove-btn');
+    const imgElement = row.querySelector('.articulo-img');
+    
+    // Event listener para select (throttled)
+    let selectChangeTimeout;
+    select.addEventListener('change', function() {
+      clearTimeout(selectChangeTimeout);
+      selectChangeTimeout = setTimeout(() => {
+        handleSelectChange(this, idx);
+      }, 50);
+    });
+    
+    // Event listener para botón eliminar
+    removeBtn.addEventListener('click', function() {
+      removeItem(idx);
+    });
+    
+    // Configurar efecto hover para imagen con cleanup
+    let hoverCleanup = null;
+    if (imgElement) {
+      const primeraImagen = obtenerPrimeraImagen(items[idx].nombre);
+      if (primeraImagen) {
+        hoverCleanup = crearHoverImagen(imgElement, primeraImagen);
+      }
+    }
+
+    // Inicializar Select2 de forma asíncrona
+    const $select = $(select);
+    
+    // Configurar Select2 con configuración optimizada
+    requestAnimationFrame(() => {
+      try {
+        $select.select2({
+          placeholder: 'Seleccione artículo',
+          width: '95%',
+          minimumResultsForSearch: 10, // Solo mostrar búsqueda si hay más de 10 items
+          dropdownAutoWidth: true,
+          templateResult: function(option) {
+            // Template simple para mejor rendimiento
+            if (!option.id) return option.text;
+            return $('<span>').text(option.text);
+          }
+        });
         
-        // Usar función auxiliar para actualizar todos los campos consistentemente
-        actualizarCamposArticulo(items[idx], nombreSel);
-        
-        // Actualizar interfaz
-        row.querySelector('.codigo').value = items[idx].codigo;
-        row.querySelector('.valorU').value = items[idx].valorU;
-        row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
-        
-        subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
-        calcularTotalFinal();
-        
-        // Actualizar contadores cuando se selecciona un artículo
-        actualizarContadoresArticulos();
-        // Enfocar campo cantidad y posicionar cursor al final
+        $select.on('select2:select', function(e) {
+          // Usar setTimeout para no bloquear el hilo principal
+          setTimeout(() => {
+            this.dispatchEvent(new Event('change', { bubbles: true }));
+          }, 0);
+        });
+      } catch (error) {
+        console.warn('Error inicializando Select2:', error);
+      }
+    });
+
+    // Retornar objetos y función de cleanup
+    return { 
+      select: $select,
+      cleanup: function() {
+        clearTimeout(selectChangeTimeout);
+        if (hoverCleanup) hoverCleanup();
+        try {
+          if ($select.hasClass('select2-hidden-accessible')) {
+            $select.select2('destroy');
+          }
+        } catch (e) {
+          // Silenciar errores de destrucción de Select2
+        }
+      }
+    };
+  }
+
+  // === OPTIMIZACIÓN: MANEJAR CAMBIO DE SELECT ===
+  function handleSelectChange(selectElement, idx) {
+    const nombreSel = selectElement.value;
+    const row = selectElement.closest('tr');
+    
+    // Usar función auxiliar para actualizar todos los campos consistentemente
+    actualizarCamposArticulo(items[idx], nombreSel);
+    
+    // Batch DOM updates para mejor rendimiento
+    requestAnimationFrame(() => {
+      // Actualizar interfaz en una sola operación
+      const updates = {
+        codigo: items[idx].codigo,
+        valorU: items[idx].valorU,
+        valorTotal: (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0})
+      };
+      
+      row.querySelector('.codigo').value = updates.codigo;
+      row.querySelector('.valorU').value = updates.valorU;
+      row.querySelector('.valorTotal').textContent = updates.valorTotal;
+      
+      // Actualizar imagen del artículo de forma optimizada
+      updateRowImage(row, nombreSel);
+      
+      // Usar debounce para cálculos (ya optimizado)
+      debouncedCalculations();
+      
+      // Enfocar campo cantidad después del render
+      setTimeout(() => {
         const cantidadInput = row.querySelector('.cantidad');
         if (cantidadInput) {
           cantidadInput.focus();
-          // Mover el cursor al final del valor
           const val = cantidadInput.value;
-          cantidadInput.setSelectionRange(val.length, val.length);
+          if (cantidadInput.type !== 'number') {
+            cantidadInput.setSelectionRange(val.length, val.length);
+          }
         }
-      });
+      }, 0);
     });
-    // Evento para eliminar fila (botón eliminar)
-    itemsBody.querySelectorAll('.remove-btn').forEach((btn, idx) => {
-      btn.addEventListener('click', function() {
-        items.splice(idx, 1);
-        renderItems();
+  }
+  
+  // === FUNCIÓN AUXILIAR PARA ACTUALIZAR IMAGEN DE FILA ===
+  function updateRowImage(row, nombreSel) {
+    const imgCell = row.querySelector('td:first-child');
+    const primeraImagen = obtenerPrimeraImagen(nombreSel);
+    
+    if (primeraImagen) {
+      imgCell.innerHTML = `<img src="${primeraImagen}" class="articulo-img" style="width:50px;height:50px;object-fit:cover;border-radius:4px;cursor:pointer;" alt="Imagen del artículo" onerror="this.style.display='none'">`;
+      const imgElement = imgCell.querySelector('.articulo-img');
+      if (imgElement) {
+        // Crear hover de forma asíncrona
+        requestAnimationFrame(() => {
+          crearHoverImagen(imgElement, primeraImagen);
+        });
+      }
+    } else {
+      imgCell.innerHTML = '<span style="color:#ccc;">Sin img</span>';
+    }
+  }
+
+  // === OPTIMIZACIÓN: REMOVER ITEM SIN RE-RENDERIZAR TODO ===
+  function removeItem(idx) {
+    items.splice(idx, 1);
+    
+    // Remover la fila del DOM
+    const rowToRemove = itemsBody.querySelector(`tr[data-idx="${idx}"]`);
+    if (rowToRemove) {
+      // Limpiar event listeners y Select2 antes de remover
+      try {
+        const select = rowToRemove.querySelector('.nombre-select');
+        if (select && $(select).hasClass('select2-hidden-accessible')) {
+          $(select).select2('destroy');
+        }
+      } catch (e) {
+        // Silenciar errores de destrucción
+      }
+      
+      rowToRemove.remove();
+    }
+    
+    // Actualizar índices en las filas restantes de forma optimizada
+    const remainingRows = itemsBody.querySelectorAll('tr[data-idx]');
+    const updateBatch = [];
+    
+    remainingRows.forEach((row) => {
+      const currentIdx = parseInt(row.getAttribute('data-idx'));
+      if (currentIdx > idx) {
+        const newIdx = currentIdx - 1;
+        updateBatch.push({
+          row,
+          newIdx,
+          select: row.querySelector('.nombre-select'),
+          removeBtn: row.querySelector('.remove-btn')
+        });
+      }
+    });
+    
+    // Aplicar actualizaciones en batch
+    requestAnimationFrame(() => {
+      updateBatch.forEach(({ row, newIdx, select, removeBtn }) => {
+        row.setAttribute('data-idx', newIdx);
+        if (select) select.setAttribute('data-idx', newIdx);
+        if (removeBtn) removeBtn.setAttribute('data-idx', newIdx);
+      });
+      
+      debouncedCalculations();
+    });
+  }
+
+  // === DEBOUNCE PARA CÁLCULOS ===
+  let calculationTimeout;
+  function debouncedCalculations() {
+    clearTimeout(calculationTimeout);
+    calculationTimeout = setTimeout(() => {
+      // Limpiar cache de costos
+      costosCache = null;
+      lastItemsHash = '';
+      
+      updateSubtotal();
+      calcularTotalFinal();
+      actualizarContadoresArticulos();
+      debouncedRecargoUpdate();
+    }, 50);
+  }
+
+  // === OPTIMIZACIÓN: ACTUALIZAR SOLO SUBTOTAL ===
+  function updateSubtotal() {
+    const subtotal = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0);
+    subtotalInput.value = subtotal.toLocaleString('es-AR', {maximumFractionDigits:0});
+  }
+
+  function renderItems() {
+    // Limpiar cache al re-renderizar por completo
+    articulosOrdenadosCache = null;
+    optionsHtmlCache = '';
+    costosCache = null;
+    lastItemsHash = '';
+    
+    // Limpiar hovers existentes antes de renderizar
+    cleanupAllHovers();
+    
+    itemsBody.innerHTML = '';
+    
+    // Usar DocumentFragment para mejor rendimiento
+    const fragment = document.createDocumentFragment();
+    const setupTasks = []; // Array para tareas asíncronas
+    
+    items.forEach((item, idx) => {
+      const row = createRowElement(item, idx);
+      fragment.appendChild(row);
+      
+      // Guardar tarea de configuración para ejecutar después
+      setupTasks.push({
+        row,
+        idx,
+        shouldOpenSelect: idx === items.length - 1 && window._abrirSelect2NuevaFila,
+        item
       });
     });
     
-    // Actualizar contadores de artículos
-    actualizarContadoresArticulos();
+    itemsBody.appendChild(fragment);
+    
+    // Procesar configuraciones en chunks para no bloquear la UI
+    function processSetupChunk(startIdx = 0) {
+      const chunkSize = 3; // Procesar de a 3 filas por chunk
+      const endIdx = Math.min(startIdx + chunkSize, setupTasks.length);
+      
+      for (let i = startIdx; i < endIdx; i++) {
+        const task = setupTasks[i];
+        const { select } = setupRowEventListeners(task.row, task.idx);
+        
+        // Configurar Select2 si es necesario
+        if (task.shouldOpenSelect) {
+          setTimeout(() => {
+            try {
+              select.select2('open');
+              setTimeout(() => {
+                const $search = $('.select2-container--open .select2-search__field');
+                if ($search.length) $search[0].focus();
+              }, 50);
+            } catch (e) {
+              console.warn('Error abriendo Select2:', e);
+            }
+          }, 100);
+        }
+        
+        // Actualizar campos si hay artículo seleccionado
+        if (task.item.nombre && articulosPorNombre[task.item.nombre]) {
+          const cantidadOriginal = task.item.cantidad;
+          const valorUOriginal = task.item.valorU;
+          actualizarCamposArticulo(task.item, task.item.nombre);
+          
+          if (cantidadOriginal) task.item.cantidad = cantidadOriginal;
+          if (valorUOriginal) task.item.valorU = valorUOriginal;
+          
+          task.item.valorG = (task.item.valorU - task.item.valorC) * (task.item.cantidad || 1);
+          
+          task.row.querySelector('.valorU').value = task.item.valorU;
+          task.row.querySelector('.valorTotal').textContent = (task.item.cantidad * task.item.valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
+        }
+      }
+      
+      // Si hay más tareas, procesarlas en el siguiente frame
+      if (endIdx < setupTasks.length) {
+        requestAnimationFrame(() => processSetupChunk(endIdx));
+      } else {
+        // Todas las tareas completadas, ejecutar cálculos finales
+        debouncedCalculations();
+      }
+    }
+    
+    // Iniciar procesamiento asíncrono
+    requestAnimationFrame(() => processSetupChunk());
   }
 
   // === FUNCIÓN PARA ACTUALIZAR CONTADORES DE ARTÍCULOS ===
@@ -389,58 +764,97 @@ function getTipoCliente() {
   }
 
 
-addItemBtn.addEventListener('click', function() {
-  // Si hay al menos un artículo y el último no tiene nombre seleccionado, no permitir agregar otro
-  if (items.length > 0) {
-    const lastItem = items[items.length - 1];
-    if (!lastItem.nombre) {
-      showPopup('Debe seleccionar un artículo antes de agregar una nueva fila.', '❗', false);
-      return;
+  // === OPTIMIZACIÓN: AGREGAR ITEM SIN RE-RENDERIZAR TODO ===
+  function addNewItem() {
+    // Si hay al menos un artículo y el último no tiene nombre seleccionado, no permitir agregar otro
+    if (items.length > 0) {
+      const lastItem = items[items.length - 1];
+      if (!lastItem.nombre) {
+        showPopup('Debe seleccionar un artículo antes de agregar una nueva fila.', '❗', false);
+        return;
+      }
     }
+    
+    const newItem = { codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '', seleccionado: '', valorG: 0 };
+    items.push(newItem);
+    
+    const newIdx = items.length - 1;
+    const row = createRowElement(newItem, newIdx);
+    itemsBody.appendChild(row);
+    
+    // Configurar event listeners para la nueva fila de forma asíncrona
+    requestAnimationFrame(() => {
+      const { select } = setupRowEventListeners(row, newIdx);
+      
+      // Abrir Select2 automáticamente con delay optimizado
+      setTimeout(() => {
+        try {
+          select.select2('open');
+          setTimeout(() => {
+            const $search = $('.select2-container--open .select2-search__field');
+            if ($search.length) $search[0].focus();
+          }, 100);
+        } catch (e) {
+          console.warn('Error abriendo Select2 en nueva fila:', e);
+        }
+      }, 150);
+      
+      // Cálculos después de configurar
+      debouncedCalculations();
+    });
   }
-  window._abrirSelect2NuevaFila = true;
-  items.push({ codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '', seleccionado: '', valorG: 0 });
-  renderItems();
-  window._abrirSelect2NuevaFila = false;
-});
 
+addItemBtn.addEventListener('click', addNewItem);
+
+  // === OPTIMIZACIÓN: EVENT DELEGATION PARA INPUTS ===
   itemsBody.addEventListener('input', function(e) {
     const row = e.target.closest('tr');
     if (!row) return;
-    const idx = Array.from(itemsBody.children).indexOf(row);
-    if (idx < 0) return;
     
-    // Actualizar valores básicos desde interfaz
-    items[idx].codigo = row.querySelector('.codigo').value;
-    const nombreInput = row.querySelector('.nombre-input');
-    if (nombreInput) items[idx].nombre = nombreInput.value;
-    items[idx].cantidad = parseInt(row.querySelector('.cantidad').value) || 1;
-    let valorUraw = row.querySelector('.valorU').value.replace(/,/g, '');
-    items[idx].valorU = parseInt(valorUraw) || 0;
+    const idx = parseInt(row.getAttribute('data-idx'));
+    if (idx < 0 || idx >= items.length) return;
     
-    // Usar función auxiliar para actualizar campos derivados si hay artículo válido
-    if (items[idx].nombre && articulosPorNombre[items[idx].nombre]) {
-      const art = articulosPorNombre[items[idx].nombre];
-      // Solo actualizar campos que vienen de Google Sheets, preservar cantidad y valorU de la interfaz
-      items[idx].categoria = art[0] || '';
-      items[idx].seleccionado = art[8] || '';
-      let valorCRaw = art[7] || '0';
-      valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
-      items[idx].valorC = parseInt(valorCRaw) || 0;
-      items[idx].valorG = (items[idx].valorU - items[idx].valorC) * (items[idx].cantidad || 1);
-    } else {
-      items[idx].categoria = '';
-      items[idx].seleccionado = '';
-      items[idx].valorC = 0;
-      items[idx].valorG = 0;
+    const target = e.target;
+    let needsRecalculation = false;
+    
+    // Actualizar solo el campo específico que cambió
+    if (target.classList.contains('codigo')) {
+      items[idx].codigo = target.value;
+    } else if (target.classList.contains('cantidad')) {
+      const newCantidad = parseInt(target.value) || 1;
+      if (items[idx].cantidad !== newCantidad) {
+        items[idx].cantidad = newCantidad;
+        needsRecalculation = true;
+        
+        // Actualizar valorG si hay artículo válido
+        if (items[idx].nombre && articulosPorNombre[items[idx].nombre]) {
+          items[idx].valorG = (items[idx].valorU - items[idx].valorC) * items[idx].cantidad;
+        }
+        
+        // Actualizar valor total de la fila
+        row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
+      }
+    } else if (target.classList.contains('valorU')) {
+      const valorUraw = target.value.replace(/,/g, '');
+      const newValorU = parseInt(valorUraw) || 0;
+      if (items[idx].valorU !== newValorU) {
+        items[idx].valorU = newValorU;
+        needsRecalculation = true;
+        
+        // Actualizar valorG si hay artículo válido
+        if (items[idx].nombre && articulosPorNombre[items[idx].nombre]) {
+          items[idx].valorG = (items[idx].valorU - items[idx].valorC) * items[idx].cantidad;
+        }
+        
+        // Actualizar valor total de la fila
+        row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
+      }
     }
     
-    row.querySelector('.valorTotal').textContent = (items[idx].cantidad * items[idx].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
-    subtotalInput.value = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0).toLocaleString('es-AR', {maximumFractionDigits:0});
-    calcularTotalFinal();
-    
-    // Actualizar contadores de artículos cuando cambian las cantidades
-    actualizarContadoresArticulos();
+    // Solo recalcular si realmente cambió algo importante
+    if (needsRecalculation) {
+      debouncedCalculations();
+    }
   });
 
   [recargoInput, descuentoInput, envioInput].forEach(input => {
@@ -454,6 +868,20 @@ addItemBtn.addEventListener('click', function() {
   });
 
   form.addEventListener('reset', function() {
+    // Limpiar recursos antes del reset
+    cleanupAllHovers();
+    
+    // Destruir todos los Select2 antes de limpiar
+    itemsBody.querySelectorAll('.nombre-select').forEach(select => {
+      try {
+        if ($(select).hasClass('select2-hidden-accessible')) {
+          $(select).select2('destroy');
+        }
+      } catch (e) {
+        // Silenciar errores de destrucción
+      }
+    });
+    
     items = [];
     setTimeout(() => {
       renderItems();
@@ -1129,34 +1557,55 @@ addItemBtn.addEventListener('click', function() {
 
   // Actualizar recargo automáticamente si está MercadoPago o Transferencia y cambia el subtotal
   function recalcularYActualizarRecargoSiMedioPago() {
-    if (form.medioPago.value === 'MercadoPago' || form.medioPago.value === 'Transferencia') {
+    const medioPago = form.medioPago.value;
+    if (medioPago === 'MercadoPago' || medioPago === 'Transferencia') {
       actualizarRecargoAutomatico();
       calcularTotalFinal();
     }
   }
 
-  // Llamar a la función después de cada cambio relevante
-  // Al agregar/quitar/modificar artículos
-  // Al modificar valores manualmente
-  itemsBody.addEventListener('input', recalcularYActualizarRecargoSiMedioPago);
-  // Al modificar descuentos/envío
-  [descuentoInput, envioInput].forEach(input => {
-    input.addEventListener('input', recalcularYActualizarRecargoSiMedioPago);
+  // === OPTIMIZACIÓN: DEBOUNCE PARA RECARGO ===
+  let recargoTimeout;
+  function debouncedRecargoUpdate() {
+    clearTimeout(recargoTimeout);
+    recargoTimeout = setTimeout(recalcularYActualizarRecargoSiMedioPago, 100);
+  }
+
+  // Llamar a la función después de cada cambio relevante solo si es necesario
+  // Al modificar descuentos/envío (mantener directo)
+  [recargoInput, descuentoInput, envioInput].forEach(input => {
+    input.addEventListener('input', function() {
+      // Normalizar y formatear
+      let val = this.value.replace(/\D/g, '');
+      // Formatear con punto como separador de miles
+      this.value = val ? Number(val).toLocaleString('es-AR').replace(/,/g, '.') : '';
+      calcularTotalFinal();
+    });
   });
 
   // === Calcular Costos ===
+  let costosCache = null;
+  let lastItemsHash = '';
+  
   function calcularCostos() {
+    // Crear hash simple de los items para detectar cambios
+    const currentHash = items.map(item => `${item.nombre}-${item.cantidad}`).join('|');
+    
+    if (costosCache !== null && lastItemsHash === currentHash) {
+      return costosCache;
+    }
+    
     let costos = 0;
     items.forEach(item => {
       if (item.nombre && articulosPorNombre[item.nombre]) {
         const art = articulosPorNombre[item.nombre];
-        // Columna H = índice 7
-        let costoRaw = art[7] || '0';
-        costoRaw = costoRaw.replace(/\$/g, '').replace(/[.,]/g, '');
-        const costoUnitario = parseInt(costoRaw) || 0;
-        costos += costoUnitario * (item.cantidad || 0);
+        // Usar valorC que ya está calculado en el item
+        costos += (item.valorC || 0) * (item.cantidad || 0);
       }
     });
+    
+    costosCache = costos;
+    lastItemsHash = currentHash;
     return costos;
   }
 
@@ -1532,8 +1981,10 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
       const end = this.selectionEnd;
       // Convertir a mayúsculas
       this.value = this.value.toUpperCase();
-      // Restaurar la posición del cursor
-      this.setSelectionRange(start, end);
+      // Restaurar la posición del cursor SOLO si no es tipo number
+      if (this.type !== 'number') {
+        this.setSelectionRange(start, end);
+      }
     });
   }
 
