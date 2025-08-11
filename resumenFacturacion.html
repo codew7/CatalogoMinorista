@@ -1129,7 +1129,7 @@
                             <div class="form-group">
                                 <label for="conceptoGasto">Concepto</label>
                                 <input type="text" id="conceptoGasto" name="concepto" list="conceptosDatalist"
-                                       placeholder="Ej: Alquiler, Servicios, Compras..." required>
+                                       placeholder="Ej: Alquiler, Servicios, Compras..." required autocomplete="off">
                                 <datalist id="conceptosDatalist">
                                     <!-- Se llenará dinámicamente con conceptos anteriores -->
                                 </datalist>
@@ -1142,10 +1142,9 @@
                             <div class="form-group">
                                 <label for="cuentaGasto">Cuenta</label>
                                 <select id="cuentaGasto" name="cuenta" class="form-select" required>
-                                    <option value="">Seleccionar</option>
+                                    <option value="Ambas" selected>Ambas (50%)</option>
                                     <option value="Local">Local</option>
                                     <option value="Envios">Envíos</option>
-                                    <option value="Ambas">Ambas (50%)</option>
                                 </select>
                             </div>
                         </div>
@@ -1288,6 +1287,11 @@
             const fechaGasto = document.getElementById('fechaGasto');
             if (fechaGasto) {
                 fechaGasto.value = new Date().toISOString().split('T')[0];
+            }
+            // Establecer opción por defecto en cuenta
+            const cuentaGasto = document.getElementById('cuentaGasto');
+            if (cuentaGasto) {
+                cuentaGasto.value = 'Ambas';
             }
         }
 
@@ -1688,8 +1692,10 @@
             event.preventDefault();
             
             const formData = new FormData(event.target);
+            // Tomar la fecha como string tal cual del input (YYYY-MM-DD)
+            const fechaInput = formData.get('fecha');
             const nuevoGasto = {
-                fecha: formData.get('fecha'),
+                fecha: fechaInput, // Guardar exactamente como string
                 concepto: formData.get('concepto'),
                 valor: parseFloat(formData.get('valor')),
                 cuenta: formData.get('cuenta'),
@@ -1796,7 +1802,12 @@
             `;
             
             gastosData.forEach(gasto => {
-                const fechaFormateada = new Date(gasto.fecha).toLocaleDateString('es-AR');
+                // Formatear fecha manualmente como DD/MM/YYYY
+                let fechaFormateada = gasto.fecha;
+                if (gasto.fecha && gasto.fecha.length === 10) {
+                    const [yyyy, mm, dd] = gasto.fecha.split('-');
+                    fechaFormateada = `${dd}/${mm}/${yyyy}`;
+                }
                 const cuentaDisplay = obtenerDisplayCuenta(gasto.cuenta);
                 
                 tablaHTML += `
@@ -1993,35 +2004,41 @@
             // Identificar índices que tienen datos (facturación > 0)
             const indicesConDatos = [];
             const nuevosLabels = [];
-            
+
             for (let i = 0; i < periodoLabels.length; i++) {
                 if (datosFacturacion.facturacion[i] > 0) {
                     indicesConDatos.push(i);
                     nuevosLabels.push(periodoLabels[i]);
                 }
             }
-            
-            // Si no hay datos, mantener al menos las últimas 12 fechas
-            if (indicesConDatos.length === 0) {
+
+            // Mantener solo los últimos 12 días con datos
+            let indicesFinales = indicesConDatos.slice(-12);
+            let labelsFinales = nuevosLabels.slice(-12);
+
+            // Si no hay datos, mantener al menos las últimas 12 fechas posibles
+            if (indicesFinales.length === 0) {
                 const inicioIndex = Math.max(0, periodoLabels.length - 12);
+                indicesFinales = [];
+                labelsFinales = [];
                 for (let i = inicioIndex; i < periodoLabels.length; i++) {
-                    indicesConDatos.push(i);
-                    nuevosLabels.push(periodoLabels[i]);
+                    indicesFinales.push(i);
+                    labelsFinales.push(periodoLabels[i]);
                 }
             }
-            
+
             // Crear mapeo de índices antiguos a nuevos
             const mapeoIndices = {};
-            indicesConDatos.forEach((indiceAntiguo, nuevoIndice) => {
+            indicesFinales.forEach((indiceAntiguo, nuevoIndice) => {
                 mapeoIndices[indiceAntiguo] = nuevoIndice;
             });
-            
+
             // Crear nuevos arrays filtrados
             const nuevosDatos = {};
             Object.keys(datosFacturacion).forEach(key => {
-                nuevosDatos[key] = indicesConDatos.map(index => datosFacturacion[key][index]);
+                nuevosDatos[key] = indicesFinales.map(index => datosFacturacion[key][index]);
             });
-            
+
             // Actualizar pedidosProcesados con los nuevos índices
             pedidosProcesados = pedidosProcesados.map(pedido => {
                 if (mapeoIndices.hasOwnProperty(pedido.indicePeriodo)) {
@@ -2032,10 +2049,10 @@
                 }
                 return null; // Marcar para eliminar
             }).filter(pedido => pedido !== null); // Eliminar pedidos que no están en las columnas filtradas
-            
+
             // Actualizar datos globales
             datosFacturacion = nuevosDatos;
-            periodoLabels = nuevosLabels;
+            periodoLabels = labelsFinales;
         }
 
         function aplicarFiltroEntrega(pedido) {
@@ -3059,7 +3076,12 @@
             `;
             
             gastos.forEach(gasto => {
-                const fechaFormateada = new Date(gasto.fecha).toLocaleDateString('es-AR');
+                // Formatear fecha manualmente como DD/MM/YYYY
+                let fechaFormateada = gasto.fecha;
+                if (gasto.fecha && gasto.fecha.length === 10) {
+                    const [yyyy, mm, dd] = gasto.fecha.split('-');
+                    fechaFormateada = `${dd}/${mm}/${yyyy}`;
+                }
                 const cuentaDisplay = obtenerDisplayCuenta(gasto.cuenta);
                 
                 tablaHTML += `
