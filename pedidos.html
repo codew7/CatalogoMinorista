@@ -17,9 +17,8 @@
     </script>
 
   <script>
-    let cotizacion = 0;
     let pedidoActual = null;
-    let cotizacionCierre = null;
+    let sheetValorMap = {}; // Mapa para valorC y valorU por código
 
     // Lista de emails de administradores
     const adminEmails = ["distribuidorahomepoint@gmail.com"];
@@ -34,16 +33,8 @@
           return;
         }
       }
-      // Solo ejecutar el fetch de cotización cuando la URL ya es la correcta
-      fetch('https://api.bluelytics.com.ar/v2/latest')
-        .then(r => r.json())
-        .then(d => {
-          cotizacion = (d.blue.value_sell || d.blue.sell);
-          if (pedidoActual) renderItems();
-        })
-        .catch(() => {
-          alert('No pude obtener la cotización Blue');
-        });
+      // Cargar datos de Google Sheets al inicializar
+      cargarDatosSheets();
     });
 </script>
 
@@ -338,13 +329,15 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       document.body.innerHTML = "<p>Pedido no encontrado</p>";
       return;
     }
-    cotizacionCierre = pedidoActual.cotizacionCierre || null;
-
+    
     // === NUEVO: status por defecto ===
     if (!pedidoActual.status) {
       pedidoRef.update({ status: 'ABIERTO' });
       pedidoActual.status = 'ABIERTO';
     }
+
+    // Actualizar valorC y valorU de los items desde Google Sheets
+    actualizarValoresItems();
 
     // Mostrar datos del cliente
     const cliente = pedidoActual.cliente || {};
@@ -425,6 +418,20 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             adminViewedValue = true;
           }
 
+          // Actualizar valorC y valorU antes de guardar
+          if (pedidoActual.items) {
+            pedidoActual.items.forEach(item => {
+              if (item.codigo && sheetValorMap[item.codigo]) {
+                const valoresSheet = sheetValorMap[item.codigo];
+                // Solo actualizar valorU desde Sheets si NO existe (undefined, null o vacío)
+                // Permitir que 0 sea un valor válido (artículos gratuitos)
+                if (item.valorU === undefined || item.valorU === null || item.valorU === '') {
+                  item.valorU = valoresSheet.valorU;
+                }
+              }
+            });
+          }
+
           // Preparar datos para actualizar
           const updateData = {
             items: pedidoActual.items,
@@ -470,43 +477,41 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             return;
           }
           // === NUEVO: Actualizar valorC de cada artículo usando el código ===
-          // 1. Obtener los datos de la hoja
-          const sheetResp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`);
-          const sheetData = await sheetResp.json();
-          const sheetRows = sheetData.values || [];
-          // 2. Crear un mapa codigo -> valorC
-          const mapValorC = {};
-          sheetRows.forEach(row => {
-            if (row[2] && row[7]) mapValorC[row[2]] = row[7];
-          });
-          // 3. Reescribir SIEMPRE valorC de cada item del pedido usando el código
-          if (Array.isArray(pedidoActual.items)) {
-            pedidoActual.items.forEach(it => {
-              let valorCRaw = mapValorC[it.codigo] || '0';
-              valorCRaw = valorCRaw.replace(/\$/g, '').replace(/[.,]/g, '');
-              it.valorC = parseInt(valorCRaw) || 0;
+          // Actualizar valores desde Google Sheets para el cálculo final
+          if (pedidoActual.items) {
+            pedidoActual.items.forEach(item => {
+              if (item.codigo && sheetValorMap[item.codigo]) {
+                const valoresSheet = sheetValorMap[item.codigo];
+                // Guardar valorC desde Sheets
+                item.valorC = valoresSheet.valorC;
+                // Solo actualizar valorU desde Sheets si NO existe (undefined, null o vacío)
+                // Permitir que 0 sea un valor válido (artículos gratuitos)
+                if (item.valorU === undefined || item.valorU === null || item.valorU === '') {
+                  item.valorU = valoresSheet.valorU;
+                }
+              }
             });
           }
-          // 4. Actualizar el pedido en Firebase con los nuevos items y status
+          
+          // Actualizar el pedido en Firebase con los nuevos items y status
           await pedidoRef.update({
             items: pedidoActual.items,
             status: 'DESPACHADO/ENTREGADO',
             locked: true,
             fecha: getFechaActual()
           });
+          
           // === REGISTRO DE PAGOS ===
           let subtotal = 0;
           let costos = 0;
-          const coti = getCotizacionActual();
           if (Array.isArray(pedidoActual.items)) {
             pedidoActual.items.forEach(it => {
-              const unitPesos = Math.round((it.valorUSD || 0) * coti);
+              const unitPesos = Math.round(it.valorU || 0);
               subtotal += Math.round(it.cantidad * unitPesos);
               costos += (parseFloat(it.valorC) || 0) * (parseInt(it.cantidad) || 0);
             });
           }
           const ganancia = subtotal - costos;
-          const costoUSD = costos / coti;
           let medioPago = 'efectivo';
           let alias = '';
           const pagoRadio = document.querySelector('input[name="tipoPago"]:checked');
@@ -530,10 +535,9 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             pagoData.alias = alias;
           }
           await pedidoRef.child('pagos').set(pagoData);
-          await pedidoRef.update({ costoUSD });
-          // 5. Registrar movimientos de salida leyendo el pedido actualizado
+          // Registrar movimientos de salida leyendo el pedido actualizado
           await registrarMovimientoSalidaDesdePedido(pedidoActual.id);
-          // 6. Marcar que ya se registraron movimientos
+          // Marcar que ya se registraron movimientos
           await pedidoRef.update({ movimientosRegistrados: true });
           alert('Pedido despachado y movimientos registrados correctamente.');
         } catch (err) {
@@ -558,8 +562,8 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       document.getElementById('estado').innerText = '📝 PEDIDO ABIERTO';
     }
 
-    // solo pinto si ya tengo la cotización
-    if (cotizacion || cotizacionCierre) renderItems();
+    // solo pinto si ya tengo los datos de Sheets cargados
+    if (Object.keys(sheetValorMap).length > 0) renderItems();
 
     // Bloqueo por status
     const bloqueado = pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO';
@@ -596,11 +600,85 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     }
   });
 
+  // Función para cargar datos desde Google Sheets
+  function cargarDatosSheets() {
+    fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
+      .then(r => r.json())
+      .then(data => {
+        const values = data.values || [];
+        sheetValorMap = {};
+        values.forEach(row => {
+          const codigo = row[2]; // Columna C (código)
+          const valorU = row[6]; // Columna G (valorU)
+          const valorC = row[7]; // Columna H (valorC)
+          
+          if (codigo) {
+            // Limpiar y convertir valorU (eliminar $ y comas)
+            let valorULimpio = 0;
+            if (valorU) {
+              valorULimpio = parseFloat(valorU.toString().replace(/\$/g, '').replace(/,/g, '')) || 0;
+            }
+            
+            // Limpiar y convertir valorC (eliminar $ y comas)
+            let valorCLimpio = 0;
+            if (valorC) {
+              valorCLimpio = parseFloat(valorC.toString().replace(/\$/g, '').replace(/,/g, '')) || 0;
+            }
+            
+            sheetValorMap[codigo] = {
+              valorU: valorULimpio,
+              valorC: valorCLimpio
+            };
+          }
+        });
+        
+        // Si ya tengo el pedido cargado, actualizar valores y renderizar
+        if (pedidoActual) {
+          actualizarValoresItems();
+          renderItems();
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando datos de Google Sheets:', err);
+        alert('Error al cargar los precios desde la base de datos');
+      });
+  }
+
+  // Función para actualizar valorC y valorU de los items del pedido
+  function actualizarValoresItems() {
+    if (!pedidoActual || !pedidoActual.items || Object.keys(sheetValorMap).length === 0) return;
+    
+    let itemsActualizados = false;
+    pedidoActual.items.forEach(item => {
+      if (item.codigo && sheetValorMap[item.codigo]) {
+        const valoresSheet = sheetValorMap[item.codigo];
+        
+        // Solo actualizar valorU desde Sheets si NO existe en Firebase (undefined o null)
+        // Permitir que 0 sea un valor válido (artículos gratuitos)
+        if (item.valorU === undefined || item.valorU === null || item.valorU === '') {
+          if (item.valorU !== valoresSheet.valorU) {
+            item.valorU = valoresSheet.valorU;
+            itemsActualizados = true;
+          }
+        }
+        
+        // Para valorC, solo actualizar si no existe (no se guarda hasta cerrar)
+        if (item.valorC === undefined || item.valorC === null || item.valorC === '') {
+          if (item.valorC !== valoresSheet.valorC) {
+            item.valorC = valoresSheet.valorC;
+            itemsActualizados = true;
+          }
+        }
+      }
+    });
+    
+    // No guardar automáticamente en Firebase - solo actualizar el objeto local
+    // Los valores se guardarán solo al cerrar el pedido
+  }
+
   function getCotizacionActual() {
-    // Si el pedido está cerrado y tiene cotizacionCierre, usarla
-    if (pedidoActual && pedidoActual.locked && cotizacionCierre) return cotizacionCierre;
-    // Si está abierto, usar la cotización en vivo
-    return cotizacion;
+    // Las cotizaciones ya no son necesarias, devolvemos 1
+    return 1;
   }
 
   function renderItems() {
@@ -631,13 +709,13 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     tbl.innerHTML = headerHTML;
     
     let total = 0;
-    const coti = getCotizacionActual();
     // Bloquea si está cerrado, despachado o cancelado
     const bloqueado = pedidoActual.locked || pedidoActual.estado === 'Despachado' || pedidoActual.status === 'CANCELADO';
     
     pedidoActual.items.forEach((it, idx) => {
-      const unitPesos = Math.round((it.valorUSD || 0) * coti);
-      const subtotal  = Math.round(it.cantidad * unitPesos);
+      // Usar directamente valorU desde el item (ya viene en pesos)
+      const unitPesos = Math.round(it.valorU || 0);
+      const subtotal = Math.round(it.cantidad * unitPesos);
       total += subtotal;
 
       const row = tbl.insertRow(-1);
@@ -707,9 +785,29 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
         }
       }
 
-      /* 4) valor unitario $ */
+      /* 4) valor unitario $ - EDITABLE SOLO PARA ADMIN */
       const valorCell = row.insertCell(admin ? 4 : 3);
-      valorCell.textContent = unitPesos.toLocaleString('es-AR');
+      
+      if (admin && !bloqueado) {
+        // Para administradores: campo editable
+        const valorInput = document.createElement('input');
+        valorInput.type = 'number';
+        valorInput.min = 0;
+        valorInput.value = unitPesos;
+        valorInput.style = 'width:80px;text-align:right;font-size:1em;padding:2px 2px;border:1px solid #ddd;';
+        valorInput.onchange = e => {
+          const nuevoValor = parseFloat(e.target.value) || 0;
+          pedidoActual.items[idx].valorU = nuevoValor;
+          renderItems(); // Re-renderizar para actualizar subtotal
+        };
+        valorCell.appendChild(valorInput);
+      } else {
+        // Para clientes o cuando está bloqueado: solo mostrar el valor
+        valorCell.textContent = unitPesos.toLocaleString('es-AR');
+        valorCell.style.textAlign = 'right';
+        valorCell.style.padding = '4px 6px';
+        valorCell.style.fontWeight = 'bold';
+      }
 
       /* 5) subtotal $ */
       const subtotalCell = row.insertCell(admin ? 5 : 4);
@@ -876,76 +974,114 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
   };
 
   /* === Guardar Cambios === */
-document.getElementById('guardarBtn').onclick = () => {
+document.getElementById('guardarBtn').onclick = async () => {
   /* 1. Validación opcional */
   if (!pedidoActual || !pedidoActual.items || !pedidoActual.items.length) {
     alert('El pedido está vacío.');
     return;
   }
 
-  // Obtener selección de pago y entrega
-  const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
-  const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked')?.value || 'Retiro en local';
+  try {
+    // Primero obtener los items actuales desde Firebase para preservar valorC y valorU
+    const pedidoSnapshot = await firebase.database().ref('pedidos/' + pedidoActual.id).once('value');
+    const pedidoFirebase = pedidoSnapshot.val();
+    const itemsFirebase = pedidoFirebase?.items || [];
 
-  // Validación ALIAS para Transferencia (solo si es admin)
-  let alias = '';
-  if (tipoPago === 'Transferencia' && admin) {
-    const aliasInput = document.getElementById('alias');
-    if (aliasInput && aliasInput.value.trim()) {
-      alias = aliasInput.value.trim().toUpperCase();
+    // Crear mapa de items existentes en Firebase por código para preservar valores
+    const itemsFirebaseMap = {};
+    itemsFirebase.forEach((item, index) => {
+      if (item && item.codigo) {
+        itemsFirebaseMap[item.codigo] = {
+          valorC: item.valorC,
+          valorU: item.valorU,
+          index: index
+        };
+      }
+    });
+
+    // Crear nueva lista de items combinando los cambios locales con valores preservados
+    const itemsParaGuardar = pedidoActual.items.map(item => {
+      const itemCopia = { ...item };
+      
+      // Eliminar valorC y valorU de la copia local
+      delete itemCopia.valorC;
+      delete itemCopia.valorU;
+      
+      // Si el item ya existía en Firebase, preservar sus valores
+      if (item.codigo && itemsFirebaseMap[item.codigo]) {
+        const valoresExistentes = itemsFirebaseMap[item.codigo];
+        if (valoresExistentes.valorC !== undefined) {
+          itemCopia.valorC = valoresExistentes.valorC;
+        }
+        if (valoresExistentes.valorU !== undefined) {
+          itemCopia.valorU = valoresExistentes.valorU;
+        }
+      }
+      
+      return itemCopia;
+    });
+
+    // Obtener selección de pago y entrega
+    const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value || 'Efectivo';
+    const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked')?.value || 'Retiro en local';
+
+    // Validación ALIAS para Transferencia (solo si es admin)
+    let alias = '';
+    if (tipoPago === 'Transferencia' && admin) {
+      const aliasInput = document.getElementById('alias');
+      if (aliasInput && aliasInput.value.trim()) {
+        alias = aliasInput.value.trim().toUpperCase();
+      }
     }
+
+    // Calcular campo entrega
+    let entrega = '';
+    if (tipoEntrega && tipoEntrega !== 'Retiro en local') {
+      entrega = 'Envios';
+    }
+
+    // Determinar quién modifica
+    let lastModifiedBy = 'usuario';
+    let lastModifiedEmail = '';
+    let adminViewedValue = false;
+    const user = firebase.auth().currentUser;
+    if (admin && user) {
+      lastModifiedBy = 'admin';
+      lastModifiedEmail = user.email || '';
+      adminViewedValue = true;
+    }
+
+    // Preparar datos para actualizar (incluye items completos con valores preservados)
+    const updateData = {
+      items: itemsParaGuardar, // Array completo con cambios pero valores preservados
+      adminViewed: adminViewedValue,
+      lastUpdated: Date.now(),
+      tipoPago: tipoPago,
+      tipoEntrega: tipoEntrega,
+      entrega: entrega,
+      lastModifiedBy: lastModifiedBy,
+      lastModifiedEmail: lastModifiedEmail
+    };
+
+    // Preparar promesas para actualización
+    const promises = [
+      firebase.database().ref('pedidos/' + pedidoActual.id).update(updateData)
+    ];
+
+    // Guardar ALIAS en pedidos.pagos.alias si es transferencia y hay alias
+    if (tipoPago === 'Transferencia' && alias && admin) {
+      promises.push(
+        firebase.database().ref('pedidos/' + pedidoActual.id + '/pagos').update({ alias: alias })
+      );
+    }
+
+    await Promise.all(promises);
+    alert('Pedido actualizado ✔️');
+    
+  } catch (error) {
+    console.error('Error al guardar:', error);
+    alert('Error al guardar: ' + error.message);
   }
-
-  // Calcular campo entrega
-  let entrega = '';
-  if (tipoEntrega && tipoEntrega !== 'Retiro en local') {
-    entrega = 'Envios';
-  }
-
-  // Determinar quién modifica
-  let lastModifiedBy = 'usuario';
-  let lastModifiedEmail = '';
-  let adminViewedValue = false;
-  const user = firebase.auth().currentUser;
-  if (admin && user) {
-    lastModifiedBy = 'admin';
-    lastModifiedEmail = user.email || '';
-    adminViewedValue = true;
-  }
-
-  // Preparar datos para actualizar
-  const updateData = {
-    items:       pedidoActual.items, // lista modificada
-    adminViewed: adminViewedValue,   // ← solo true si admin
-    lastUpdated: Date.now(),         // (útil para ordenar por fecha)
-    tipoPago: tipoPago,
-    tipoEntrega: tipoEntrega,
-    entrega: entrega,
-    lastModifiedBy: lastModifiedBy,
-    lastModifiedEmail: lastModifiedEmail
-  };
-
-  // Guardar ALIAS en pedidos.pagos.alias si es transferencia y hay alias
-  let pagoUpdates = null;
-  if (tipoPago === 'Transferencia' && alias && admin) {
-    pagoUpdates = { alias: alias };
-  }
-
-  /* 2. Enviamos la actualización */
-  const promises = [
-    firebase.database().ref('pedidos/' + pedidoActual.id).update(updateData)
-  ];
-  
-  // Agregar actualización de pagos si hay alias
-  if (pagoUpdates) {
-    promises.push(
-      firebase.database().ref('pedidos/' + pedidoActual.id + '/pagos').update(pagoUpdates)
-    );
-  }
-
-  Promise.all(promises)
-    .then(() => alert('Pedido actualizado ✔️'))
-    .catch(()  => alert('Error al guardar'));
 };
 
 
@@ -957,9 +1093,25 @@ document.getElementById('cerrarBtn').onclick = () => {
     alert('Debe seleccionar un tipo de pago y un tipo de entrega antes de cerrar el pedido.');
     return;
   }
-  // Ejecutar guardarBtn antes de cerrar
-  document.getElementById('guardarBtn').click();
+  
   if (!confirm("¿Cerrar definitivamente el pedido?")) return;
+  
+  // Actualizar valorC y valorU desde Google Sheets antes de cerrar
+  if (pedidoActual.items) {
+    pedidoActual.items.forEach(item => {
+      if (item.codigo && sheetValorMap[item.codigo]) {
+        const valoresSheet = sheetValorMap[item.codigo];
+        // Guardar valorC desde Sheets
+        item.valorC = valoresSheet.valorC;
+        // Solo actualizar valorU desde Sheets si NO existe (undefined, null o vacío)
+        // Permitir que 0 sea un valor válido (artículos gratuitos)
+        if (item.valorU === undefined || item.valorU === null || item.valorU === '') {
+          item.valorU = valoresSheet.valorU;
+        }
+      }
+    });
+  }
+  
   // Determinar quién modifica
   let lastModifiedBy = 'usuario';
   let lastModifiedEmail = '';
@@ -967,9 +1119,44 @@ document.getElementById('cerrarBtn').onclick = () => {
     lastModifiedBy = 'admin';
     lastModifiedEmail = firebase.auth().currentUser.email || '';
   }
-  // Al cerrar, guardo la cotización actual y status
-  pedidoRef.update({ locked:true, cotizacionCierre: cotizacion, status: 'CERRADO', lastModifiedBy, lastModifiedEmail })
-    .then(()=>alert("Pedido cerrado"));
+  
+  // Primero guardar los datos básicos del pedido (sin values)
+  const tipoPagoFinal = tipoPago.value || 'Efectivo';
+  const tipoEntregaFinal = tipoEntrega.value || 'Retiro en local';
+  let entrega = '';
+  if (tipoEntregaFinal !== 'Retiro en local') {
+    entrega = 'Envios';
+  }
+  
+  // Preparar datos para cerrar
+  const updateData = {
+    locked: true, 
+    status: 'CERRADO', 
+    lastModifiedBy, 
+    lastModifiedEmail,
+    tipoPago: tipoPagoFinal,
+    tipoEntrega: tipoEntregaFinal,
+    entrega: entrega,
+    items: pedidoActual.items // Guardar items CON valorC y valorU
+  };
+  
+  // Guardar ALIAS si es transferencia y hay alias
+  const promises = [pedidoRef.update(updateData)];
+  
+  if (tipoPagoFinal === 'Transferencia' && admin) {
+    const aliasInput = document.getElementById('alias');
+    if (aliasInput && aliasInput.value.trim()) {
+      const alias = aliasInput.value.trim().toUpperCase();
+      promises.push(
+        pedidoRef.child('pagos').update({ alias: alias })
+      );
+    }
+  }
+  
+  // Al cerrar, guardo los items actualizados con valorC y valorU
+  Promise.all(promises)
+    .then(() => alert("Pedido cerrado"))
+    .catch(() => alert("Error al cerrar el pedido"));
 };
 
   document.getElementById('reabrirBtn').onclick = async () => {
@@ -982,8 +1169,24 @@ document.getElementById('cerrarBtn').onclick = () => {
     lastModifiedBy = 'admin';
     lastModifiedEmail = firebase.auth().currentUser.email || '';
   }
+  
+  // Eliminar valorC y valorU de todos los items antes de reabrir
+  if (pedidoActual.items) {
+    pedidoActual.items.forEach(item => {
+      delete item.valorC;
+      delete item.valorU;
+    });
+  }
+  
   try {
-    await pedidoRef.update({ locked:false, status: 'ABIERTO', lastModifiedBy, lastModifiedEmail, movimientosRegistrados: false });
+    await pedidoRef.update({ 
+      locked: false, 
+      status: 'ABIERTO', 
+      lastModifiedBy, 
+      lastModifiedEmail, 
+      movimientosRegistrados: false,
+      items: pedidoActual.items // Guardar items sin valorC y valorU
+    });
     // Eliminar movimientos relacionados a este pedido
     const movimientosSnap = await db.ref('movimientos').orderByChild('pedidoId').equalTo(pedidoActual.id).once('value');
     const movimientos = movimientosSnap.val();
@@ -1050,6 +1253,10 @@ fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPRE
         window.sheetStockMap[codigo] = parseInt(stockK, 10) || 0;
       }
     });
+    // Después de cargar imágenes y stock, cargar también los valores si aún no están cargados
+    if (Object.keys(sheetValorMap).length === 0) {
+      cargarDatosSheets();
+    }
   });
 
   function abrirLB(nombre){
@@ -1364,7 +1571,7 @@ observer.observe(document.body, { childList: true, subtree: true });
 
 <div style="max-width:600px;margin:30px auto 0 auto;font-size:0.90em;color:#444;text-align:left;opacity:0.85;">
   <hr style="margin:18px 0;">
-  <div style="margin-bottom:10px;">* Mientras el pedido se mantenga ABIERTO, los precios pueden sufrir leves ajustes por variaciones cambiarias.</div>
+  <div style="margin-bottom:10px;">* Los precios mostrados son los valores actuales desde la base de datos de productos.</div>
   <!-- <div style="margin-bottom:10px;">* Los pagos por transferencia bancaria tienen un recargo del 2 % sobre el total.</div> -->
   <div style="margin-bottom:10px;">** En caso de requerirlo, los envíos se despachan a sucursales para reducir costos de envío. La cotización se encuentra sujeta a la distancia, el tamaño y el peso final del pedido.</div>
 </div>

@@ -851,7 +851,7 @@
                         if (existe) {
                             existe.cantidad = cantidad;
                         } else {
-                            agregarAlCarrito(articulo.textContent, item[5], cantidad, item[2], item[0], item[7].toString().replace(/[,\.]/g, ''), item[4].toString().replace(/[,\.]/g, ''));
+                            agregarAlCarrito(articulo.textContent, item[5], cantidad, item[2], item[0], item[7].toString().replace(/[,\.]/g, ''), item[6].toString().replace(/[,\.]/g, ''));
                         }
                         actualizarCarrito();
                     }
@@ -1028,14 +1028,14 @@
             });
         }
 
-function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria, valorC, valorU) {
+function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria) {
     const existe = carrito.find(item => item.nombre === nombre);
     if (existe) {
         // Si el artículo ya existe, actualizamos la cantidad
         existe.cantidad += cantidad;
     } else {
-        // Si no existe, lo agregamos al carrito, incluyendo valorC y valorU
-        carrito.push({ nombre, precio, cantidad, codigo, categoria, valorC, valorU });
+        // Si no existe, lo agregamos al carrito
+        carrito.push({ nombre, precio, cantidad, codigo, categoria});
     }
     actualizarCarrito();
 }
@@ -1424,9 +1424,7 @@ continuarBtn.addEventListener('click', () => {
                 cantidad:  it.cantidad,
                 valorUSD:  it.precio,
                 codigo:    it.codigo || '',
-                categoria: it.categoria || '',
-                valorC:    it.valorC || '', // ← Guardar valorC en Firebase
-                valorU:    it.valorU || ''  // ← Guardar valorU en Firebase
+                categoria: it.categoria || ''
             }))
         };
 
@@ -1462,9 +1460,7 @@ continuarBtn.addEventListener('click', () => {
                     cantidad:  sel.cantidad,
                     valorUSD:  sel.precio,
                     codigo:    sel.codigo || '',
-                    categoria: sel.categoria || '',
-                    valorC:    sel.valorC || '', // ← Guardar valorC también al editar
-                    valorU:    sel.valorU || ''  // ← Guardar valorU también al editar
+                    categoria: sel.categoria || ''
                 });
             }
         });
