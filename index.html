@@ -6,37 +6,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="icon" href="faviconnegro.png" type="image/png">
     
-    <title>Catálogo Mayorista</title>
-
-    <script>
-
-        const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491121891006"; // MAYORISTA
-        //const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491154597288"; // MINORISTA
-
-        const MARQUEE_TEXT = "💲&nbsp; Valores publicados en dólares o cotización al Blue del día &nbsp;💲 - &nbsp; 🛒 &nbsp; COMPRA MINIMA: 5 articulos (iguales o distintos) &nbsp; 🛍️ &nbsp; - &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS &nbsp; 📦"; // MAYORISTA
-        //const MARQUEE_TEXT = "🏪 &nbsp; Visita nuestro Showroom en Vicente López &nbsp; 🛍️ &nbsp; - &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS &nbsp; 📦 &nbsp;"; // MINORISTA
-
-        const ITEMPESOS = "6"; // MAYORISTA
-        //const ITEMPESOS = "4"; // MINORISTA
-        
-    </script>
-
-        <!-- Google Tag Manager -->
-        <script> (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-5P63433D');
-        </script>
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="config.js"></script>
 
     <script>
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+
+        const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491154597288"; // MINORISTA
+        //const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491121891006"; // MAYORISTA
+
+        //const MARQUEE_TEXT = "💲&nbsp; Valores publicados en dólares o cotización al Blue del día &nbsp;💲 - &nbsp; 🛒 &nbsp; COMPRA MINIMA: 5 articulos (iguales o distintos) &nbsp; 🛍️ &nbsp; - &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS &nbsp; 📦"; // MAYORISTA
+        const MARQUEE_TEXT = "🏪 &nbsp; Visita nuestro Showroom en Vicente López &nbsp; 🛍️ &nbsp; - &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS &nbsp; 📦 &nbsp;"; // MINORISTA
+
+        //const ITEMPESOS = "6"; // MAYORISTA
+        const ITEMPESOS = "4"; // MINORISTA
+        
     </script>
+
+
     
     <style>
         
@@ -54,7 +39,7 @@
             justify-content: space-between;
             padding: 10px;
             background-color: #4CAF50;
-            color: white;
+            color: rgb(27, 27, 27);
         }
 
         header h1 {
@@ -361,37 +346,16 @@
 
 <body>
 
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5P63433D"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-
-<header style="display: flex; flex-direction: column; align-items: center; padding: 10px; background-color: #4CAF50; width: 90%; margin: 0 auto; border-radius: 10px;">
-    <img src="logoblanco.png" alt="Logo de HomePoint" width="300" height=auto>
+<header style="display: flex; flex-direction: column; align-items: center; padding: 10px; background-color: #FFFFFF; width: 90%; margin: 0 auto; border-radius: 10px;">
+    <img src="logo.png" alt="Logo de HomePoint" width="300" height=auto>
     <div style="text-align: center; font-size: 16px; font-style: italic; margin-top: 5px;">
-        Distribuidora Mayorista
+        Distribuidora Mayorista & Minorista
     </div>
-    <div style="display: flex; width: 100%; justify-content: center; align-items: center; margin-top: 10px; position: relative; gap: 10px;">
-        <span style="color: #fff; font-size: 13px; font-weight: 500; font-style: italic;">Busca tu pedido 👉</span>
-        <button id="ultimoPedidoBtn" style="background: #fff; color: #4CAF50; border: 2px solid #4CAF50; border-radius: 50%; padding: 7px; width: 38px; height: 38px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px #0001;">
-            <i class="fas fa-shopping-cart"></i>
-        </button>
-        <a href="#" onclick="window.open(WHATSAPP_URL, '_blank')" class="whatsapp-link" target="_blank">
-            <img src="whatsapp.png" alt="WhatsApp" class="whatsapp-link" width="50" height="50" style="position: fixed; bottom: 30px; right: 20px; z-index: 1000; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
-        </a>
-    </div>
+    <a href="#" onclick="window.open(WHATSAPP_URL, '_blank')" class="whatsapp-link" target="_blank" style="margin-top: 10px; position: relative;">
+        <img src="whatsapp.png" alt="WhatsApp" class="whatsapp-link" width="50" height="50" style="position: fixed; bottom: 30px; right: 20px; z-index: 1000; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
+    </a>
 </header>
-
-<!-- Modal para buscar último pedido -->
-<div id="ultimoPedidoModal" class="modal">
-  <div class="modal-content" style="max-width:350px;">
-    <span id="closeUltimoPedidoModal" style="position:absolute;top:10px;right:18px;font-size:22px;cursor:pointer;">&times;</span>
-    <h3 style="margin-top:0; font-size:medium;">Ingresa tu email para buscar el último pedido registrado.</h3>
-    <input id="ultimoPedidoEmailInput" type="email" placeholder="Ingresá tu email" style="margin-bottom:10px;">
-    <button id="buscarUltimoPedidoBtn" style="width:100%;margin-bottom:10px;">Buscar</button>
-    <p id="ultimoPedidoError" style="color:red;font-weight:bold;margin:0;"></p>
-  </div>
-</div>
 
     <script>
         // Mostrar el acceso mayorista solo si ITEMPESOS es "4"
@@ -399,7 +363,7 @@
             document.write(`
         <div style="text-align: center; font-size: 14px; font-style: italic; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin: 15px 0;">
             Acceso Mayorista
-            <button onclick="window.location.href='https://homepoint.dev.ar/'" style="padding: 5px 10px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: auto;">Login</button>
+            <button onclick="window.location.href='https://homepoint.dev.ar/'" style="padding: 5px 10px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; width: auto;">Entrar</button>
         </div>
             `);
         }
@@ -508,51 +472,10 @@
         <button onclick="limpiarCarrito()"><i class="fas fa-trash" style="margin-right: 8px;"></i>Vaciar Carrito</button>
     </div>
 
-    <!-- === Modal solicitar datos de cliente === -->
-    <div id="clienteModal" class="modal">
-    <div class="modal-content">
-        <p><strong>Si es tu primera compra, por favor ingresa:</strong></p>
-        <input id="nombreInput"     type="text" placeholder="Nombre y Apellido">
-        <input id="emailInput" type="email" placeholder="Email">
-        <input id="telefonoInput"   type="tel"  placeholder="Teléfono (en caso de requerir envío)">
-        <input id="direccionInput"  type="text" placeholder="Localidad (en caso de requerir envío)">
-        <select id="provinciaInput" style="width:100%;padding:8px;margin:6px 0;box-sizing:border-box">
-          <option value="">Provincia (en caso de requerir envío)</option>
-          <option value="Buenos Aires">Buenos Aires</option>
-          <option value="Catamarca">Catamarca</option>
-          <option value="Chaco">Chaco</option>
-          <option value="Chubut">Chubut</option>
-          <option value="Córdoba">Córdoba</option>
-          <option value="Corrientes">Corrientes</option>
-          <option value="Entre Ríos">Entre Ríos</option>
-          <option value="Formosa">Formosa</option>
-          <option value="Jujuy">Jujuy</option>
-          <option value="La Pampa">La Pampa</option>
-          <option value="La Rioja">La Rioja</option>
-          <option value="Mendoza">Mendoza</option>
-          <option value="Misiones">Misiones</option>
-          <option value="Neuquén">Neuquén</option>
-          <option value="Río Negro">Río Negro</option>
-          <option value="Salta">Salta</option>
-          <option value="San Juan">San Juan</option>
-          <option value="San Luis">San Luis</option>
-          <option value="Santa Cruz">Santa Cruz</option>
-          <option value="Santa Fe">Santa Fe</option>
-          <option value="Santiago del Estero">Santiago del Estero</option>
-          <option value="Tierra del Fuego">Tierra del Fuego</option>
-          <option value="Tucumán">Tucumán</option>
-        </select>
-        <input id="dniNuevoInput" type="tel" placeholder="DNI (en caso de requerir envío)">
-        <hr>
-        <p><strong>Si ya sos cliente, por favor ingresa tu email:</strong></p>
-        <input id="emailClienteInput" type="email" placeholder="Email registrado">
-        <button id="continuarBtn">Continuar</button>
-    </div>
-    </div>
+
 
 
     <script>
-        src="config.js"
         const ITEMS_PER_PAGE = 30;
 
         let productos = [];
@@ -560,34 +483,6 @@
         let carrito = [];
         let currentLightboxImages = [];
         let currentImageIndex = 0;
-
-        // === soporte para editar un pedido existente ===
-        const urlParams    = new URLSearchParams(window.location.search);
-        const pedidoEditId = urlParams.get('pedido');   // si viene de pedidos.html
-        const modoEdicion  = !!pedidoEditId;
-
-        if (modoEdicion) {
-        const aviso = document.createElement('div');
-        aviso.textContent = `⚙️ Estás agregando artículos al pedido #${pedidoEditId}`;
-        aviso.id = 'aviso-edicion-pedido';
-        aviso.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          z-index: 3001;
-          background: #fff7c2;
-          padding: 10px 0;
-          text-align: center;
-          font-weight: bold;
-          font-size: 1.1em;
-          box-shadow: 0 2px 8px #0002;
-          border-bottom: 2px solid #ffe066;
-        `;
-        document.body.appendChild(aviso);
-        // Agregar margen superior al body para que no tape el header
-        document.body.style.marginTop = '54px';
-        }
 
         const loadingMessage = document.getElementById('loading-message');
 
@@ -851,7 +746,7 @@
                         if (existe) {
                             existe.cantidad = cantidad;
                         } else {
-                            agregarAlCarrito(articulo.textContent, item[5], cantidad, item[2], item[0], item[7].toString().replace(/[,\.]/g, ''), item[4].toString().replace(/[,\.]/g, ''));
+                            agregarAlCarrito(articulo.textContent, item[5], cantidad, item[2], item[0]);
                         }
                         actualizarCarrito();
                     }
@@ -1028,14 +923,14 @@
             });
         }
 
-function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria, valorC, valorU) {
+function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria) {
     const existe = carrito.find(item => item.nombre === nombre);
     if (existe) {
         // Si el artículo ya existe, actualizamos la cantidad
         existe.cantidad += cantidad;
     } else {
-        // Si no existe, lo agregamos al carrito, incluyendo valorC y valorU
-        carrito.push({ nombre, precio, cantidad, codigo, categoria, valorC, valorU });
+        // Si no existe, lo agregamos al carrito
+        carrito.push({ nombre, precio, cantidad, codigo, categoria });
     }
     actualizarCarrito();
 }
@@ -1159,342 +1054,36 @@ function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria, valorC, v
         }
 
         /* === Variables globales === */
-        let datosExtraCliente = {};              // email, nombre, direccion, dni
         let pedidoEnviado = false;  // ← nueva bandera
-        let autofillDisparado = false;
 
-        /* === Referencias al modal === */
-        const modal        = document.getElementById('clienteModal');
-        const continuarBtn = document.getElementById('continuarBtn');
-        const emailInput = document.getElementById('emailInput');
-        const nombreInput = document.getElementById('nombreInput');
-        const direccionInput = document.getElementById('direccionInput');
-        const dniNuevoInput = document.getElementById('dniNuevoInput');
-        const emailClienteInput = document.getElementById('emailClienteInput');
-        const telefonoInput = document.getElementById('telefonoInput');
-        const provinciaInput = document.getElementById('provinciaInput');
-
-
-        // Autocompletar datos si el email ya existe en la tabla clientes
-        ['emailClienteInput'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.addEventListener('blur', e => {
-              const email = e.target.value.trim().toLowerCase();
-              if (email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-                db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
-                  .then(snap => {
-                    const cli = snap.exists() ? Object.values(snap.val())[0] : null;
-                    if (!cli) {
-                      alert('No se encontró el email ingresado. Por favor, registrate antes de poder ingresar el pedido.');
-                      // Limpiar campos por si había datos previos
-                      nombreInput.value = '';
-                      direccionInput.value = '';
-                      dniNuevoInput.value = '';
-                      emailInput.value = '';
-                      emailClienteInput.value = '';
-                      return;
-                    }
-                    nombreInput.value    = cli.nombre    || '';
-                    direccionInput.value = cli.direccion || '';
-                    dniNuevoInput.value  = cli.dni       || '';
-                    emailInput.value     = cli.email     || '';
-                    // Si carrito NO está vacío y aún no se lanzó, continúa solo
-                    if (carrito.length && !autofillDisparado) {
-                      autofillDisparado = true;
-                      continuarBtn.click();
-                    }
-                  })
-                  .catch(e => console.error('Error consulta email cliente', e));
-              }
-            });
-          }
-        });
-
-        /* --- 1. abrir modal --- */
         function enviarPedido(){
-
-        /* Si estoy en modo edición NO vuelvo a pedir datos */
-        if (modoEdicion){
-            if (carrito.length === 0){
-            alert("El carrito está vacío.");
-            return;
-            }
-            enviarPedidoFinal();          // guarda directamente
-            return;                       // ← importante
-        }
-
-        /* Nuevo pedido: abro el modal */
-        autofillDisparado = false;      // resetea flag
-        modal.style.display = 'flex';
-        }
-
-        // === Validación de pedido abierto ===
-function validarPedidoAbierto(email, callback) {
-  db.ref('pedidos')
-    .orderByChild('cliente/email')
-    .equalTo(email)
-    .once('value')
-    .then(snap => {
-      let abierto = null;
-      let pedidoId = null;
-      snap.forEach(child => {
-        const pedido = child.val();
-        if (pedido.status === 'ABIERTO' && !abierto) {
-          abierto = pedido;
-          pedidoId = pedido.id || child.key;
-        }
-      });
-      callback(abierto, pedidoId);
-    })
-    .catch(err => {
-      console.error('Error validando pedido abierto', err);
-      callback(null, null);
-    });
-}
-
-function mostrarMensajePedidoAbierto(pedidoId) {
-  modal.style.display = 'none';
-  let overlay = document.getElementById('pedido-abierto-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'pedido-abierto-overlay';
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100vw';
-    overlay.style.height = '100vh';
-    overlay.style.background = 'rgba(0,0,0,0.6)';
-    overlay.style.display = 'flex';
-    overlay.style.flexDirection = 'column';
-    overlay.style.justifyContent = 'center';
-    overlay.style.alignItems = 'center';
-    overlay.style.zIndex = '9999';
-    document.body.appendChild(overlay);
-  }
-  overlay.innerHTML = `
-    <div style="background: #fff; padding: 30px 40px; border-radius: 12px; text-align: center; max-width: 90vw;">
-      <h2 style='color:#d32f2f;'>¡Ya tienes un pedido abierto en proceso! 🛒</h2>
-      <p>Si quieres hacer cambios, puedes modificarlo o cancelarlo para crear uno completamente nuevo.</p>
-      <button id="verPedidoBtn" style="background:#4CAF50;color:#fff;padding:10px 30px;border:none;border-radius:6px;font-size:1.1em;cursor:pointer;">Ver Pedido</button>
-    </div>
-  `;
-  document.getElementById('verPedidoBtn').onclick = function() {
-    window.location.href = `pedidos.html?id=${pedidoId}`;
-  };
-}
-
-// --- ÚNICO manejador para continuarBtn ---
-continuarBtn.addEventListener('click', () => {
-  const email      = emailInput.value.trim().toLowerCase();
-  const nombre     = nombreInput.value.trim();
-  const telefono   = telefonoInput.value.trim();
-  const direccion  = direccionInput.value.trim();
-  const provincia  = provinciaInput.value;
-  const dniNuevo   = dniNuevoInput.value.trim();
-  const emailCli   = emailClienteInput.value.trim().toLowerCase();
-  const dni        = dniNuevo;
-
-  let emailFinal = email || emailCli;
-  if (!emailFinal || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailFinal)) {
-    alert("Ingresá un email válido.");
-    return;
-  }
-
-  db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
-    .then(snap => {
-      if (snap.exists()) {
-        validarPedidoAbierto(emailFinal, (abierto, pedidoId) => {
-          if (abierto) {
-            mostrarMensajePedidoAbierto(pedidoId);
-            return;
-          }
-          // --- FLUJO ORIGINAL PARA CLIENTE REGISTRADO ---
-          const cli = Object.values(snap.val())[0];
-          nombreInput.value    = cli.nombre    || '';
-          telefonoInput.value  = cli.telefono  || '';
-          direccionInput.value = cli.direccion || '';
-          provinciaInput.value = cli.provincia || '';
-          dniNuevoInput.value  = cli.dni       || '';
-          emailInput.value     = cli.email     || '';
-          datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
-          modal.style.display = 'none';
-          enviarPedidoFinal();
-        });
-      } else {
-        // --- FLUJO ORIGINAL PARA NUEVO CLIENTE ---
-        if (!nombre) {
-          alert("Ingresá tu nombre.");
-          return;
-        }
-        datosExtraCliente = { email: emailFinal, nombre, telefono, direccion, provincia, dni, tipoCliente: 'mayorista' };
-        db.ref('clientes').push({
-          email: emailFinal,
-          nombre,
-          telefono,
-          direccion,
-          provincia,
-          dni,
-          tipoCliente: 'mayorista',
-          registro: 'web'
-        }).then(() => {
-          modal.style.display = 'none';
-          enviarPedidoFinal();
-        });
-      }
-    });
-});
-
-        function continuarPedido() {
-            const email      = emailInput.value.trim().toLowerCase();
-            const nombre     = nombreInput.value.trim();
-            const telefono   = telefonoInput.value.trim();
-            const direccion  = direccionInput.value.trim();
-            const provincia  = provinciaInput.value;
-            const dniNuevo   = dniNuevoInput.value.trim();
-            const emailCli   = emailClienteInput.value.trim().toLowerCase();
-            const dni        = dniNuevo;
-
-            let emailFinal = email || emailCli;
-            if (!emailFinal || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailFinal)) {
-                alert("Ingresá un email válido.");
+            if (pedidoEnviado) return;  // Si ya se envió, salimos
+            if (carrito.length === 0) {
+                alert("El carrito está vacío.");
                 return;
             }
 
-            // Solo para usuarios registrados (clientes existentes)
-            db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
-                .then(snap => {
-                    if (snap.exists()) {
-                        // Validar si ya tiene pedido abierto
-                        validarPedidoAbierto(emailFinal, (abierto, pedidoId) => {
-                            if (abierto) {
-                                mostrarMensajePedidoAbierto(pedidoId);
-                                return;
-                            }
-                            // --- FLUJO ORIGINAL PARA CLIENTE REGISTRADO ---
-                            const cli = Object.values(snap.val())[0];
-                            nombreInput.value    = cli.nombre    || '';
-                            telefonoInput.value  = cli.telefono  || '';
-                            direccionInput.value = cli.direccion || '';
-                            provinciaInput.value = cli.provincia || '';
-                            dniNuevoInput.value  = cli.dni       || '';
-                            emailInput.value     = cli.email     || '';
-                            datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
-                            modal.style.display = 'none';
-                            enviarPedidoFinal();
-                        });
-                    } else {
-                        // Si no es cliente registrado, continuar lógica normal
-                        // ...existing code... (el resto de la lógica original)
-                    }
-                });
-        }
-
-        function enviarPedidoFinal() {
-    if (pedidoEnviado) return;  // Si ya se envió, salimos
-    pedidoEnviado = true;
-    
-    if (carrito.length === 0) { alert("El carrito está vacío."); return; }
-
-    /* ------------------ NUEVO PEDIDO ------------------ */
-    if (!modoEdicion) {
-        const pedidoRef = db.ref('pedidos').push();
-        const pedidoId  = pedidoRef.key;
-
-        const pedidoObj = {
-            id:        pedidoId,
-            timestamp: Date.now(),
-            locked:    false,
-            adminViewed: false,
-            createdby: "web",
-            status:    'ABIERTO',
-
-            cliente: {
-                nombre:    datosExtraCliente.nombre    || '',
-                telefono:  datosExtraCliente.telefono  || '',
-                direccion: datosExtraCliente.direccion || '',
-                provincia: datosExtraCliente.provincia || '',
-                dni:       String(datosExtraCliente.dni || ''),
-                email:     datosExtraCliente.email     || '',
-                tipoCliente: datosExtraCliente.tipoCliente || 'mayorista'
-            },
-
-            items: carrito.map(it => ({
-                nombre:    it.nombre,
-                cantidad:  it.cantidad,
-                valorUSD:  it.precio,
-                codigo:    it.codigo || '',
-                categoria: it.categoria || '',
-                valorC:    it.valorC || '', // ← Guardar valorC en Firebase
-                valorU:    it.valorU || ''  // ← Guardar valorU en Firebase
-            }))
-        };
-
-        pedidoRef.set(pedidoObj).then(() => {
+            pedidoEnviado = true;
+            
             // Construir mensaje detallado para WhatsApp
-            let mensaje = "Hola! Este es mi pedido:%0A";
-            mensaje += `https://www.home-point.com.ar/pedidos.html?id=${pedidoId}%0A`;
-            mensaje += `%0ADetalle del pedido:%0A`;
+            let mensaje = "Hola! Este es mi pedido:%0A%0A";
+            mensaje += "Detalle del pedido:%0A";
+            
             carrito.forEach(item => {
                 mensaje += `- ${item.nombre} - Cantidad: ${item.cantidad}%0A`;
             });
+            
+            mensaje += "%0A¡Gracias!";
+            
             window.open(`${WHATSAPP_URL}&text=${mensaje}`);
-            limpiarCarrito();
-        });
-        return;
-    }
-
-    /* -------------- EDITAR PEDIDO EXISTENTE -------------- */
-    const pedidoRef = db.ref('pedidos/' + pedidoEditId);
-
-    pedidoRef.once('value').then(snap => {
-        const pedido = snap.val();
-        if (!pedido || pedido.locked) { alert("Este pedido no existe o está cerrado."); return; }
-
-        // fusiono artículos
-        carrito.forEach(sel => {
-            const idx = pedido.items.findIndex(it => it.nombre === sel.nombre);
-            if (idx > -1) {
-                pedido.items[idx].cantidad += sel.cantidad;
-            } else {
-                pedido.items.push({
-                    nombre:    sel.nombre,
-                    cantidad:  sel.cantidad,
-                    valorUSD:  sel.precio,
-                    codigo:    sel.codigo || '',
-                    categoria: sel.categoria || '',
-                    valorC:    sel.valorC || '', // ← Guardar valorC también al editar
-                    valorU:    sel.valorU || ''  // ← Guardar valorU también al editar
-                });
-            }
-        });
-
-        pedido.cliente = {
-            nombre:    datosExtraCliente.nombre    || pedido.cliente?.nombre    || '',
-            telefono:  datosExtraCliente.telefono  || pedido.cliente?.telefono || '',
-            direccion: datosExtraCliente.direccion || pedido.cliente?.direccion || '',
-            provincia: datosExtraCliente.provincia || pedido.cliente?.provincia || '',
-            dni:       String(
-                        datosExtraCliente.dni ||
-                        pedido.cliente?.dni    || ''
-                        ),
-            email:     datosExtraCliente.email     || pedido.cliente?.email || '',
-            tipoCliente: datosExtraCliente.tipoCliente || pedido.cliente?.tipoCliente || 'mayorista'
-        };
-        return pedidoRef.update({
-            items:   pedido.items,
-            cliente: pedido.cliente,
-            adminViewed: false,
-            lastUpdated: Date.now()
-        });
-
-    })
-    .then(() => {
-        alert("Artículos agregados al pedido 👌");
-        window.location.href = `pedidos.html?id=${pedidoEditId}`;
-    })
-    .catch(err => { console.error(err); alert("Error actualizando el pedido"); });
+            
+            // Resetear la bandera después de un tiempo para permitir reenvíos
+            setTimeout(() => {
+                pedidoEnviado = false;
+            }, 2000);
         }
+
+
 
         
         function limpiarCarrito() {
@@ -1533,74 +1122,7 @@ continuarBtn.addEventListener('click', () => {
             document.getElementById('marquee-text').innerHTML = MARQUEE_TEXT;
         });
 
-    // Permitir cerrar el modal al hacer clic fuera del contenido
-    modal.addEventListener('mousedown', function(e) {
-      if (e.target === modal) {
-        modal.style.display = 'none';
-      }
-    });
 
-    // === Último Pedido ===
-const ultimoPedidoBtn = document.getElementById('ultimoPedidoBtn');
-const ultimoPedidoModal = document.getElementById('ultimoPedidoModal');
-const closeUltimoPedidoModal = document.getElementById('closeUltimoPedidoModal');
-const buscarUltimoPedidoBtn = document.getElementById('buscarUltimoPedidoBtn');
-const ultimoPedidoEmailInput = document.getElementById('ultimoPedidoEmailInput');
-const ultimoPedidoError = document.getElementById('ultimoPedidoError');
-
-ultimoPedidoBtn.addEventListener('click', function() {
-  ultimoPedidoModal.style.display = 'flex';
-  ultimoPedidoEmailInput.value = '';
-  ultimoPedidoError.textContent = '';
-  setTimeout(() => ultimoPedidoEmailInput.focus(), 100);
-});
-closeUltimoPedidoModal.addEventListener('click', function() {
-  ultimoPedidoModal.style.display = 'none';
-});
-
-// Cerrar modal al hacer click fuera del contenido
-ultimoPedidoModal.addEventListener('mousedown', function(e) {
-  if (e.target === ultimoPedidoModal) {
-    ultimoPedidoModal.style.display = 'none';
-  }
-});
-
-buscarUltimoPedidoBtn.addEventListener('click', function() {
-  const email = ultimoPedidoEmailInput.value.trim().toLowerCase();
-  ultimoPedidoError.textContent = '';
-  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    ultimoPedidoError.textContent = 'Ingresá un email válido.';
-    return;
-  }
-  // Buscar el último pedido por email
-  db.ref('pedidos').orderByChild('cliente/email').equalTo(email).once('value')
-    .then(snap => {
-      if (!snap.exists()) {
-        ultimoPedidoError.textContent = 'No se encontraron pedidos registrados con este email.';
-        return;
-      }
-      // Buscar el pedido con mayor timestamp
-      let ultimo = null;
-      snap.forEach(child => {
-        const pedido = child.val();
-        if (!ultimo || (pedido.timestamp > ultimo.timestamp)) {
-          ultimo = pedido;
-        }
-      });
-      if (ultimo && ultimo.id) {
-        window.open(`pedidos.html?id=${ultimo.id}`, '_blank');
-      } else {
-        ultimoPedidoError.textContent = 'No se encontraron pedidos registrados con este email.';
-      }
-    })
-    .catch(() => {
-      ultimoPedidoError.textContent = 'Error buscando el pedido. Intenta de nuevo.';
-    });
-});
-// Permitir Enter para buscar
-ultimoPedidoEmailInput.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') buscarUltimoPedidoBtn.click();
-});
     </script>
 
     <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 86%; margin: 20px auto; border-radius: 10px;">
