@@ -7,6 +7,12 @@
     <link rel="icon" href="faviconnegro.png" type="image/png">
     
     <title>Catálogo Mayorista</title>
+            
+        <!-- EmailJS Script v4 -->
+        <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+        <script>
+            emailjs.init("vcbQsbE2bgLwFAnDr");
+        </script>
 
     <script>
 
@@ -1436,6 +1442,23 @@ continuarBtn.addEventListener('click', () => {
             carrito.forEach(item => {
                 mensaje += `- ${item.nombre} - Cantidad: ${item.cantidad}%0A`;
             });
+
+            // === ENVÍO POR EMAILJS SOLO CON LINK ===
+            if (datosExtraCliente.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(datosExtraCliente.email)) {
+                emailjs.send("service_lu9cpxk", "template_xqo1j5z", {
+                    email: datosExtraCliente.email,
+                    name: datosExtraCliente.nombre,
+                    linkPedido: `https://www.home-point.com.ar/pedidos.html?id=${pedidoId}`
+                })
+                .then(function(response) {
+                    console.log("Email enviado!", response.status, response.text);
+                }, function(error) {
+                    console.error("Error enviando email:", error);
+                });
+            } else {
+                alert("El email del cliente está vacío o no es válido. No se envía el pedido por email.");
+                console.error("Email del cliente no válido o vacío.");
+            }
             window.open(`${WHATSAPP_URL}&text=${mensaje}`);
             limpiarCarrito();
         });
