@@ -1310,23 +1310,38 @@ continuarBtn.addEventListener('click', () => {
   db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
     .then(snap => {
       if (snap.exists()) {
-        validarPedidoAbierto(emailFinal, (abierto, pedidoId) => {
-          if (abierto) {
-            mostrarMensajePedidoAbierto(pedidoId);
-            return;
-          }
-          // --- FLUJO ORIGINAL PARA CLIENTE REGISTRADO ---
-          const cli = Object.values(snap.val())[0];
-          nombreInput.value    = cli.nombre    || '';
-          telefonoInput.value  = cli.telefono  || '';
-          direccionInput.value = cli.direccion || '';
-          provinciaInput.value = cli.provincia || '';
-          dniNuevoInput.value  = cli.dni       || '';
-          emailInput.value     = cli.email     || '';
-          datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
-          modal.style.display = 'none';
-          enviarPedidoFinal();
-        });
+                // Solo validar pedido abierto si NO se acaba de enviar uno
+                if (!pedidoEnviado) {
+                    validarPedidoAbierto(emailFinal, (abierto, pedidoId) => {
+                        if (abierto) {
+                            mostrarMensajePedidoAbierto(pedidoId);
+                            return;
+                        }
+                        // --- FLUJO ORIGINAL PARA CLIENTE REGISTRADO ---
+                        const cli = Object.values(snap.val())[0];
+                        nombreInput.value    = cli.nombre    || '';
+                        telefonoInput.value  = cli.telefono  || '';
+                        direccionInput.value = cli.direccion || '';
+                        provinciaInput.value = cli.provincia || '';
+                        dniNuevoInput.value  = cli.dni       || '';
+                        emailInput.value     = cli.email     || '';
+                        datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
+                        modal.style.display = 'none';
+                        enviarPedidoFinal();
+                    });
+                } else {
+                    // Si se acaba de enviar un pedido, simplemente continuar flujo normal
+                    const cli = Object.values(snap.val())[0];
+                    nombreInput.value    = cli.nombre    || '';
+                    telefonoInput.value  = cli.telefono  || '';
+                    direccionInput.value = cli.direccion || '';
+                    provinciaInput.value = cli.provincia || '';
+                    dniNuevoInput.value  = cli.dni       || '';
+                    emailInput.value     = cli.email     || '';
+                    datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
+                    modal.style.display = 'none';
+                    enviarPedidoFinal();
+                }
       } else {
         // --- FLUJO ORIGINAL PARA NUEVO CLIENTE ---
         if (!nombre) {
@@ -1435,15 +1450,7 @@ continuarBtn.addEventListener('click', () => {
         };
 
         pedidoRef.set(pedidoObj).then(() => {
-            // Construir mensaje detallado para WhatsApp
-            let mensaje = "Hola! Este es mi pedido:%0A";
-            mensaje += `https://www.home-point.com.ar/pedidos.html?id=${pedidoId}%0A`;
-            mensaje += `%0ADetalle del pedido:%0A`;
-            carrito.forEach(item => {
-                mensaje += `- ${item.nombre} - Cantidad: ${item.cantidad}%0A`;
-            });
-
-            // === ENVÍO POR EMAILJS SOLO CON LINK ===
+            // Enviar email automático como hasta ahora
             if (datosExtraCliente.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(datosExtraCliente.email)) {
                 emailjs.send("service_lu9cpxk", "template_xqo1j5z", {
                     email: datosExtraCliente.email,
@@ -1459,10 +1466,43 @@ continuarBtn.addEventListener('click', () => {
                 alert("El email del cliente está vacío o no es válido. No se envía el pedido por email.");
                 console.error("Email del cliente no válido o vacío.");
             }
-            window.open(`${WHATSAPP_URL}&text=${mensaje}`);
+
+            // Mostrar modal de confirmación profesional
+            mostrarModalPedidoConfirmado(pedidoId, datosExtraCliente.email);
             limpiarCarrito();
         });
         return;
+// Modal de confirmación de pedido realizado
+function mostrarModalPedidoConfirmado(pedidoId, email) {
+    // Elimina cualquier modal previo
+    let modalExistente = document.getElementById('pedido-confirmado-modal');
+    if (modalExistente) {
+        modalExistente.remove();
+    }
+    let overlay = document.createElement('div');
+    overlay.id = 'pedido-confirmado-modal';
+    overlay.className = 'modal';
+    overlay.style.display = 'flex';
+    overlay.innerHTML = `
+        <div class="modal-content" style="max-width:350px;position:relative;">
+            <h2 style='color:#4CAF50;'>¡Pedido realizado correctamente!</h2>
+            <p>Se envió una notificación a su casilla de email para que pueda ver o editar el pedido.</p>
+            <button id="verPedidoBtnConfirmado" style="background:#4CAF50;color:#fff;padding:10px 30px;border:none;border-radius:6px;font-size:1.1em;cursor:pointer;">Ver Pedido</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    // Botón para ver el pedido
+    document.getElementById('verPedidoBtnConfirmado').onclick = function() {
+        window.location.href = `pedidos.html?id=${pedidoId}`;
+    };
+    // Cerrar modal al hacer click fuera del contenido y refrescar la página
+    overlay.addEventListener('mousedown', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+            window.location.reload();
+        }
+    });
+}
     }
 
     /* -------------- EDITAR PEDIDO EXISTENTE -------------- */

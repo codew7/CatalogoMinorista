@@ -32,6 +32,22 @@
           window.location.replace(url.toString());
           return;
         }
+      } else {
+        admin = false;
+      }
+      // Mostrar botón "Hablar con alguien" solo para usuarios no administradores
+      const hablarBtn = document.getElementById('hablarBtn');
+      if (hablarBtn) {
+        if (!admin) {
+          hablarBtn.style.display = 'inline-block';
+          hablarBtn.onclick = function() {
+            const pedidoId = id;
+            const mensaje = encodeURIComponent(`Hola! Me contacto por mi pedido: https://www.home-point.com.ar/pedidos.html?id=${pedidoId}`);
+            window.open(`https://api.whatsapp.com/send/?phone=5491121891006&text=${mensaje}`, '_blank');
+          };
+        } else {
+          hablarBtn.style.display = 'none';
+        }
       }
       // Cargar datos de Google Sheets al inicializar
       cargarDatosSheets();
@@ -51,18 +67,48 @@
       justify-content:flex-start;
     }
     h1{color:#4CAF50;text-align:center;;margin-bottom:10px}
-    #items{
-      max-width:750px;
-      width:100%;
-      margin:0 auto;
-      background:#fff;
-      border-radius:8px;
-      padding:20px;
-      box-sizing:border-box;
-      display:block;
+    #items {
+      max-width: 750px;
+      width: 100%;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-sizing: border-box;
+      display: block;
+      overflow-x: auto;
     }
-    #items div{display:flex;justify-content:space-between;margin-bottom:5px;}
-    #items input{width:60px;text-align:center;}
+    #items table {
+      width: 100%;
+      min-width: 400px;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      overflow-x: auto;
+      display: block;
+    }
+    #items div { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    #items input { width: 60px; text-align: center; }
+
+    @media (max-width: 600px) {
+      #items {
+        padding: 8px;
+        border-radius: 0;
+        box-shadow: none;
+        min-width: 0;
+        max-width: 100vw;
+      }
+      #items table {
+        font-size: 0.95em;
+        min-width: 320px;
+        width: 100%;
+        display: block;
+        overflow-x: auto;
+      }
+      th, td {
+        padding: 6px 2px;
+        font-size: 0.95em;
+      }
+    }
     button, .accion-btn {
       background:#4CAF50;
       color:#fff;
@@ -211,12 +257,14 @@
   <div id="items"></div>
 
   <div style="text-align:center;margin-top:20px;">
-    <button id="agregarItemBtn" class="accion-btn">Agregar Artículos</button>
-    <button id="guardarBtn" class="accion-btn">Guardar Cambios</button>
-    <button id="cerrarBtn" class="accion-btn">Cerrar Pedido</button>
-    <button id="reabrirBtn" class="accion-btn">Reabrir Pedido</button>
-    <button id="cancelarBtn" class="accion-btn">Cancelar Pedido</button>
-    <button id="ImprimirBtn" class="accion-btn" style="display:none;background:#888;">Imprimir</button>
+  <button id="agregarItemBtn" class="accion-btn">Agregar Artículos</button>
+  <button id="guardarBtn" class="accion-btn">Guardar Cambios</button>
+  <button id="cerrarBtn" class="accion-btn">Cerrar Pedido</button>
+  <button id="reabrirBtn" class="accion-btn">Reabrir Pedido</button>
+  <button id="cancelarBtn" class="accion-btn">Cancelar Pedido</button>
+  <button id="hablarBtn" class="accion-btn" style="background:#2196F3;display:none;">Chat</button>
+  <button id="ImprimirBtn" class="accion-btn" style="display:none;background:#888;">Imprimir</button>
+
   </div>
   <div id="accionesAdmin" style="text-align:center;margin-top:10px;">
     <button id="despachadoEntregadoBtn" class="accion-btn" style="display:none;background:#666;">Entregado</button>
@@ -345,7 +393,17 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     document.getElementById('direccionCliente').textContent = cliente.direccion || '';
     document.getElementById('provinciaCliente').textContent = cliente.provincia || '';
     document.getElementById('dniCliente').textContent = cliente.dni ? `DNI: ${cliente.dni}` : '';
-    document.getElementById('telefonoCliente').textContent = cliente.telefono ? `Teléfono: ${cliente.telefono}` : '';
+    if (cliente.telefono) {
+      // Formatear el teléfono para WhatsApp (eliminar espacios, guiones, paréntesis)
+      let telClean = cliente.telefono.replace(/[^\d]/g, '');
+      // Si empieza con 0, quitarlo
+      if (telClean.startsWith('0')) telClean = telClean.substring(1);
+      // Si no empieza con 54, agregarlo
+      if (!telClean.startsWith('54')) telClean = '54' + telClean;
+      document.getElementById('telefonoCliente').innerHTML = `Teléfono: <a href='https://api.whatsapp.com/send/?phone=${telClean}' target='_blank' style='color:#4CAF50;text-decoration:underline;'>${cliente.telefono}</a>`;
+    } else {
+      document.getElementById('telefonoCliente').textContent = '';
+    }
     document.getElementById('emailCliente').textContent = cliente.email ? `${cliente.email}` : 'Email no disponible';
     // Mostrar fecha y hora de ingreso
     let fechaIngreso = '';
@@ -851,12 +909,24 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     }
     totalDiv.style = 'font-weight:bold;font-size:1.2em;text-align:right;';
     totalDiv.textContent = `TOTAL $ ${total.toLocaleString('es-AR')}`;
+
     // Selector de pago
     let pagoDiv = document.getElementById('pagoSelector');
     if (!pagoDiv) {
       pagoDiv = document.createElement('div');
       pagoDiv.id = 'pagoSelector';
       pagoDiv.style = 'margin-top:18px;text-align:left;width:100%';
+
+    // Línea gris sutil
+    let lineaDiv1 = document.getElementById('linea1');
+    if (!lineaDiv1) {
+      lineaDiv1 = document.createElement('div');
+      lineaDiv1.id = 'linea1';
+      lineaDiv1.style = 'border-top:1px solid #ddd;margin:8px 0 6px 0;width:100%';
+      totalPagoWrap.appendChild(lineaDiv1);
+    } else if (!totalPagoWrap.contains(lineaDiv1)) {
+      totalPagoWrap.appendChild(lineaDiv1);
+    }
       pagoDiv.innerHTML = `
         <div style="display:flex;align-items:center;">
           <div style="font-weight:bold;min-width:75px;">Pago</div>
@@ -881,6 +951,18 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       totalPagoWrap.appendChild(pagoDiv);
     }
     pagoDiv.style = 'margin-top:18px;text-align:left;width:100%';
+
+        // Línea gris sutil
+    let lineaDiv2 = document.getElementById('linea2');
+    if (!lineaDiv2) {
+      lineaDiv2 = document.createElement('div');
+      lineaDiv2.id = 'linea2';
+      lineaDiv2.style = 'border-top:1px solid #ddd;margin:8px 0 6px 0;width:100%';
+      totalPagoWrap.appendChild(lineaDiv2);
+    } else if (!totalPagoWrap.contains(lineaDiv2)) {
+      totalPagoWrap.appendChild(lineaDiv);
+    }
+    
     // Selector de entrega
     let entregaDiv = document.getElementById('entregaSelector');
     if (!entregaDiv) {
@@ -888,6 +970,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       entregaDiv.id = 'entregaSelector';
       entregaDiv.style = 'margin-top:18px;text-align:left;width:100%';
       entregaDiv.innerHTML = `
+      <div style="max-width:600px;margin:30px auto 0 auto;font-size:0.90em;color:#444;text-align:left;opacity:0.85;"></div>
         <div style="display:flex;align-items:center;">
           <div style="font-weight:bold;min-width:75px;">Entrega</div>
           <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
