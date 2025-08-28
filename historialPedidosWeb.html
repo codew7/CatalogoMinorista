@@ -185,34 +185,33 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>Historial Pedidos Web</h1>
-    
-    <!-- Indicador de Administrador -->
-    <div id="adminIndicator" class="user-indicator" style="display: none;">
-        <i class="bi bi-shield-check"></i>
-        <span>Modo Administrador</span>
-    </div>
-    
-    <!-- Indicador de Usuario Normal -->
-    <div id="userIndicator" class="user-indicator" style="display: none;">
-        <i class="bi bi-person-circle"></i>
-        <span>Usuario</span>
-        <button class="logout-btn" onclick="cerrarSesion()" title="Cerrar Sesión">
-            <i class="bi bi-box-arrow-right"></i>
-        </button>
-    </div>
-    
-     <div id="filtroStatusBtns"></div>
-  </header>
+  <div style="display: flex; justify-content: center;">
+    <header style="width:100%; max-width:1200px;">
+      <h1>Historial Pedidos Web</h1>
+      <!-- Indicador de Administrador -->
+      <div id="adminIndicator" class="user-indicator" style="display: none;">
+          <i class="bi bi-shield-check"></i>
+          <span>Modo Administrador</span>
+      </div>
+      <!-- Indicador de Usuario Normal -->
+      <div id="userIndicator" class="user-indicator" style="display: none;">
+          <i class="bi bi-person-circle"></i>
+          <span>Usuario</span>
+          <button class="logout-btn" onclick="cerrarSesion()" title="Cerrar Sesión">
+              <i class="bi bi-box-arrow-right"></i>
+          </button>
+      </div>
+      <div id="filtroStatusBtns"></div>
+    </header>
+  </div>
   
  
 
-  <table id="tabla">
+  <div style="display: flex; justify-content: center;">
+    <table id="tabla" style="max-width:1200px; width:100%;">
     <thead>
 <tr>
   <th></th>
-  <th>ID</th>
   <th>Nombre</th>
   <th>Fecha</th>
   <th>Unidades</th>
@@ -432,12 +431,6 @@
           indCell.appendChild(dot);
         }
 
-        /* --- 2. ID del pedido --- */
-        const idCell = tr.insertCell();
-        idCell.textContent = p.id || '—';
-        idCell.style.fontFamily = 'monospace';
-        idCell.style.fontSize = '0.9em';
-
         /* --- 3. Nombre cliente --- */
         const nombreCell = tr.insertCell();
         const nombreSpan = document.createElement('span');
@@ -463,12 +456,19 @@
 
         /* --- 6. ENTREGA --- */
         let tipoEntrega = '';
-        if (p.tipoEntrega === 'Showroom' && (!p.cliente?.direccion || p.cliente.direccion.trim() === '')) {
+        const provincia = p.cliente?.provincia ? p.cliente.provincia.trim() : '';
+        if (p.tipoEntrega === 'Showroom') {
           tipoEntrega = 'Retiro';
-        } else if (p.tipoEntrega === 'Correo Argentino' || p.tipoEntrega === 'Via Cargo') {
-          tipoEntrega = 'Envio';
-        } else if (p.tipoEntrega !== 'Correo Argentino' && p.tipoEntrega !== 'Via Cargo' && p.cliente?.direccion && p.cliente.direccion.trim() !== '') {
-          tipoEntrega = 'Envio?';
+        } else if (!provincia) {
+          tipoEntrega = 'Retiro';
+        } else if (p.tipoEntrega !== 'Showroom') {
+          if (provincia !== 'Buenos Aires' && provincia !== 'CABA') {
+            tipoEntrega = 'Envio';
+          } else if (provincia === 'Buenos Aires' || provincia === 'CABA') {
+            tipoEntrega = 'Envio?';
+          } else {
+            tipoEntrega = 'Envio';
+          }
         } else {
           tipoEntrega = 'Retiro';
         }
@@ -490,20 +490,29 @@
         /* --- 9. Acciones --- */
         const acciones = tr.insertCell();
 
-        // Botón Eliminar
-        const btnEliminar = document.createElement('button');
-        btnEliminar.textContent = 'Eliminar';
-        btnEliminar.style.background = '#f44336';
-        btnEliminar.style.color = '#fff';
-        btnEliminar.onclick = () => {
-          mostrarModalClave(() => {
-            if (confirm('¿Está seguro que desea eliminar este pedido? Esta acción es irreversible.')) {
-              db.ref(`pedidos/${p.id}`).remove()
-                .catch(()=>alert('Error al eliminar el pedido'));
-            }
-          });
-        };
-        acciones.appendChild(btnEliminar);
+          // Botón Eliminar con icono de cruz
+          const btnEliminar = document.createElement('button');
+          btnEliminar.innerHTML = '<i class="bi bi-x-lg"></i>';
+          btnEliminar.title = 'Eliminar';
+            btnEliminar.style.background = '#f44336';
+            btnEliminar.style.color = '#fff';
+            btnEliminar.style.borderRadius = '50%';
+            btnEliminar.style.width = '22px';
+            btnEliminar.style.height = '22px';
+            btnEliminar.style.display = 'flex';
+            btnEliminar.style.alignItems = 'center';
+            btnEliminar.style.justifyContent = 'center';
+            btnEliminar.style.fontSize = '0.95em';
+            btnEliminar.style.boxShadow = 'none';
+          btnEliminar.onclick = () => {
+            mostrarModalClave(() => {
+              if (confirm('¿Está seguro que desea eliminar este pedido? Esta acción es irreversible.')) {
+                db.ref(`pedidos/${p.id}`).remove()
+                  .catch(()=>alert('Error al eliminar el pedido'));
+              }
+            });
+          };
+          acciones.appendChild(btnEliminar);
 
         tbody.appendChild(tr);
       });
