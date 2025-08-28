@@ -1069,7 +1069,7 @@ function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria) {
             
             // Construir mensaje detallado para WhatsApp
             let mensaje = "Hola! Este es mi pedido:%0A%0A";
-            mensaje += "Detalle del pedido:%0A";
+            mensaje += "Detalle del pedido CF:%0A";
             
             carrito.forEach(item => {
                 mensaje += `- ${item.nombre} - Cantidad: ${item.cantidad}%0A`;
@@ -1144,3 +1144,4 @@ function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria) {
     </footer>
 </body>
 </html>
+
