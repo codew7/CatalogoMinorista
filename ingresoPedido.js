@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const totalFinalInput = document.getElementById('totalFinal');
   const recargoInput = document.getElementById('recargo');
   const descuentoInput = document.getElementById('descuento');
+  const descuentoPorcentajeInput = document.getElementById('descuentoPorcentaje');
   const envioInput = document.getElementById('envio');
   const messageDiv = document.getElementById('message');
 
@@ -753,6 +754,22 @@ function getTipoCliente() {
     let recargo = parseInt((recargoInput.value || '0').replace(/\D/g, '')) || 0;
     let descuento = parseInt((descuentoInput.value || '0').replace(/\D/g, '')) || 0;
     let envio = parseInt((envioInput.value || '0').replace(/\D/g, '')) || 0;
+    // Si hay porcentaje, calcular descuento automáticamente
+    if (descuentoPorcentajeInput && descuentoPorcentajeInput.value.trim() !== '') {
+      let porcentaje = descuentoPorcentajeInput.value.replace(/[^\d.]/g, '');
+      porcentaje = parseFloat(porcentaje);
+      if (!isNaN(porcentaje) && porcentaje > 0) {
+        descuento = Math.round(subtotal * (porcentaje / 100));
+        // Actualizar el campo descuento visualmente aunque esté vacío inicialmente
+        if (descuentoInput) {
+          descuentoInput.value = descuento.toLocaleString('es-AR', {maximumFractionDigits:0});
+        }
+      } else {
+        if (descuentoInput) {
+          descuentoInput.value = '';
+        }
+      }
+    }
     let total = subtotal + recargo + envio - descuento;
     // Usar punto como separador de miles para todos los campos
     const formatMiles = n => n ? n.toLocaleString('es-AR').replace(/,/g, '.').replace(/\./g, (m, o, s) => s && s.length > 3 ? '.' : '.') : '';
@@ -866,6 +883,23 @@ addItemBtn.addEventListener('click', addNewItem);
       calcularTotalFinal();
     });
   });
+
+  // Nuevo: actualizar descuento automáticamente al cambiar el porcentaje
+  if (typeof descuentoPorcentajeInput !== 'undefined' && descuentoPorcentajeInput) {
+    descuentoPorcentajeInput.addEventListener('input', function() {
+      calcularTotalFinal();
+    });
+  }
+
+  // Si el usuario edita el campo descuento manualmente, limpiar el campo porcentaje
+  if (typeof descuentoInput !== 'undefined' && descuentoInput) {
+    descuentoInput.addEventListener('input', function() {
+      if (typeof descuentoPorcentajeInput !== 'undefined' && descuentoPorcentajeInput && descuentoInput.value.trim() !== '') {
+        descuentoPorcentajeInput.value = '';
+      }
+      calcularTotalFinal();
+    });
+  }
 
   form.addEventListener('reset', function() {
     // Limpiar recursos antes del reset
@@ -1084,7 +1118,7 @@ addItemBtn.addEventListener('click', addNewItem);
             subtotal,
             totalFinal,
             costos,
-            ganancia: subtotal - costos,
+            ganancia: subtotal - costos - descuento,
             gananciaSelec,
             alias
           },
@@ -1420,7 +1454,7 @@ addItemBtn.addEventListener('click', addNewItem);
               subtotal,
               totalFinal,
               costos,
-              ganancia: subtotal - costos,
+              ganancia: subtotal - costos - descuento,
               gananciaSelec,
               alias
             },

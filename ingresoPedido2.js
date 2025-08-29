@@ -1088,7 +1088,7 @@ addItemBtn.addEventListener('click', addNewItem);
             subtotal,
             totalFinal,
             costos,
-            ganancia: subtotal - costos,
+            ganancia: subtotal - costos - descuento,
             gananciaSelec,
             alias
           },
@@ -1424,7 +1424,7 @@ addItemBtn.addEventListener('click', addNewItem);
               subtotal,
               totalFinal,
               costos,
-              ganancia: subtotal - costos,
+              ganancia: subtotal - costos - descuento,
               gananciaSelec,
               alias
             },

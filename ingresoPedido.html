@@ -124,7 +124,10 @@
         </div>
         <div class="form-row">
           <label for="descuento">Descuento</label>
-          <input type="text" id="descuento" name="descuento" inputmode="numeric" pattern="[0-9.]*" value="0">
+          <div style="display:flex;align-items:center;gap:6px;width:100%;">
+            <input type="text" id="descuentoPorcentaje" name="descuentoPorcentaje" inputmode="numeric" pattern="[0-9.]*" placeholder="%" style="max-width:50px;text-align:right;">
+            <input type="text" id="descuento" name="descuento" inputmode="numeric" pattern="[0-9.]*" value="0" style="flex:1 1 0%;min-width:0;width:100%;">
+          </div>
         </div>
         <div class="form-row">
           <label for="envio">Costo de Envío</label>
