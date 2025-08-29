@@ -88,7 +88,7 @@
   <!-- Fin Firebase Auth Check -->
 
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#f2f2f2;padding:20px}
+    body{font-family:Arial,Helvetica,sans-serif;background:#f2f2f2;padding:5px}
     header {background: linear-gradient(90deg, #4CAF50, #69a86b); padding: 1.5rem 1rem 1.5rem 1rem; box-shadow: #5c5866 0px 2px 8px 0px; text-align: center; position: relative;}
     header h1 {margin: 0; font-size: 2.2rem; color: #306932; letter-spacing: 1px; font-weight: 700;}
     table{width:100vw;min-width:600px;max-width:100vw;border-collapse:collapse;background:#fff;box-shadow: #5c5866 0px 2px 8px 0px;}
@@ -118,6 +118,23 @@
     th,td{padding:8px;border:1px solid #ddd;text-align:center;}
     th{background:#4CAF50;color:#fff}
     button{padding:4px 10px;border:none;border-radius:4px;cursor:pointer;box-shadow: #5c5866 0px 2px 8px 0px;}
+    /* Anchos de columnas */
+    th.col-indicador, td.col-indicador { width: 4%; min-width: 28px; }
+    th.col-nombre, td.col-nombre { width: 18%; min-width: 120px; }
+    th.col-fecha, td.col-fecha { width: 12%; min-width: 80px; }
+    th.col-entrega, td.col-entrega { width: 12%; min-width: 80px; }
+    th.col-estado, td.col-estado { width: 12%; min-width: 80px; }
+    th.col-contacto, td.col-contacto { width: 7%; min-width: 40px; }
+  th.col-eliminar, td.col-eliminar { width: 7%; min-width: 40px; text-align: center; vertical-align: middle; }
+    @media (max-width: 900px) {
+      th.col-indicador, td.col-indicador { min-width: 20px; }
+      th.col-nombre, td.col-nombre { min-width: 80px; }
+      th.col-fecha, td.col-fecha,
+      th.col-entrega, td.col-entrega,
+      th.col-estado, td.col-estado { min-width: 60px; }
+      th.col-contacto, td.col-contacto,
+      th.col-eliminar, td.col-eliminar { min-width: 32px; }
+    }
     .cerrar{background:#4CAF50;color:#fff}
     .cerrado{background:#9e9e9e;color:#fff;cursor:not-allowed}
     .reabrir{background:#FF9800;color:#fff} 
@@ -210,7 +227,7 @@
 <body>
   <div style="display: flex; justify-content: center;">
   <header style="width:100vw; max-width:100vw; min-width:0;">
-      <h1>Historial Pedidos Web</h1>
+      <h1>Pedidos Web</h1>
       <!-- Indicador de Administrador -->
       <div id="adminIndicator" class="user-indicator" style="display: none;">
           <i class="bi bi-shield-check"></i>
@@ -235,13 +252,13 @@
       <table id="tabla" style="width:100vw; min-width:600px; max-width:100vw;">
     <thead>
 <tr>
-  <th></th>
-  <th>Nombre</th>
-  <th>Fecha</th>
-  <th>Unidades</th>
-  <th>Entrega</th>
-  <th>Estado</th>
-  <th></th>
+  <th class="col-indicador"></th>
+  <th class="col-nombre">Nombre</th>
+  <th class="col-fecha">Fecha</th>
+  <th class="col-entrega">Entrega</th>
+  <th class="col-estado">Estado</th>
+  <th class="col-contacto"></th>
+  <th class="col-eliminar"></th>
 </tr>
 
     </thead>
@@ -449,7 +466,8 @@
         }
 
         /* --- 1. Indicador de modificación --- */
-        const indCell = tr.insertCell();
+  const indCell = tr.insertCell();
+  indCell.className = 'col-indicador';
         if (p.adminViewed === false) {
           const dot = document.createElement('span');
           dot.className = 'dot';
@@ -457,7 +475,8 @@
         }
 
         /* --- 3. Nombre cliente --- */
-        const nombreCell = tr.insertCell();
+  const nombreCell = tr.insertCell();
+  nombreCell.className = 'col-nombre';
         const nombreSpan = document.createElement('span');
         nombreSpan.textContent = p.cliente?.nombre || '—';
         nombreSpan.style.cursor = 'pointer';
@@ -472,12 +491,12 @@
 
         /* --- 4. Fecha corta --- */
         const fecha = new Date(p.timestamp);
-        tr.insertCell().textContent =
+        const fechaCell = tr.insertCell();
+        fechaCell.className = 'col-fecha';
+        fechaCell.textContent =
           fecha.toLocaleDateString('es-AR') + ' ' +
           fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
-        /* --- 5. Cant. ítems --- */
-        tr.insertCell().textContent = (p.items || []).reduce((acc, item) => acc + (item.cantidad || 0), 0);
 
         /* --- 6. ENTREGA --- */
         let tipoEntrega = '';
@@ -497,7 +516,9 @@
         } else {
           tipoEntrega = 'Retiro';
         }
-        tr.insertCell().textContent = tipoEntrega;
+  const entregaCell = tr.insertCell();
+  entregaCell.className = 'col-entrega';
+  entregaCell.textContent = tipoEntrega;
 
         /* --- 7. Estado --- */
         let estado = 'ABIERTO';
@@ -510,34 +531,70 @@
         } else if (p.status === 'ABIERTO') {
           estado = 'ABIERTO';
         }
-        tr.insertCell().textContent = estado;
+  const estadoCell = tr.insertCell();
+  estadoCell.className = 'col-estado';
+  estadoCell.textContent = estado;
+
+        /* --- 8. Contacto (icono WhatsApp) --- */
+  const contactoCell = tr.insertCell();
+  contactoCell.className = 'col-contacto';
+        const telefono = p.cliente?.telefono ? p.cliente.telefono.replace(/[^\d]/g, '') : '';
+        let telClean = telefono;
+        if (telClean.startsWith('0')) telClean = telClean.substring(1);
+        if (telClean && !telClean.startsWith('54')) telClean = '54' + telClean;
+        const btnTel = document.createElement('button');
+        btnTel.innerHTML = '<i class="bi bi-telephone-fill"></i>';
+        btnTel.title = 'Contactar por WhatsApp';
+        btnTel.style.background = '#2196F3';
+        btnTel.style.color = '#fff';
+        btnTel.style.borderRadius = '50%';
+        btnTel.style.width = '22px';
+        btnTel.style.height = '22px';
+        btnTel.style.display = 'flex';
+        btnTel.style.alignItems = 'center';
+        btnTel.style.justifyContent = 'center';
+        btnTel.style.fontSize = '0.95em';
+        btnTel.style.boxShadow = 'none';
+        btnTel.style.margin = '0 auto';
+        btnTel.disabled = !telClean;
+        btnTel.onclick = () => {
+          if (telClean) {
+            window.open(`https://api.whatsapp.com/send/?phone=${telClean}`, '_blank');
+          } else {
+            alert('Teléfono no disponible');
+          }
+        };
+        contactoCell.appendChild(btnTel);
 
         /* --- 9. Acciones --- */
         const acciones = tr.insertCell();
-
-          // Botón Eliminar con icono de cruz
-          const btnEliminar = document.createElement('button');
-          btnEliminar.innerHTML = '<i class="bi bi-x-lg"></i>';
-          btnEliminar.title = 'Eliminar';
-            btnEliminar.style.background = '#f44336';
-            btnEliminar.style.color = '#fff';
-            btnEliminar.style.borderRadius = '50%';
-            btnEliminar.style.width = '22px';
-            btnEliminar.style.height = '22px';
-            btnEliminar.style.display = 'flex';
-            btnEliminar.style.alignItems = 'center';
-            btnEliminar.style.justifyContent = 'center';
-            btnEliminar.style.fontSize = '0.95em';
-            btnEliminar.style.boxShadow = 'none';
-          btnEliminar.onclick = () => {
-            mostrarModalClave(() => {
-              if (confirm('¿Está seguro que desea eliminar este pedido? Esta acción es irreversible.')) {
-                db.ref(`pedidos/${p.id}`).remove()
-                  .catch(()=>alert('Error al eliminar el pedido'));
-              }
-            });
-          };
-          acciones.appendChild(btnEliminar);
+        acciones.className = 'col-eliminar';
+        acciones.style.textAlign = 'center';
+        acciones.style.verticalAlign = 'middle';
+        // Botón Eliminar centrado
+        const btnEliminar = document.createElement('button');
+        btnEliminar.innerHTML = '<i class="bi bi-x-lg"></i>';
+        btnEliminar.title = 'Eliminar';
+        btnEliminar.style.background = '#f44336';
+        btnEliminar.style.color = '#fff';
+        btnEliminar.style.borderRadius = '50%';
+        btnEliminar.style.width = '22px';
+        btnEliminar.style.height = '22px';
+        btnEliminar.style.display = 'flex';
+        btnEliminar.style.alignItems = 'center';
+        btnEliminar.style.justifyContent = 'center';
+        btnEliminar.style.fontSize = '0.95em';
+        btnEliminar.style.boxShadow = 'none';
+        btnEliminar.style.margin = '0 auto';
+        btnEliminar.onclick = () => {
+          mostrarModalClave(() => {
+            if (confirm('¿Está seguro que desea eliminar este pedido? Esta acción es irreversible.')) {
+              db.ref(`pedidos/${p.id}`).remove()
+                .catch(()=>alert('Error al eliminar el pedido'));
+            }
+          });
+        };
+        acciones.appendChild(btnEliminar);
 
         tbody.appendChild(tr);
       });
