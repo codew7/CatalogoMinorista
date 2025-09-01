@@ -739,6 +739,64 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     return 1;
   }
 
+  // Variable global para cachear los valores
+  window.cachedValues = window.cachedValues || {};
+
+  // Función global para actualizar todos los cálculos
+  function actualizarCalculosGlobales() {
+    // Calcular subtotal actual
+    let subtotal = 0;
+    if (pedidoActual && pedidoActual.items) {
+      pedidoActual.items.forEach(it => {
+        const unitPesos = Math.round(it.valorU || 0);
+        subtotal += Math.round(it.cantidad * unitPesos);
+      });
+    }
+
+    // Actualizar el total en pantalla
+    const totalDiv = document.getElementById('total');
+    if (totalDiv) {
+      totalDiv.textContent = `TOTAL $ ${subtotal.toLocaleString('es-AR')}`;
+    }
+
+    // Obtener valores actuales de los inputs
+    const porcentajeInput = document.getElementById('porcentajeInput');
+    const descuentoInput = document.getElementById('descuentoInput');
+    const envioInput = document.getElementById('envioInput');
+    const totalFinalDiv = document.getElementById('totalFinalDiv');
+
+    if (porcentajeInput && descuentoInput && envioInput && totalFinalDiv) {
+      const porcentaje = parseFloat(porcentajeInput.value) || 0;
+      const descuento = parseFloat(descuentoInput.value) || 0;
+      const envio = parseFloat(envioInput.value) || 0;
+
+      // Actualizar descuento si es necesario basado en el porcentaje
+      const descuentoCalculado = Math.round(subtotal * porcentaje / 100);
+      if (descuentoInput.value != descuentoCalculado && porcentaje > 0) {
+        descuentoInput.value = descuentoCalculado;
+      }
+
+      // Calcular y mostrar total final
+      let totalFinal = subtotal - parseFloat(descuentoInput.value || 0) + envio;
+      if (totalFinal < 0) totalFinal = 0;
+      totalFinalDiv.textContent = `TOTAL FINAL $ ${totalFinal.toLocaleString('es-AR')}`;
+
+      // Actualizar caché
+      window.cachedValues = {
+        ...window.cachedValues,
+        porcentaje: parseFloat(porcentajeInput.value) || 0,
+        descuento: parseFloat(descuentoInput.value) || 0,
+        envio: envio
+      };
+
+      // Actualizar en pedidoActual
+      if (!pedidoActual.pagos) pedidoActual.pagos = {};
+      pedidoActual.pagos.porcentajeDescuento = parseFloat(porcentajeInput.value) || 0;
+      pedidoActual.pagos.descuento = parseFloat(descuentoInput.value) || 0;
+      pedidoActual.pagos.envio = envio;
+    }
+  }
+
   function renderItems() {
     const cont = document.getElementById('items');
     cont.innerHTML = '';
@@ -803,6 +861,8 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
         if (bloqueado) return;
         pedidoActual.items[idx].cantidad = parseInt(e.target.value, 10) || 1;
         renderItems();
+        // Actualizar cálculos inmediatamente
+        setTimeout(() => actualizarCalculosGlobales(), 100);
       };
       qtyCell.appendChild(qty);
 
@@ -857,6 +917,8 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
           const nuevoValor = parseFloat(e.target.value) || 0;
           pedidoActual.items[idx].valorU = nuevoValor;
           renderItems(); // Re-renderizar para actualizar subtotal
+          // Actualizar cálculos inmediatamente
+          setTimeout(() => actualizarCalculosGlobales(), 100);
         };
         valorCell.appendChild(valorInput);
       } else {
@@ -880,7 +942,10 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       del.disabled = bloqueado; // Deshabilitar si cerrado o despachado
       del.onclick = () => {
         if (bloqueado) return;
-        pedidoActual.items.splice(idx, 1); renderItems();
+        pedidoActual.items.splice(idx, 1); 
+        renderItems();
+        // Actualizar cálculos inmediatamente
+        setTimeout(() => actualizarCalculosGlobales(), 100);
       };
       delCell.appendChild(del);
     });
@@ -908,7 +973,185 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       totalPagoWrap.appendChild(totalDiv);
     }
     totalDiv.style = 'font-weight:bold;font-size:1.2em;text-align:right;';
+
     totalDiv.textContent = `TOTAL $ ${total.toLocaleString('es-AR')}`;
+
+    // Campo Porcentaje y Descuento
+    let descuentoDiv = document.getElementById('descuentoDiv');
+    if (!descuentoDiv) {
+      descuentoDiv = document.createElement('div');
+      descuentoDiv.id = 'descuentoDiv';
+      descuentoDiv.style = 'font-weight:bold;font-size:1.1em;text-align:right;margin-top:10px;display:flex;align-items:center;justify-content:flex-end;gap:10px;';
+      totalPagoWrap.appendChild(descuentoDiv);
+    }
+    // Obtener valores del caché o del pedido
+    let descuento = window.cachedValues.descuento;
+    let porcentaje = window.cachedValues.porcentaje;
+    let envio = window.cachedValues.envio;
+
+    // Si no hay valores en caché, obtener de Firebase
+    if (descuento === undefined && pedidoActual.pagos && typeof pedidoActual.pagos.descuento === 'number') {
+      descuento = pedidoActual.pagos.descuento;
+    }
+    if (porcentaje === undefined && pedidoActual.pagos && typeof pedidoActual.pagos.porcentajeDescuento === 'number') {
+      porcentaje = pedidoActual.pagos.porcentajeDescuento;
+    }
+    if (envio === undefined && pedidoActual.pagos && typeof pedidoActual.pagos.envio === 'number') {
+      envio = pedidoActual.pagos.envio;
+    }
+
+    // Valores por defecto si no hay nada
+    descuento = descuento || 0;
+    porcentaje = porcentaje || 0;
+    envio = envio || 0;
+    // Input para porcentaje y descuento
+    const readonlyStyle = admin ? '' : 'background-color:#f5f5f5;cursor:not-allowed;';
+    descuentoDiv.innerHTML = `
+      <label for='porcentajeInput' style='font-weight:normal;'>Descuento %</label>
+      <input type='number' id='porcentajeInput' min='0' max='100' value='${porcentaje}' style='width:40px;text-align:right;font-size:1em;padding:2px 2px;border:1px solid #ddd;${readonlyStyle}' ${admin ? '' : 'readonly'}>
+      <span style='font-weight:normal;'>$</span>
+      <input type='number' id='descuentoInput' min='0' value='${descuento}' style='width:80px;text-align:right;font-size:1em;padding:2px 2px;border:1px solid #ddd;${readonlyStyle}' ${admin ? '' : 'readonly'}>
+    `;
+
+    // Campo Costo de Envio
+    let envioDiv = document.getElementById('envioDiv');
+    if (!envioDiv) {
+      envioDiv = document.createElement('div');
+      envioDiv.id = 'envioDiv';
+      envioDiv.style = 'font-weight:normal;font-size:1.1em;text-align:right;margin-top:10px;display:flex;align-items:center;justify-content:flex-end;gap:10px;';
+      totalPagoWrap.appendChild(envioDiv);
+    }
+    envioDiv.innerHTML = `<label for='envioInput' style='font-weight:normal;'>Costo de Envio $</label><input type='number' id='envioInput' min='0' value='${envio}' style='width:80px;text-align:right;font-size:1em;padding:2px 2px;border:1px solid #ddd;font-weight:normal;${readonlyStyle}' ${admin ? '' : 'readonly'}>`;
+    // Mostrar/ocultar según tipoEntrega
+    setTimeout(() => {
+      const entregaRadios = document.getElementsByName('tipoEntrega');
+      const envioDiv = document.getElementById('envioDiv');
+      const envioInput = document.getElementById('envioInput');
+      
+      // Determinar el tipo de entrega seleccionado inicialmente
+      let tipoEntregaSel = '';
+      for (let r of entregaRadios) {
+        if (r.checked) {
+          tipoEntregaSel = r.value;
+          break;
+        }
+      }
+
+      // Mantener el valor original del envío de Firebase
+      const envioValorFirebase = (pedidoActual.pagos && typeof pedidoActual.pagos.envio === 'number') ? 
+        pedidoActual.pagos.envio : 0;
+
+      // Configurar el evento change para todos los radios
+      for (let r of entregaRadios) {
+        r.addEventListener('change', () => {
+          if (r.value === 'Correo Argentino' && r.checked) {
+            envioDiv.style.display = 'flex';
+            // Solo restaurar valores si es admin
+            if (admin) {
+              envioInput.value = envioValorFirebase;
+            }
+          } else if (r.checked) {
+            envioDiv.style.display = 'none';
+            // Solo modificar valores si es admin
+            if (admin) {
+              if (envioInput.value > 0) {
+                window.cachedValues.envioTemp = parseFloat(envioInput.value);
+              }
+              envioInput.value = 0;
+            }
+          }
+          // Actualizar totales solo si es admin
+          if (admin) {
+            envioInput.dispatchEvent(new Event('input'));
+          } else {
+            // Para usuarios no admin, actualizar cálculos sin modificar valores
+            actualizarCalculosGlobales();
+          }
+        });
+      }
+
+      // Configuración inicial explícita basada en el valor actual
+      if (tipoEntregaSel === 'Correo Argentino' || pedidoActual.tipoEntrega === 'Correo Argentino') {
+        envioDiv.style.display = 'flex';
+        if (pedidoActual.pagos && typeof pedidoActual.pagos.envio === 'number') {
+          envioInput.value = pedidoActual.pagos.envio;
+        }
+        // Asegurarse de que el radio correcto esté seleccionado
+        for (let r of entregaRadios) {
+          if (r.value === 'Correo Argentino') {
+            r.checked = true;
+            break;
+          }
+        }
+      } else {
+        envioDiv.style.display = 'none';
+        envioInput.value = 0;
+      }
+    }, 0);
+
+    // Campo Total Final
+    let totalFinalDiv = document.getElementById('totalFinalDiv');
+    if (!totalFinalDiv) {
+      totalFinalDiv = document.createElement('div');
+      totalFinalDiv.id = 'totalFinalDiv';
+      totalFinalDiv.style = 'font-weight:bold;font-size:1.2em;text-align:right;margin-top:10px;color:#222;';
+      totalPagoWrap.appendChild(totalFinalDiv);
+    }
+    // Calcular total final
+    let totalFinal = total - descuento + envio;
+    if (totalFinal < 0) totalFinal = 0;
+    totalFinalDiv.textContent = `TOTAL FINAL $ ${totalFinal.toLocaleString('es-AR')}`;
+
+    // Actualizar descuento, envio y total final al cambiar porcentaje, descuento o envio
+    setTimeout(() => {
+      const porcentajeInput = document.getElementById('porcentajeInput');
+      const descuentoInput = document.getElementById('descuentoInput');
+      const envioInput = document.getElementById('envioInput');
+      const totalFinalDiv = document.getElementById('totalFinalDiv');
+
+      function actualizarTotalFinal() {
+        actualizarCalculosGlobales();
+      }
+      
+      function actualizarPorPorcentaje() {
+        let porc = parseFloat(porcentajeInput.value) || 0;
+        if (porc < 0) porc = 0;
+        if (porc > 100) porc = 100;
+        porcentajeInput.value = porc;
+        
+        actualizarCalculosGlobales();
+      }
+      
+      function actualizarPorDescuento() {
+        let desc = parseInt(descuentoInput.value, 10) || 0;
+        if (desc < 0) desc = 0;
+        descuentoInput.value = desc;
+        
+        // Actualizar el porcentaje basado en el descuento
+        const total = calcularSubtotalActual();
+        const porc = total > 0 ? Math.round((desc/total)*100) : 0;
+        porcentajeInput.value = porc;
+        actualizarCalculosGlobales();
+      }
+
+      function calcularSubtotalActual() {
+        let subtotal = 0;
+        if (pedidoActual && pedidoActual.items) {
+          pedidoActual.items.forEach(it => {
+            const unitPesos = Math.round(it.valorU || 0);
+            subtotal += Math.round(it.cantidad * unitPesos);
+          });
+        }
+        return subtotal;
+      }
+
+      // Configurar event listeners solo para administradores
+      if (admin) {
+        porcentajeInput.addEventListener('input', actualizarPorPorcentaje);
+        descuentoInput.addEventListener('input', actualizarPorDescuento);
+        envioInput.addEventListener('input', actualizarTotalFinal);
+      }
+    }, 0);
 
     // Selector de pago
     let pagoDiv = document.getElementById('pagoSelector');
@@ -1046,6 +1289,9 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       
       // Llamar para actualizar el estado de los botones después de renderizar
       actualizarEstadoBotonesPorEntrega();
+      
+      // Actualizar todos los cálculos después de renderizar
+      setTimeout(() => actualizarCalculosGlobales(), 200);
     }, 0);
   }
 
@@ -1151,12 +1397,52 @@ document.getElementById('guardarBtn').onclick = async () => {
       firebase.database().ref('pedidos/' + pedidoActual.id).update(updateData)
     ];
 
-    // Guardar ALIAS en pedidos.pagos.alias si es transferencia y hay alias
-    if (tipoPago === 'Transferencia' && alias && admin) {
-      promises.push(
-        firebase.database().ref('pedidos/' + pedidoActual.id + '/pagos').update({ alias: alias })
-      );
+
+
+
+    // Guardar descuento, porcentaje, envio y totalFinal en pedidos.pagos
+    const descuentoInput = document.getElementById('descuentoInput');
+    const porcentajeInput = document.getElementById('porcentajeInput');
+    const envioInput = document.getElementById('envioInput');
+    let descuento = 0;
+    let porcentaje = 0;
+    let envio = 0;
+    if (descuentoInput) {
+      descuento = parseInt(descuentoInput.value, 10);
+      if (isNaN(descuento) || descuento < 0) descuento = 0;
     }
+    if (porcentajeInput) {
+      porcentaje = parseInt(porcentajeInput.value, 10);
+      if (isNaN(porcentaje) || porcentaje < 0) porcentaje = 0;
+      if (porcentaje > 100) porcentaje = 100;
+    }
+    if (envioInput) {
+      envio = parseInt(envioInput.value, 10);
+      if (isNaN(envio) || envio < 0) envio = 0;
+    }
+    let totalFinal = 0;
+    if (pedidoActual.items && pedidoActual.items.length) {
+      let totalTmp = 0;
+      pedidoActual.items.forEach(it => {
+        const unitPesos = Math.round(it.valorU || 0);
+        totalTmp += Math.round(it.cantidad * unitPesos);
+      });
+      totalFinal = totalTmp - descuento + envio;
+      if (totalFinal < 0) totalFinal = 0;
+    }
+
+    // Guardar ALIAS, descuento, porcentaje y envio en pedidos.pagos
+    const pagosUpdate = {};
+    if (tipoPago === 'Transferencia' && alias && admin) {
+      pagosUpdate.alias = alias;
+    }
+    pagosUpdate.descuento = descuento;
+    pagosUpdate.porcentajeDescuento = porcentaje;
+    pagosUpdate.envio = envio;
+    pagosUpdate.totalFinal = totalFinal;
+    promises.push(
+      firebase.database().ref('pedidos/' + pedidoActual.id + '/pagos').update(pagosUpdate)
+    );
 
     await Promise.all(promises);
     alert('Pedido actualizado ✔️');

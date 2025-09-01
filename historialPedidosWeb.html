@@ -120,10 +120,11 @@
     button{padding:4px 10px;border:none;border-radius:4px;cursor:pointer;box-shadow: #5c5866 0px 2px 8px 0px;}
     /* Anchos de columnas */
     th.col-indicador, td.col-indicador { width: 4%; min-width: 28px; }
-    th.col-nombre, td.col-nombre { width: 18%; min-width: 120px; }
-    th.col-fecha, td.col-fecha { width: 12%; min-width: 80px; }
-    th.col-entrega, td.col-entrega { width: 12%; min-width: 80px; }
-    th.col-estado, td.col-estado { width: 12%; min-width: 80px; }
+    th.col-nombre, td.col-nombre { width: 16%; min-width: 120px; }
+    th.col-fecha, td.col-fecha { width: 10%; min-width: 80px; }
+    th.col-entrega, td.col-entrega { width: 10%; min-width: 80px; }
+    th.col-estado, td.col-estado { width: 10%; min-width: 80px; }
+    th.col-nota, td.col-nota { width: 18%; min-width: 120px; }
     th.col-contacto, td.col-contacto { width: 7%; min-width: 40px; }
   th.col-eliminar, td.col-eliminar { width: 7%; min-width: 40px; text-align: center; vertical-align: middle; }
     @media (max-width: 900px) {
@@ -132,6 +133,7 @@
       th.col-fecha, td.col-fecha,
       th.col-entrega, td.col-entrega,
       th.col-estado, td.col-estado { min-width: 60px; }
+      th.col-nota, td.col-nota { min-width: 80px; }
       th.col-contacto, td.col-contacto,
       th.col-eliminar, td.col-eliminar { min-width: 32px; }
     }
@@ -211,6 +213,24 @@
         line-height: 1;
     }
 
+    /* Estilos para el campo de nota */
+    .nota-input {
+        width: 95%;
+        padding: 4px 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.85em;
+        min-height: 20px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .nota-input:focus {
+        outline: none;
+        border-color: #4CAF50;
+        box-shadow: 0 0 3px rgba(76, 175, 80, 0.3);
+    }
+
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -257,6 +277,7 @@
   <th class="col-fecha">Fecha</th>
   <th class="col-entrega">Entrega</th>
   <th class="col-estado">Estado</th>
+  <th class="col-nota">Nota</th>
   <th class="col-contacto"></th>
   <th class="col-eliminar"></th>
 </tr>
@@ -535,7 +556,29 @@
   estadoCell.className = 'col-estado';
   estadoCell.textContent = estado;
 
-        /* --- 8. Contacto (icono WhatsApp) --- */
+        /* --- 8. Nota --- */
+        const notaCell = tr.insertCell();
+        notaCell.className = 'col-nota';
+        const notaInput = document.createElement('textarea');
+        notaInput.className = 'nota-input';
+        notaInput.value = p.nota || '';
+        notaInput.placeholder = 'Agregar nota...';
+        notaInput.rows = 1;
+        
+        // Guardar nota en Firebase cuando se modifique
+        let timeoutId;
+        notaInput.addEventListener('input', () => {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            const nuevaNota = notaInput.value.trim();
+            db.ref(`pedidos/${p.id}`).update({ nota: nuevaNota })
+              .catch(() => console.error('Error al guardar la nota'));
+          }, 1000); // Esperar 1 segundo después de que el usuario deje de escribir
+        });
+        
+        notaCell.appendChild(notaInput);
+
+        /* --- 9. Contacto (icono WhatsApp) --- */
   const contactoCell = tr.insertCell();
   contactoCell.className = 'col-contacto';
         const telefono = p.cliente?.telefono ? p.cliente.telefono.replace(/[^\d]/g, '') : '';
@@ -566,7 +609,7 @@
         };
         contactoCell.appendChild(btnTel);
 
-        /* --- 9. Acciones --- */
+        /* --- 10. Acciones --- */
         const acciones = tr.insertCell();
         acciones.className = 'col-eliminar';
         acciones.style.textAlign = 'center';
