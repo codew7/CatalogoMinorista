@@ -573,7 +573,7 @@
             const nuevaNota = notaInput.value.trim();
             db.ref(`pedidos/${p.id}`).update({ nota: nuevaNota })
               .catch(() => console.error('Error al guardar la nota'));
-          }, 1000); // Esperar 1 segundo después de que el usuario deje de escribir
+          }, 5000); // Esperar 5 segundo después de que el usuario deje de escribir
         });
         
         notaCell.appendChild(notaInput);
@@ -702,4 +702,5 @@ function mostrarModalClave(onSuccess) {
 </script>
 
 </body>
+
 </html>
