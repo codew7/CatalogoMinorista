@@ -20,6 +20,12 @@
     
     <style>
         :root {
+            --ganancia-seleccionados-color: #dbad23;
+        /* Exclusivo para Ganancia Seleccionados */
+        .ganancia-seleccionados-cell {
+            color: var(--ganancia-seleccionados-color) !important;
+            font-weight: 700;
+        }
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
             --success-color: #27ae60;
@@ -2131,7 +2137,7 @@
             const filas = [
                 { nombre: 'Facturacion', datos: datosFacturacion.facturacion, esMoneda: true, expandible: true, color: 'facturacion' },
                 { nombre: 'Ganancia Bruta Tot.', datos: datosFacturacion.gananciaBruta, esMoneda: true, expandible: true, color: 'ganancia' },
-                { nombre: 'Ganancia Seleccionados', datos: datosFacturacion.gananciaSeleccionados, esMoneda: true, color: 'ganancia' },
+                { nombre: 'Ganancia Seleccionados', datos: datosFacturacion.gananciaSeleccionados, esMoneda: true, color: 'ganancia-seleccionados' },
                 { nombre: 'Gastos', datos: datosFacturacion.gastos, esMoneda: true, expandible: true, color: 'gastos' },
                 { nombre: 'Ganancia Neta', datos: datosFacturacion.gananciaNeta, esMoneda: true, color: 'ganancia' },
                 { nombre: 'Ganancia %', datos: datosFacturacion.gananciaPercent, esMoneda: false, expandible: true, color: 'ganancia' },
@@ -2156,6 +2162,10 @@
                     } else if (fila.nombre === 'Ventas Generadas') {
                         tr.addEventListener('click', () => toggleVentasGeneradasDetail());
                     }
+                }
+                // Aplicar clase exclusiva a Ganancia Seleccionados
+                if (fila.color === 'ganancia-seleccionados') {
+                    tr.classList.add('ganancia-seleccionados-cell');
                 }
                 
                 // Primera columna: nombre de la fila
@@ -2201,6 +2211,8 @@
                             td.classList.add('ganancia-cell');
                         } else if (fila.color === 'gastos') {
                             td.classList.add('gastos-cell');
+                        } else if (fila.color === 'ganancia-seleccionados') {
+                            td.classList.add('ganancia-seleccionados-cell');
                         } else {
                             td.classList.add('currency-cell');
                         }
@@ -2242,6 +2254,8 @@
                         tdTotal.classList.add('ganancia-cell');
                     } else if (fila.color === 'gastos') {
                         tdTotal.classList.add('gastos-cell');
+                    } else if (fila.color === 'ganancia-seleccionados') {
+                        tdTotal.classList.add('ganancia-seleccionados-cell');
                     } else {
                         tdTotal.classList.add('currency-cell');
                     }

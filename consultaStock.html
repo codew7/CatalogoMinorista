@@ -464,16 +464,10 @@
                     return;
                 }
 
-                // Limitar a 500 resultados para mejorar rendimiento
-                const limitedData = data.slice(0, 500);
-                if (data.length > 500) {
-                    console.log(`Mostrando 500 de ${data.length} resultados. Refina tu búsqueda para ver más.`);
-                }
-
                 // Usar DocumentFragment para mejor rendimiento
                 const fragment = document.createDocumentFragment();
 
-                limitedData.forEach(item => {
+                data.forEach(item => {
                     let stockClass = '';
                     if (item.stock <= 0) stockClass = 'stock-zero';
                     else if (item.stock <= 5) stockClass = 'stock-low';
@@ -494,13 +488,6 @@
                 });
 
                 tableBody.appendChild(fragment);
-
-                // Mostrar aviso si hay muchos resultados
-                if (data.length > 500) {
-                    const warningRow = document.createElement('tr');
-                    warningRow.innerHTML = `<td colspan="5" style="text-align:center;color:var(--warning);font-style:italic;">Mostrando 500 de ${data.length} resultados. Refina tu búsqueda para ver más.</td>`;
-                    tableBody.appendChild(warningRow);
-                }
             }
 
             let searchTimeout;
