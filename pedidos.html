@@ -490,6 +490,25 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             });
           }
 
+          // Capturar valores de porcentaje, descuento y envío desde los inputs
+          const descuentoInput = document.getElementById('descuentoInput');
+          const porcentajeInput = document.getElementById('porcentajeInput');
+          const envioInput = document.getElementById('envioInput');
+          
+          let descuento = 0;
+          let porcentaje = 0;
+          let envio = 0;
+          
+          if (descuentoInput) {
+            descuento = parseFloat(descuentoInput.value) || 0;
+          }
+          if (porcentajeInput) {
+            porcentaje = parseFloat(porcentajeInput.value) || 0;
+          }
+          if (envioInput) {
+            envio = parseFloat(envioInput.value) || 0;
+          }
+
           // Preparar datos para actualizar
           const updateData = {
             items: pedidoActual.items,
@@ -502,8 +521,22 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             lastModifiedEmail: lastModifiedEmail
           };
 
-          // Guardar cambios primero
-          await firebase.database().ref('pedidos/' + pedidoActual.id).update(updateData);
+          // Preparar datos de pagos con porcentaje, descuento y envío
+          const pagosUpdate = {};
+          if (tipoPago === 'Transferencia' && alias && admin) {
+            pagosUpdate.alias = alias;
+          }
+          pagosUpdate.descuento = descuento;
+          pagosUpdate.porcentajeDescuento = porcentaje;
+          pagosUpdate.envio = envio;
+
+          // Guardar cambios y datos de pagos
+          const promises = [
+            firebase.database().ref('pedidos/' + pedidoActual.id).update(updateData),
+            firebase.database().ref('pedidos/' + pedidoActual.id + '/pagos').update(pagosUpdate)
+          ];
+          
+          await Promise.all(promises);
 
         } catch (error) {
           alert('Error al guardar cambios antes del despacho: ' + error.message);
@@ -569,6 +602,30 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
               costos += (parseFloat(it.valorC) || 0) * (parseInt(it.cantidad) || 0);
             });
           }
+          
+          // Obtener valores actuales de descuento y envío
+          const descuentoInputPago = document.getElementById('descuentoInput');
+          const envioInputPago = document.getElementById('envioInput');
+          const porcentajeInputPago = document.getElementById('porcentajeInput');
+          
+          let descuentoPago = 0;
+          let envioPago = 0;
+          let porcentajePago = 0;
+          
+          if (descuentoInputPago) {
+            descuentoPago = parseFloat(descuentoInputPago.value) || 0;
+          }
+          if (envioInputPago) {
+            envioPago = parseFloat(envioInputPago.value) || 0;
+          }
+          if (porcentajeInputPago) {
+            porcentajePago = parseFloat(porcentajeInputPago.value) || 0;
+          }
+          
+          // Calcular total final correctamente
+          let totalFinal = subtotal - descuentoPago + envioPago;
+          if (totalFinal < 0) totalFinal = 0;
+          
           const ganancia = subtotal - costos;
           let medioPago = 'efectivo';
           let alias = '';
@@ -587,7 +644,10 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
             subtotal,
             costos,
             ganancia,
-            totalFinal: subtotal
+            totalFinal: totalFinal,
+            descuento: descuentoPago,
+            porcentajeDescuento: porcentajePago,
+            envio: envioPago
           };
           if (alias) {
             pagoData.alias = alias;
@@ -756,7 +816,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     // Actualizar el total en pantalla
     const totalDiv = document.getElementById('total');
     if (totalDiv) {
-      totalDiv.textContent = `TOTAL $ ${subtotal.toLocaleString('es-AR')}`;
+      totalDiv.textContent = `Subtotal $ ${subtotal.toLocaleString('es-AR')}`;
     }
 
     // Obtener valores actuales de los inputs
@@ -818,7 +878,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     
     headerHTML += `
         <th>Valor</th>
-        <th>Subtotal</th>
+        <th>Total</th>
         <th class="elim"></th>
       </tr>`;
     
@@ -974,7 +1034,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     }
     totalDiv.style = 'font-weight:bold;font-size:1.2em;text-align:right;';
 
-    totalDiv.textContent = `TOTAL $ ${total.toLocaleString('es-AR')}`;
+    totalDiv.textContent = `Subtotal $ ${total.toLocaleString('es-AR')}`;
 
     // Campo Porcentaje y Descuento
     let descuentoDiv = document.getElementById('descuentoDiv');
