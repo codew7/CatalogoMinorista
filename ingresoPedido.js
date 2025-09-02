@@ -988,6 +988,7 @@ addItemBtn.addEventListener('click', addNewItem);
   form.addEventListener('submit', function(e) {
   if (pedidoId) return; // Si es edición, no ejecutar alta
   e.preventDefault();
+  // Deshabilitar el botón de submit para evitar doble clic
   const submitBtn = form.querySelector('button[type="submit"]');
   if (submitBtn) submitBtn.disabled = true;
   ingresarPedido();
@@ -1008,17 +1009,14 @@ addItemBtn.addEventListener('click', addNewItem);
 
     if (!nombre) {
       showPopup('Debe completar el campo Nombre de cliente.', '❗', false);
-      reenableSubmitBtn();
       return;
     }
     if (!tipoCliente) {
       showPopup('Debe seleccionar el Tipo de Cliente.', '❗', false);
-      reenableSubmitBtn();
       return;
     }
     if (!medioPago) {
       showPopup('Debe seleccionar el Medio de Pago.', '❗', false);
-      reenableSubmitBtn();
       return;
     }
     // Validar ALIAS si el medio de pago es Transferencia o Parcial
@@ -1026,14 +1024,12 @@ addItemBtn.addEventListener('click', addNewItem);
       const alias = form.alias ? form.alias.value.trim().toUpperCase() : '';
       if (!alias) {
         showPopup('Debe completar el campo ALIAS para transferencias y pagos parciales.', '❗', false);
-        reenableSubmitBtn();
         return;
       }
     }
     if (!vendedor) {
-  showPopup('Debe completar el campo Vendedor.', '❗', false);
-  reenableSubmitBtn();
-  return;
+      showPopup('Debe completar el campo Vendedor.', '❗', false);
+      return;
     }
 
     // Procesar y guardar subtotal y total como enteros (solo dígitos)
@@ -1049,22 +1045,15 @@ addItemBtn.addEventListener('click', addNewItem);
     const alias = form.alias ? form.alias.value.trim().toUpperCase() : '';
 
     if (items.length === 0) {
-  showPopup('Debe agregar al menos un artículo.', '❗', false);
-  reenableSubmitBtn();
-  return;
+      showPopup('Debe agregar al menos un artículo.', '❗', false);
+      return;
     }
     // Validar artículos
     for (const item of items) {
       if (!item.nombre || item.cantidad <= 0 || item.valorU < 0) {
         showPopup('Complete correctamente los datos de los artículos.', '❗', false);
-        reenableSubmitBtn();
         return;
       }
-  // Función para reactivar el botón submit si hubo error
-  function reenableSubmitBtn() {
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) submitBtn.disabled = false;
-  }
       
       // FORZAR ACTUALIZACIÓN de todos los campos desde Google Sheets antes de guardar
       if (item.nombre && articulosPorNombre[item.nombre]) {
