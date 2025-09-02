@@ -986,12 +986,9 @@ addItemBtn.addEventListener('click', addNewItem);
 
   // --- SUBMIT GLOBAL SOLO PARA ALTAS ---
   form.addEventListener('submit', function(e) {
-  if (pedidoId) return; // Si es edición, no ejecutar alta
-  e.preventDefault();
-  // Deshabilitar el botón de submit para evitar doble clic
-  const submitBtn = form.querySelector('button[type="submit"]');
-  if (submitBtn) submitBtn.disabled = true;
-  ingresarPedido();
+    if (pedidoId) return; // Si es edición, no ejecutar alta
+    e.preventDefault();
+    ingresarPedido();
   });
 
   // Extraer la lógica de ingreso de pedido a una función reutilizable
