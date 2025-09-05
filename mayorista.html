@@ -47,6 +47,47 @@
     </script>
     
     <style>
+@media (max-width: 600px) {
+    .header-content-mobile {
+        position: absolute;
+        top: 10px;
+        left: 25px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        z-index: 5;
+    }
+    .header-content-mobile img {
+        width: 200px !important;
+        margin-bottom: 2px;
+    }
+    .header-content-mobile .mayorista-text {
+        font-size: 16px !important;
+        margin-top: 0 !important;
+        margin-left: 5px !important;
+        text-align: left !important;
+    }
+    .header-content-desktop {
+        display: none !important;
+    }
+}
+
+@media (min-width: 601px) {
+    .header-content-mobile {
+        display: none !important;
+    }
+    .header-content-desktop {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+    .header-content-desktop .mayorista-text {
+    font-size: 22px;
+    }
+}
         
         body {
             font-family: 'Arial', sans-serif;
@@ -363,6 +404,47 @@
             -moz-appearance: textfield;
             appearance: textfield;
         }
+
+        .carousel {
+            position: relative;
+            width: 100%;
+            max-width: 90vw;
+            margin: 15px auto;
+            overflow: hidden;
+            border-radius: 10px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+        }
+        .carousel-images {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+        .carousel-slide {
+            flex: 0 0 100%;
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        @media (max-width: 600px) {
+            .carousel { height: 140px; }
+        }
+        @media (min-width: 601px) and (max-width: 1024px) {
+            .carousel { height: 180px; }
+        }
+        @media (min-width: 1025px) {
+            .carousel { height: 300px; }
+        }
+
         
     </style>
 </head>
@@ -374,19 +456,30 @@
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 
-<header style="display: flex; flex-direction: column; align-items: center; padding: 10px; background-color: #4CAF50; width: 90%; margin: 0 auto; border-radius: 10px;">
-    <img src="logoblanco.png" alt="Logo de HomePoint" width="300" height=auto>
-    <div style="text-align: center; font-size: 16px; font-style: italic; margin-top: 5px;">
-        Distribuidora Mayorista
-    </div>
-    <div style="display: flex; width: 100%; justify-content: center; align-items: center; margin-top: 10px; position: relative; gap: 10px;">
-        <span style="color: #fff; font-size: 13px; font-weight: 500; font-style: italic;">Busca tu pedido 👉</span>
-        <button id="ultimoPedidoBtn" style="background: #fff; color: #4CAF50; border: 2px solid #4CAF50; border-radius: 50%; padding: 7px; width: 38px; height: 38px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px #0001;">
-            <i class="fas fa-shopping-cart"></i>
-        </button>
-        <a href="#" onclick="window.open(WHATSAPP_URL, '_blank')" class="whatsapp-link" target="_blank">
-            <img src="whatsapp.png" alt="WhatsApp" class="whatsapp-link" width="50" height="50" style="position: fixed; bottom: 30px; right: 20px; z-index: 1000; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
-        </a>
+<header style="display: flex; flex-direction: column; align-items: center; padding: 10px; background-color: #a9e062; width: 90%; margin: 0 auto; border-radius: 10px;">
+    <div style="position: relative; width: 100%; min-height: 70px;">
+
+        <div style="position: absolute; top: 15px; right: 25px; z-index: 10; display: flex; align-items: center; gap: 8px;">
+            <span style="color: #fff; font-size: 16px; font-weight: 600; font-family: Arial, sans-serif;">Ingresar</span>
+            <button id="ultimoPedidoBtn" style="background: #fff; color: #626462; border: 2px solid #fff; border-radius: 50%; padding: 7px; width: 38px; height: 38px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px #0001;">
+                <i class="fas fa-sign-in-alt"></i>
+            </button>
+        </div>
+        <!-- Logo y texto para mobile -->
+        <div class="header-content-mobile">
+            <img src="logoblanco.png" alt="Logo de HomePoint">
+            <div class="mayorista-text">Distribuidora Mayorista</div>
+        </div>
+        <!-- Logo y texto para desktop/tablet -->
+        <div class="header-content-desktop">
+            <img src="logoblanco.png" alt="Logo de HomePoint" width="400" style="display:block; margin:0 auto;">
+            <div class="mayorista-text">Distribuidora Mayorista</div>
+        </div>
+        <div style="display: flex; width: 100%; justify-content: center; align-items: center; margin-top: 10px; position: relative; gap: 10px;">
+            <a href="#" onclick="window.open(WHATSAPP_URL, '_blank')" class="whatsapp-link" target="_blank">
+                <img src="whatsapp.png" alt="WhatsApp" class="whatsapp-link" width="50" height="50" style="position: fixed; bottom: 30px; right: 20px; z-index: 1000; cursor: pointer; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
+            </a>
+        </div>
     </div>
 </header>
 
@@ -413,32 +506,27 @@
         }
     </script>
 
-<div id="carousel" style="position: relative; width: 100%; max-width: 90%; margin: 15px auto; overflow: hidden; height: 300px; border-radius: 10px;">
-    <div id="carousel-images" style="display: flex; transition: transform 0.5s ease-in-out; height: 100%; width: 100%;">
-        <div style="flex: 0 0 100%; height: 100%;">
-            <img src="image1.jpg" alt="Imagen 1" style="width: 100%; height: 100%; object-fit: cover;">
+<div id="carousel" style="position: relative; width: 100%; max-width: 90%; margin: 15px auto; overflow: hidden; border-radius: 10px;">
+    <div id="carousel-images" class="carousel-images">
+        <div class="carousel-slide">
+            <picture>
+                <source srcset="image1-mobile.jpg" media="(max-width: 600px)">
+                <img src="image1.jpg" alt="Imagen 1" style="width:100%;height:100%;object-fit:cover;">
+            </picture>
         </div>
-        <div style="flex: 0 0 100%; height: 100%;">
-            <img src="image2.jpg" alt="Imagen 2" style="width: 100%; height: 100%; object-fit: cover;">
-        </div>
-        <div style="flex: 0 0 100%; height: 100%;">
-            <img src="image3.jpg" alt="Imagen 3" style="width: 100%; height: 100%; object-fit: cover;">
-        </div>
-        <div style="flex: 0 0 100%; height: 100%;">
-            <img src="image4.jpg" alt="Imagen 4" style="width: 100%; height: 100%; object-fit: cover;">
-        </div>
-        <div style="flex: 0 0 100%; height: 100%;">
-            <img src="image5.jpg" alt="Imagen 5" style="width: 100%; height: 100%; object-fit: cover;">
-        </div>
-        <div style="flex: 0 0 100%; height: 100%;">
-            <img src="image6.jpg" alt="Imagen 6" style="width: 100%; height: 100%; object-fit: cover;">
+        <div class="carousel-slide">
+            <picture>
+                <source srcset="image2-mobile.jpg" media="(max-width: 600px)">
+                <img src="image2.jpg" alt="Imagen 2" style="width:100%;height:100%;object-fit:cover;">
+            </picture>
         </div>
     </div>
 </div>
 
+
 <script>
     const carouselImages = document.getElementById('carousel-images');
-    const images = document.querySelectorAll('#carousel-images img');
+    const slides = document.querySelectorAll('.carousel-slide');
     let currentIndex = 0;
 
     function updateCarousel() {
@@ -447,7 +535,7 @@
     }
 
     setInterval(() => {
-        currentIndex = (currentIndex + 1) % images.length;
+        currentIndex = (currentIndex + 1) % slides.length;
         updateCarousel();
     }, 5000); // Cambiar imagen cada 5 segundos
 </script>
@@ -1664,21 +1752,102 @@ ultimoPedidoEmailInput.addEventListener('keydown', function(e) {
 });
     </script>
 
-    <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 86%; margin: 20px auto; border-radius: 10px;">
+    <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 86%; margin: 10px auto; border-radius: 10px;">
         <img src="logo.png" alt="Logo de HomePoint" width="200" style="display: block; margin: 0 auto;">
-        <h1 style="font-size: 14px; font-style: normal; margin: 0; text-align: center; font-weight: normal;"></h1>
+        <div style="margin: 18px 0 20px 0; display: flex; justify-content: center; gap: 30px; align-items: center;">
+            <a href="https://www.instagram.com/distribuidora.homepoint/" target="_blank" style="color: #E1306C; text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 18px;">
+                <i class="fab fa-instagram" style="font-size: 28px;"></i>
+                <span>Instagram</span>
+            </a>
+            <a href="https://www.tiktok.com/@sdistribuidora.homepoint/" target="_blank" style="color: #000; text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 18px;">
+                <i class="fab fa-tiktok" style="font-size: 28px;"></i>
+                <span>TikTok</span>
+            </a>
+        </div>
+        <div style="margin-top: 10px;">
             <span style="display: block; margin-top: 10px;"></span>
-            Contacto Consumidor Final
-            <a href="https://api.whatsapp.com/send/?phone=5491154597288&text&type=phone_number&app_absent=0" target="_blank" class="whatsapp-link" style="color: #4CAF50; text-decoration: none;">+54 9 11 5459-7288</a> <br>
+            <span style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                <i class="fas fa-user-tag" style="color:#4CAF50;"></i> Venta Minorista
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                <i class="fas fa-phone" style="color:#4CAF50;"></i>
+                <a href="https://api.whatsapp.com/send/?phone=5491154597288&text&type=phone_number&app_absent=0" target="_blank" class="whatsapp-link" style="color: #4CAF50; text-decoration: none;">+54 9 11 5459-7288</a>
+            </span><br>
             <span style="display: block; margin-top: 5px;"></span>
-            Venta Mayorista
-            <a href="https://api.whatsapp.com/send/?phone=5491121891006&text&type=phone_number&app_absent=0" target="_blank" class="whatsapp-link" style="color: #4CAF50; text-decoration: none;">+54 9 11 2189-1006</a> <br>
+            <span style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                <i class="fas fa-user-tie" style="color:#4CAF50;"></i> Venta Mayorista
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                <i class="fas fa-phone" style="color:#4CAF50;"></i>
+                <a href="https://api.whatsapp.com/send/?phone=5491121891006&text&type=phone_number&app_absent=0" target="_blank" class="whatsapp-link" style="color: #4CAF50; text-decoration: none;">+54 9 11 2189-1006</a>
+            </span><br>
+            <span style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2px; margin-top: 8px;">
+                <i class="fas fa-envelope" style="color:#4CAF50;"></i>
+                <a href="mailto:distribuidorahomepoint@gmail.com" style="color: #4CAF50; text-decoration: none;">
+                    distribuidorahomepoint@gmail.com
+                </a>
+            </span><br>
             <span style="display: block; margin-top: 10px;"></span>
-            Sargento Cabral 1945, Florida Oeste, Vicente López, Buenos Aires <br>
+            <span style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                <i class="fas fa-map-marker-alt" style="color:#4CAF50;"></i>
+                <a href="https://www.google.com/maps?q=Sargento+Cabral+1945,+Florida+Oeste,+Vicente+López,+Buenos+Aires" target="_blank" style="color:#4CAF50; text-decoration: none;">
+                    Sargento Cabral 1945, Florida Oeste, Vicente López, Buenos Aires
+                </a>
+            </span><br>
             <span style="display: block; margin-top: 20px;"></span>
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3286.805060845621!2d-58.51409442351304!3d-34.53316655377695!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb0d51d5740b3%3A0x2d2dfd9b7cad8e98!2sALI%2C%20Sgto.%20Cabral%201945%2C%20B1604%20Florida%20Oeste%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1ses!2sar!4v1744725791062!5m2!1ses!2sar" width="300" height="200" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-        </h1>
+        </div>
     </footer>
+<!-- Carrusel Pie de Página -->
+<div id="carousel-pie" class="carousel" style="margin-bottom: 20px;">
+    <div id="carousel-pie-images" class="carousel-images">
+        <div class="carousel-slide">
+            <picture>
+                <source srcset="imagepie1-mobile.jpg" media="(max-width: 600px)">
+                <img src="imagepie1.jpg" alt="Imagen Pie 1" style="width:100%;height:100%;object-fit:cover;">
+            </picture>
+        </div>
+        <div class="carousel-slide">
+            <picture>
+                <source srcset="imagepie2-mobile.jpg" media="(max-width: 600px)">
+                <img src="imagepie2.jpg" alt="Imagen Pie 2" style="width:100%;height:100%;object-fit:cover;">
+            </picture>
+        </div>
+        <div class="carousel-slide">
+            <picture>
+                <source srcset="imagepie3-mobile.jpg" media="(max-width: 600px)">
+                <img src="imagepie3.jpg" alt="Imagen Pie 3" style="width:100%;height:100%;object-fit:cover;">
+            </picture>
+        </div>
+        <div class="carousel-slide">
+            <picture>
+                <source srcset="imagepie4-mobile.jpg" media="(max-width: 600px)">
+                <img src="imagepie4.jpg" alt="Imagen Pie 4" style="width:100%;height:100%;object-fit:cover;">
+            </picture>
+        </div>
+        <div class="carousel-slide">
+            <picture>
+                <source srcset="imagepie5-mobile.jpg" media="(max-width: 600px)">
+                <img src="imagepie5.jpg" alt="Imagen Pie 5" style="width:100%;height:100%;object-fit:cover;">
+            </picture>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Carrusel Pie de Página
+    const carouselPieImages = document.getElementById('carousel-pie-images');
+    const slidesPie = carouselPieImages.querySelectorAll('.carousel-slide');
+    let currentPieIndex = 0;
+
+    function updateCarouselPie() {
+        const offset = -currentPieIndex * 100;
+        carouselPieImages.style.transform = `translateX(${offset}%)`;
+    }
+
+    setInterval(() => {
+        currentPieIndex = (currentPieIndex + 1) % slidesPie.length;
+        updateCarouselPie();
+    }, 5000);
+</script>
 </body>
 </html>
-
