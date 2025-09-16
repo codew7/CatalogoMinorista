@@ -1575,7 +1575,7 @@ addItemBtn.addEventListener('click', addNewItem);
       // recargoInput.readOnly = true; // Ahora siempre editable
     } else if (form.medioPago.value === 'Transferencia') {
       let subtotal = items.reduce((acc, it) => acc + (it.cantidad * it.valorU), 0);
-      let recargo = Math.round(subtotal * 0.02);
+      let recargo = Math.round(subtotal * 0.03);
       recargoInput.value = recargo.toLocaleString('es-AR', {maximumFractionDigits:0});
       // recargoInput.readOnly = true; // Ahora siempre editable
     } else {

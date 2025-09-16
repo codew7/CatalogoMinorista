@@ -268,14 +268,18 @@
 
         .pagination-button {
             width: 40px;
-            padding: 8px 12px;
-            font-size: 14px;
+            height: 40px;
+            padding: 0;
+            font-size: 16px;
             border: 1px solid #ddd;
-            border-radius: 50px;
+            border-radius: 50%;
             background-color: #4CAF50;
             cursor: pointer;
             transition: background-color 0.3s, color 0.3s;
             text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .pagination-button:hover {
@@ -285,7 +289,7 @@
 
         .pagination-button.active {
             background-color: #4CAF50;
-            color: white;
+            color: rgb(231, 235, 11);
             font-weight: bold;
             cursor: default;
         }
@@ -542,18 +546,42 @@
 
 
 <header style="text-align: center; padding: 10px; background-color: #FFFFFF; width: 89%; margin: 0 auto; border-radius: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden;">
-    <div style="white-space: nowrap; animation: marquee 15s linear infinite;">
-        <h1 id="marquee-text" style="font-size: 18px; font-style: italic; margin: 0; text-align: center; display: inline-block; color: #4CAF50;"></h1>
+    <div class="marquee-container">
+        <div class="marquee-content">
+            <span id="marquee-text-1" class="marquee-text"></span>
+            <span id="marquee-text-2" class="marquee-text"></span>
+        </div>
     </div>
 </header>
 
 <style>
-    @keyframes marquee {
+    .marquee-container {
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        height: 36px;
+        display: flex;
+        align-items: center;
+    }
+    .marquee-content {
+        display: flex;
+        width: max-content;
+        animation: marquee-continuous 20s linear infinite;
+    }
+    .marquee-text {
+        font-size: 18px;
+        font-style: italic;
+        color: #4CAF50;
+        margin: 0 40px;
+        white-space: nowrap;
+        display: inline-block;
+    }
+    @keyframes marquee-continuous {
         0% {
-            transform: translateX(-100%);
+            transform: translateX(0);
         }
         100% {
-            transform: translateX(100%);
+            transform: translateX(-50%);
         }
     }
 </style>
@@ -569,7 +597,11 @@
             <select id="categorias">
                 <option value="todos">Todas las categorías</option>
             </select>
-            <button id="todos">Mostrar Todos</button>
+            <button id="todos" style="margin-left: 10px;">Mostrar Todos</button>
+            <label style="display: flex; align-items: center; font-weight: bold; margin-left: 10px; background-color: #e8f5e8; border: 1px solid #4CAF50; color: #4CAF50; padding: 4px 8px; border-radius: 4px; font-size: 0.95em;">
+                <input type="checkbox" id="filtroDisponibles" style="margin-right: 12px; accent-color: #4CAF50; width: 18px; height: 18px;">
+                <span style="color: #4CAF50; font-weight: bold;"> Solo Disponibles</span>
+            </label>
         </div>
         <div class="controls-row">
             <input type="text" id="buscar" placeholder="Buscar artículo..." style="width: 100%;">
@@ -588,10 +620,10 @@
 
     <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
         <span class="close" onclick="closeLightbox(event)">x</span>
-        <button id="prev-btn" style="position: absolute; left: 15px; top: 50%; transform:translateY(-70%); font-size:3em; background:none; border:none; color:#4CAF50; display:none;">&#10094;</button>
+        <button id="prev-btn" style="position: absolute; left: 15px; top: 50%; transform:translateY(-70%); font-size:3em; background:none; border:none; color:#777777; display:none;">&#10094;</button>
         <img id="lightbox-img" src="" alt="Imagen ampliada">
         <div id="lightbox-value" style="color: white; font-size: 1.5em; text-align: center; margin-top: 10px;"></div>
-        <button id="next-btn" style="position: absolute; right: 15px; top: 50%; transform:translateY(-70%); font-size:3em; background:none; border:none; color:#4CAF50; display:none;">&#10095;</button>
+        <button id="next-btn" style="position: absolute; right: 15px; top: 50%; transform:translateY(-70%); font-size:3em; background:none; border:none; color:#777777; display:none;">&#10095;</button>
     </div>
 
     <!-- Contenedor del carrito de compras -->
@@ -714,7 +746,13 @@
                 // Usar la lista filtrada para obtener categorías
                 const categoriasSet = new Set(productos.map(item => item[0]));
                 const selectCategorias = document.getElementById('categorias');
-                categoriasSet.forEach(categoria => {
+                
+                // Convertir a array, filtrar categorías vacías y ordenar alfabéticamente
+                const categoriasOrdenadas = Array.from(categoriasSet)
+                    .filter(categoria => categoria && categoria.trim() !== '') // Filtrar categorías vacías
+                    .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' })); // Ordenar alfabéticamente
+                
+                categoriasOrdenadas.forEach(categoria => {
                     const option = document.createElement('option');
                     option.value = categoria;
                     option.textContent = categoria;
@@ -722,31 +760,60 @@
                 });
 
                 selectCategorias.addEventListener('change', () => {
-                    const categoria = selectCategorias.value;
-                    if (categoria === "todos") {
-                        mostrarPagina(1);
-                    } else {
-                        const filtrados = productos.filter(item => item[0] === categoria);
-                        mostrarPagina(1, filtrados);
-                    }
+                    aplicarFiltros();
                 });
 
                 document.getElementById('buscar').addEventListener('input', (e) => {
-                    const query = e.target.value.toLowerCase();
-                    const filtrados = productos.filter(item => 
-                        item[3].toLowerCase().includes(query) || item[2].toLowerCase().includes(query)
-                    );
-                    mostrarPagina(1, filtrados);
+                    aplicarFiltros();
+                });
+
+                document.getElementById('filtroDisponibles').addEventListener('change', () => {
+                    aplicarFiltros();
                 });
 
                 document.getElementById('todos').addEventListener('click', () => {
-                    // Resetear el filtro de categorías
+                    // Resetear todos los filtros
                     document.getElementById('categorias').value = 'todos';
-                    // Limpiar el campo de búsqueda
                     document.getElementById('buscar').value = '';
+                    document.getElementById('filtroDisponibles').checked = false;
                     // Mostrar todos los productos
                     mostrarPagina(1);
                 });
+
+                // Función para aplicar todos los filtros combinados
+                function aplicarFiltros() {
+                    const categoria = document.getElementById('categorias').value;
+                    const query = document.getElementById('buscar').value.toLowerCase();
+                    const soloDisponibles = document.getElementById('filtroDisponibles').checked;
+                    
+                    let filtrados = productos;
+                    
+                    // Filtrar por categoría
+                    if (categoria !== "todos") {
+                        filtrados = filtrados.filter(item => item[0] === categoria);
+                    }
+                    
+                    // Filtrar por búsqueda
+                    if (query.trim() !== '') {
+                        filtrados = filtrados.filter(item => 
+                            item[3].toLowerCase().includes(query) || item[2].toLowerCase().includes(query)
+                        );
+                    }
+                    
+                    // Filtrar por disponibilidad (solo disponibles y pocas unidades)
+                    if (soloDisponibles) {
+                        filtrados = filtrados.filter(item => {
+                            let stock = 0;
+                            if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
+                                stock = parseInt(item[10]);
+                            }
+                            // Mostrar solo si tiene stock (mayor a 0)
+                            return !isNaN(stock) && stock > 0;
+                        });
+                    }
+                    
+                    mostrarPagina(1, filtrados);
+                }
             })
             .catch(error => {
                 loadingMessage.style.display = 'none'; // Ocultar el mensaje de carga en caso de error
@@ -754,6 +821,7 @@
                 document.querySelector('#error').textContent = error.message;
             });
 
+        let primeraCarga = true;
         function mostrarPagina(pagina, datos = productos) {
             currentPage = pagina;
             const totalPaginas = Math.ceil(datos.length / ITEMS_PER_PAGE);
@@ -766,7 +834,20 @@
 
             // Solo hacer scroll si no se está escribiendo en el campo de búsqueda
             if (document.activeElement !== document.getElementById('buscar')) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (primeraCarga) {
+                    window.scrollTo({ top: 0, behavior: 'auto' });
+                    primeraCarga = false;
+                } else {
+                    const selectCategorias = document.getElementById('categorias');
+                    if (selectCategorias) {
+                        const rect = selectCategorias.getBoundingClientRect();
+                        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                        window.scrollTo({
+                            top: rect.top + scrollTop - 20, // 20px de margen superior opcional
+                            behavior: 'smooth'
+                        });
+                    }
+                }
             }
         }
 
@@ -1136,6 +1217,21 @@ function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria) {
     actualizarCarrito();
 }
 
+        function getMaxVisiblePaginationButtons() {
+            // Cada botón ocupa 48px (40px ancho + 8px margen), ajusta si tu CSS es diferente
+            const minButtonWidth = 48;
+            const container = document.getElementById('pagination');
+            let availableWidth = window.innerWidth;
+            if (container) {
+                // Si la paginación está en un contenedor más pequeño, usa su ancho
+                availableWidth = container.offsetWidth || availableWidth;
+            }
+            // Deja espacio para botones "Anterior" y "Siguiente" (2x100px)
+            const reserved = 220;
+            const maxButtons = Math.max(3, Math.floor((availableWidth - reserved) / minButtonWidth));
+            return Math.min(maxButtons, 15); // Límite máximo de 15 botones
+        }
+
         function actualizarPaginacion(paginaActual, datos) {
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = '';
@@ -1152,7 +1248,7 @@ function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria) {
             }
 
             // Botones numerados
-            const MAX_VISIBLE_BUTTONS = 5; // Máximo de botones visibles
+            const MAX_VISIBLE_BUTTONS = getMaxVisiblePaginationButtons();
             let startPage = Math.max(1, paginaActual - Math.floor(MAX_VISIBLE_BUTTONS / 2));
             let endPage = Math.min(totalPaginas, startPage + MAX_VISIBLE_BUTTONS - 1);
 
@@ -1180,6 +1276,14 @@ function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria) {
                 pagination.appendChild(btnSiguiente);
             }
         }
+
+        // Recalcular paginación al redimensionar la ventana
+        window.addEventListener('resize', () => {
+            // Se asume que currentPage y datos actuales están en variables globales
+            if (typeof currentPage !== 'undefined' && typeof productos !== 'undefined') {
+                actualizarPaginacion(currentPage, productos);
+            }
+        });
 
         function isValidImageUrl(url) {
             return url && url.match(/\.(jpeg|jpg|gif|png)$/i);
@@ -1679,7 +1783,8 @@ function mostrarModalPedidoConfirmado(pedidoId, email) {
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('marquee-text').innerHTML = MARQUEE_TEXT;
+            document.getElementById('marquee-text-1').innerHTML = MARQUEE_TEXT;
+            document.getElementById('marquee-text-2').innerHTML = MARQUEE_TEXT;
         });
 
     // Permitir cerrar el modal al hacer clic fuera del contenido
