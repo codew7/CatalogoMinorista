@@ -396,19 +396,58 @@
 </script>
 
 
-<header style="text-align: center; padding: 10px; background-color: #FFFFFF; width: 89%; margin: 0 auto; border-radius: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden;">
-    <div style="white-space: nowrap; animation: marquee 15s linear infinite;">
-        <h1 id="marquee-text" style="font-size: 18px; font-style: italic; margin: 0; text-align: center; display: inline-block; color: #4CAF50;"></h1>
+
+<header class="marquee-header">
+    <div class="marquee-container">
+        <div class="marquee-content" id="marquee-content">
+            <span id="marquee-text"></span>
+            <span id="marquee-text-duplicate"></span>
+        </div>
     </div>
 </header>
 
 <style>
-    @keyframes marquee {
+    .marquee-header {
+        text-align: center;
+        padding: 10px;
+        background-color: #FFFFFF;
+        width: 89%;
+        margin: 0 auto;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    .marquee-container {
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        height: 32px;
+        display: flex;
+        align-items: center;
+    }
+    .marquee-content {
+        display: flex;
+        width: max-content;
+        will-change: transform;
+        align-items: center;
+        animation: marquee-linear 20s linear infinite;
+    }
+    .marquee-content span {
+        font-size: 18px;
+        font-style: italic;
+        color: #4CAF50;
+        white-space: nowrap;
+        margin-right: 60px;
+        display: inline-block;
+    }
+    @keyframes marquee-linear {
         0% {
-            transform: translateX(100%);
+            transform: translateX(0);
         }
         100% {
-            transform: translateX(-100%);
+            transform: translateX(-50%);
         }
     }
 </style>
@@ -498,14 +537,19 @@
                 }, 100);
 
                 // Usar la lista filtrada para obtener categorías
-                const categoriasSet = new Set(productos.map(item => item[0]));
-                const selectCategorias = document.getElementById('categorias');
-                categoriasSet.forEach(categoria => {
-                    const option = document.createElement('option');
-                    option.value = categoria;
-                    option.textContent = categoria;
-                    selectCategorias.appendChild(option);
-                });
+
+                                const categoriasSet = new Set(productos.map(item => item[0]));
+                                const selectCategorias = document.getElementById('categorias');
+                                // Convertir a array, ordenar y agregar
+                                                Array.from(categoriasSet)
+                                                    .filter(categoria => categoria && categoria.trim() !== "")
+                                                    .sort((a, b) => a.localeCompare(b, 'es', {sensitivity: 'base'}))
+                                                    .forEach(categoria => {
+                                                        const option = document.createElement('option');
+                                                        option.value = categoria;
+                                                        option.textContent = categoria;
+                                                        selectCategorias.appendChild(option);
+                                                    });
 
                 selectCategorias.addEventListener('change', () => {
                     const categoria = selectCategorias.value;
@@ -1105,8 +1149,27 @@ function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria) {
             });
         }
 
+
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('marquee-text').innerHTML = MARQUEE_TEXT;
+            const marqueeText = document.getElementById('marquee-text');
+            const marqueeTextDuplicate = document.getElementById('marquee-text-duplicate');
+            marqueeText.innerHTML = MARQUEE_TEXT;
+            marqueeTextDuplicate.innerHTML = MARQUEE_TEXT;
+
+            // Ajustar la duración de la animación según el ancho del texto y la pantalla
+            function adjustMarqueeSpeed() {
+                const marqueeContent = document.getElementById('marquee-content');
+                const container = marqueeContent.parentElement;
+                // Sumar ambos textos y el margen
+                const contentWidth = marqueeText.offsetWidth + marqueeTextDuplicate.offsetWidth + 60;
+                const containerWidth = container.offsetWidth;
+                // Duración base: 20s para 2x pantalla, ajustar proporcionalmente
+                let duration = 20 * (contentWidth / containerWidth);
+                if (duration < 8) duration = 8; // mínimo
+                marqueeContent.style.animationDuration = duration + 's';
+            }
+            window.addEventListener('resize', adjustMarqueeSpeed);
+            setTimeout(adjustMarqueeSpeed, 200); // Esperar renderizado
         });
 
 
