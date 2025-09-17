@@ -1557,6 +1557,37 @@ document.getElementById('cerrarBtn').onclick = () => {
     entrega = 'Envios';
   }
   
+  // Capturar valores de porcentaje, descuento y envío desde los inputs
+  const descuentoInput = document.getElementById('descuentoInput');
+  const porcentajeInput = document.getElementById('porcentajeInput');
+  const envioInput = document.getElementById('envioInput');
+  
+  let descuento = 0;
+  let porcentaje = 0;
+  let envio = 0;
+  
+  if (descuentoInput) {
+    descuento = parseFloat(descuentoInput.value) || 0;
+  }
+  if (porcentajeInput) {
+    porcentaje = parseFloat(porcentajeInput.value) || 0;
+  }
+  if (envioInput) {
+    envio = parseFloat(envioInput.value) || 0;
+  }
+
+  // Calcular total final
+  let totalFinal = 0;
+  if (pedidoActual.items && pedidoActual.items.length) {
+    let subtotal = 0;
+    pedidoActual.items.forEach(it => {
+      const unitPesos = Math.round(it.valorU || 0);
+      subtotal += Math.round(it.cantidad * unitPesos);
+    });
+    totalFinal = subtotal - descuento + envio;
+    if (totalFinal < 0) totalFinal = 0;
+  }
+  
   // Preparar datos para cerrar
   const updateData = {
     locked: true, 
@@ -1569,16 +1600,25 @@ document.getElementById('cerrarBtn').onclick = () => {
     items: pedidoActual.items // Guardar items CON valorC y valorU
   };
   
+  // Preparar datos de pagos con porcentaje, descuento, envío y total final
+  const pagosUpdate = {
+    descuento: descuento,
+    porcentajeDescuento: porcentaje,
+    envio: envio,
+    totalFinal: totalFinal
+  };
+  
   // Guardar ALIAS si es transferencia y hay alias
-  const promises = [pedidoRef.update(updateData)];
+  const promises = [
+    pedidoRef.update(updateData),
+    pedidoRef.child('pagos').update(pagosUpdate)
+  ];
   
   if (tipoPagoFinal === 'Transferencia' && admin) {
     const aliasInput = document.getElementById('alias');
     if (aliasInput && aliasInput.value.trim()) {
       const alias = aliasInput.value.trim().toUpperCase();
-      promises.push(
-        pedidoRef.child('pagos').update({ alias: alias })
-      );
+      pagosUpdate.alias = alias;
     }
   }
   
@@ -1840,11 +1880,10 @@ document.getElementById('ImprimirBtn').onclick = () => {
     <style>
       body { font-family: Arial, Helvetica, sans-serif; background: #fff; margin: 0; padding: 30px; }
       .info { font-size: 1.25em; }
-      table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-      th, td { border: 1px solid #bbb; padding: 4px; text-align: center; font-size: 0.9em; }
-      th { background: #4CAF50; color: #fff; }
-      .cant { width: 1%; white-space: nowrap; }
-      .check { width: 1%; }
+      table { border-collapse: collapse; margin-bottom: 20px; table-layout: auto; }
+  th, td { border: 1px solid #bbb; padding: 4px 15px; font-size: 0.9em; text-align: left; white-space: nowrap; }
+  th { background: #4CAF50; color: #fff; }
+  td.cant, th.cant, td.check, th.check { text-align: center; }
       @media print { button { display: none !important; } }
     </style>
     </head><body>
@@ -1863,14 +1902,14 @@ document.getElementById('ImprimirBtn').onclick = () => {
     <table>
       <tr>
         <th>Artículo</th>
-        <th class="cant">Cantidad</th>
+        <th class="cant">Cant.</th>
         <th class="check"></th>
       </tr>
   `;
   pedidoActual.items.forEach(it => {
     html += `<tr>
       <td style="text-align:left;">${it.nombre}</td>
-      <td>${it.cantidad}</td>
+      <td class="cant">${it.cantidad}</td>
       <td><input type='checkbox' style='width:22px;height:22px;'></td>
     </tr>`;
   });
@@ -2000,9 +2039,9 @@ observer.observe(document.body, { childList: true, subtree: true });
 
 <div style="max-width:600px;margin:30px auto 0 auto;font-size:0.90em;color:#444;text-align:left;opacity:0.85;">
   <hr style="margin:18px 0;">
-  <div style="margin-bottom:10px;">* Los precios mostrados son los valores actuales desde la base de datos de productos.</div>
-  <!-- <div style="margin-bottom:10px;">* Los pagos por transferencia bancaria tienen un recargo del 2 % sobre el total.</div> -->
-  <div style="margin-bottom:10px;">** En caso de requerirlo, los envíos se despachan a sucursales para reducir costos de envío. La cotización se encuentra sujeta a la distancia, el tamaño y el peso final del pedido.</div>
+  <div style="margin-bottom:10px;">* Los precios se congelan únicamente al momento de CERRAR el pedido.</div>
+  <div style="margin-bottom:10px;">** La cotización final se mantendrá vigente únicamente durante el día en curso, en caso de demorarse el pago se recotizará el total.</div>
+  <div style="margin-bottom:10px;">*** En caso de requerirlo, los envíos se despachan a sucursales para reducir costos de envío. La cotización se encuentra sujeta a la distancia, el tamaño y el peso final del pedido.</div>
 </div>
 </body>
 </html>
