@@ -140,14 +140,13 @@
     .cerrar{background:#4CAF50;color:#fff}
     .cerrado{background:#9e9e9e;color:#fff;cursor:not-allowed}
     .reabrir{background:#FF9800;color:#fff} 
-    .cancelar{background:#f44336;color:#fff} 
     button + button{ margin-left:6px; }
     .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#f44336;}
     .cancelado-row {background: #e0e0e0 !important;color: #888;}
 
     #filtroStatusBtns {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
@@ -299,8 +298,8 @@
   const estados = [
     { label: 'Abierto', value: 'ABIERTO', color: '#4CAF50' },
     { label: 'Cerrado', value: 'CERRADO', color: '#4CAF50' },
-    { label: 'Entregado', value: 'DESPACHADO/ENTREGADO', color: '#4CAF50' },
-    { label: 'Cancelado', value: 'CANCELADO', color: '#4CAF50' },
+    { label: 'Entrega', value: 'DESPACHADO/ENTREGADO', color: '#4CAF50' },
+    { label: 'Cancel', value: 'CANCELADO', color: '#4CAF50' },
   ];
 
   // Por defecto seleccionados
@@ -317,22 +316,84 @@
     }
   }
 
+  let descargandoTodo = false;
+  let listenerPedidos = null;
+
   function configurarEventListeners() {
-    // Renderizar botones de filtro
     renderBotonesFiltro();
-    
-    // listener principal
-    db.ref('pedidos').on('value', snap => {
-      pedidos = [];                        // ahora un array, no objeto
+    agregarBotonDescargarTodo();
+    cargarPedidosUltimos30Dias();
+  }
 
-      snap.forEach(child => {              // recorro cada nodo hijo
-      const p = child.val() || {};
-      p.id    = child.key;               // key garantizada
-      pedidos.push(p);
+  function cargarPedidosUltimos30Dias() {
+    if (listenerPedidos) listenerPedidos.off();
+    descargandoTodo = false;
+    const ahora = Date.now();
+    const hace30dias = ahora - 30 * 24 * 60 * 60 * 1000;
+    // Consulta por timestamp >= hace 30 días
+    listenerPedidos = db.ref('pedidos').orderByChild('timestamp').startAt(hace30dias);
+    listenerPedidos.on('value', snap => {
+      pedidos = [];
+      snap.forEach(child => {
+        const p = child.val() || {};
+        p.id = child.key;
+        pedidos.push(p);
+      });
+      renderTabla();
     });
+  }
 
-    renderTabla();
-  });
+  function cargarPedidosTodos() {
+    if (listenerPedidos) listenerPedidos.off();
+    descargandoTodo = true;
+    listenerPedidos = db.ref('pedidos');
+    listenerPedidos.on('value', snap => {
+      pedidos = [];
+      snap.forEach(child => {
+        const p = child.val() || {};
+        p.id = child.key;
+        pedidos.push(p);
+      });
+      renderTabla();
+    });
+  }
+
+  function agregarBotonDescargarTodo() {
+    let btn = document.getElementById('btnDescargarTodo');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'btnDescargarTodo';
+      btn.textContent = 'Descargar todo';
+      btn.style.background = '#2196F3';
+      btn.style.color = '#fff';
+      btn.style.border = '1.5px solid #2196F3';
+      btn.style.borderRadius = '18px';
+  btn.style.padding = '6px 16px';
+  btn.style.fontWeight = 'bold';
+  btn.style.cursor = 'pointer';
+  btn.style.margin = '30px auto 0 auto';
+  btn.style.display = 'block';
+  btn.style.fontSize = '1em';
+      btn.onclick = function() {
+        if (!descargandoTodo) cargarPedidosTodos();
+      };
+      // Insertar el botón fuera del contenedor de la tabla, como pie de página independiente
+      let pie = document.getElementById('pieDescargarTodo');
+      if (!pie) {
+        pie = document.createElement('div');
+        pie.id = 'pieDescargarTodo';
+        pie.style.width = '100vw';
+        pie.style.display = 'flex';
+        pie.style.justifyContent = 'center';
+        pie.style.alignItems = 'center';
+        pie.style.margin = '0 auto 30px auto';
+        // Insertar pie al final del body
+        document.body.appendChild(pie);
+      }
+      pie.appendChild(btn);
+    }
+    // Mostrar/ocultar según estado
+    btn.style.display = descargandoTodo ? 'none' : 'block';
   }
 
   function renderBotonesFiltro() {
@@ -382,7 +443,6 @@
     btnRetiro.style.padding = '6px 16px';
     btnRetiro.style.fontWeight = 'bold';
     btnRetiro.style.cursor = 'pointer';
-    btnRetiro.style.marginLeft = '12px';
     btnRetiro.onclick = () => {
       entregaSeleccionada = entregaSeleccionada === 'Retiro' ? null : 'Retiro';
       renderBotonesFiltro();
@@ -399,7 +459,6 @@
     btnEnvio.style.padding = '6px 16px';
     btnEnvio.style.fontWeight = 'bold';
     btnEnvio.style.cursor = 'pointer';
-    btnEnvio.style.marginLeft = '6px';
     btnEnvio.onclick = () => {
       entregaSeleccionada = entregaSeleccionada === 'Envio' ? null : 'Envio';
       renderBotonesFiltro();
@@ -417,7 +476,6 @@
     btnTodos.style.padding = '6px 16px';
     btnTodos.style.fontWeight = 'bold';
     btnTodos.style.cursor = 'pointer';
-    btnTodos.style.marginLeft = '12px';
     btnTodos.onclick = () => {
       statusSeleccionados = [];
       entregaSeleccionada = null;
@@ -573,7 +631,7 @@
             const nuevaNota = notaInput.value.trim();
             db.ref(`pedidos/${p.id}`).update({ nota: nuevaNota })
               .catch(() => console.error('Error al guardar la nota'));
-          }, 5000); // Esperar 5 segundo después de que el usuario deje de escribir
+          }, 5000); // Esperar 5 segundos después de que el usuario deje de escribir
         });
         
         notaCell.appendChild(notaInput);
@@ -644,26 +702,6 @@
 }
 
 
-  function cerrarPedido(id){
-    if(!confirm(`¿Bloquear el pedido ${id}?`)) return;
-    db.ref(`pedidos/${id}`).update({ locked: true })
-      .catch(()=>alert('Error al cerrar pedido'));
-  }
-
-  function reabrirPedido(id){
-  if(!confirm(`¿Reabrir el pedido ${id}?`)) return;
-  db.ref(`pedidos/${id}`).update({ locked:false })
-    .catch(()=>alert('Error al reabrir pedido'));
-}
-
-function cancelarPedido(id, locked){
-  if (locked) return;                                    // no borra cerrados
-  if (!confirm(`¿Eliminar definitivamente el pedido ${id}?`)) return;
-
-  db.ref(`pedidos/${id}`).remove()
-    .catch(()=>alert('Error al cancelar'));
-}
-
 </script>
 
 <!-- Modal de autorización reutilizable -->
@@ -702,5 +740,4 @@ function mostrarModalClave(onSuccess) {
 </script>
 
 </body>
-
 </html>
