@@ -362,7 +362,6 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
             <h1>Registro de Códigos de Barras</h1>
         </div>
         
@@ -375,8 +374,7 @@
             </div>
             
             <div class="form-group">
-                <label for="codigoArticulo">Código del Artículo</label>
-                <input type="text" id="codigoArticulo" class="form-control" readonly placeholder="Se cargará automáticamente">
+                <input type="text" id="codigoArticulo" class="form-control" readonly placeholder="Código Interno">
             </div>
             
             <div class="form-group">
@@ -389,7 +387,7 @@
             
             <div class="btn-container">
                 <button type="submit" id="submitBtn" class="btn btn-primary">
-                    Registrar Código de Barras
+                    Registrar
                 </button>
             </div>
         </form>
@@ -400,9 +398,7 @@
         <div class="historial-section">
             <div class="historial-header">
                 <h2 class="historial-title">Historial de Registros</h2>
-                <button type="button" id="refreshBtn" class="btn btn-secondary">
-                    🔄 Actualizar
-                </button>
+                <!-- Botón de actualizar eliminado -->
             </div>
             
             <div id="historialContainer">
@@ -682,14 +678,6 @@
                 }, 100);
             }
         });
-        
-        // Event listener para botón de actualizar historial
-        document.getElementById('refreshBtn').addEventListener('click', function() {
-            cargarHistorial();
-        });
-        
-        // Hacer función eliminarRegistro global para acceso desde HTML
-        window.eliminarRegistro = eliminarRegistro;
         
         // Inicializar aplicación
         document.addEventListener('DOMContentLoaded', function() {
