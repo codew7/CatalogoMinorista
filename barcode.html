@@ -33,7 +33,7 @@
         }
         
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
@@ -250,6 +250,22 @@
             text-align: left;
             border-bottom: 1px solid #e1e8ed;
         }
+        /* Ajuste de ancho mínimo para columnas específicas */
+        .historial-table th.fecha-hora, .historial-table td.fecha-hora {
+            min-width: 90px;
+            width: 1%;
+            white-space: nowrap;
+        }
+        .historial-table th.codigo, .historial-table td.codigo {
+            min-width: 70px;
+            width: 1%;
+            white-space: nowrap;
+        }
+        .historial-table th.acciones, .historial-table td.acciones {
+            min-width: 40px;
+            width: 1%;
+            text-align: center;
+        }
         
         .historial-table th {
             background-color: #f8f9fa;
@@ -372,7 +388,6 @@
                     <option value="">Cargando artículos...</option>
                 </select>
             </div>
-            
             <div class="form-group">
                 <input type="text" id="codigoArticulo" class="form-control" readonly placeholder="Código Interno">
             </div>
@@ -473,6 +488,12 @@
                     option.value = item[3]; // Nombre del artículo
                     option.textContent = item[3];
                     option.setAttribute('data-codigo', item[2]); // Código interno
+                    // Guardar la URL de la imagen en data-imgurl (columna 1)
+                    let imgUrl = '';
+                    if (item[1]) {
+                        imgUrl = item[1].split(',')[0].trim();
+                    }
+                    option.setAttribute('data-imgurl', imgUrl);
                     articuloSelect.appendChild(option);
                 });
                 
@@ -488,7 +509,7 @@
                     const nombreArticulo = this.value;
                     if (nombreArticulo && articulosPorNombre[nombreArticulo]) {
                         const articulo = articulosPorNombre[nombreArticulo];
-                        codigoArticulo.value = articulo[2] || ''; // Código interno (Columna C)
+                        codigoArticulo.value = articulo[2] || '';
                     } else {
                         codigoArticulo.value = '';
                     }
@@ -576,24 +597,31 @@
                     <table class="historial-table">
                         <thead>
                             <tr>
-                                <th>Fecha/Hora</th>
-                                <th>Código</th>
+                                <th class="fecha-hora">Fecha</th>
+                                <th class="codigo">Código</th>
                                 <th>Artículo</th>
-                                <th>Código de Barras</th>
-                                <th>Acciones</th>
+                                <th>BarCode</th>
+                                <th class="acciones"></th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
                 
                 registros.forEach(registro => {
+                    // Extraer solo la fecha (dd/mm/yyyy) de registro.timestamp
+                    let fechaSolo = 'N/A';
+                    if (registro.timestamp) {
+                        // Buscar formato dd/mm/yyyy en el string
+                        const match = registro.timestamp.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+                        fechaSolo = match ? match[1] : registro.timestamp;
+                    }
                     tableHTML += `
                         <tr>
-                            <td>${registro.timestamp || 'N/A'}</td>
-                            <td>${registro.codigo || 'N/A'}</td>
+                            <td class="fecha-hora">${fechaSolo}</td>
+                            <td class="codigo">${registro.codigo || 'N/A'}</td>
                             <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${registro.articulo || 'N/A'}">${registro.articulo || 'N/A'}</td>
                             <td>${registro.codigoBarras || 'N/A'}</td>
-                            <td>
+                            <td class="acciones">
                                 <button type="button" class="btn-delete" onclick="eliminarRegistro('${registro.key}')" title="Eliminar registro">
                                     🗑️
                                 </button>
