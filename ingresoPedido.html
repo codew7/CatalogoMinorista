@@ -54,11 +54,11 @@
           <!-- Eliminado pattern para evitar error de regex; usar inputmode para orientación numérica -->
           <input type="tel" id="telefono" name="telefono" maxlength="20" inputmode="tel" autocomplete="tel">
         </div>
-        <div class="form-row">
+        <div class="form-row" >
           <label for="direccion">Dirección</label>
           <input type="text" id="direccion" name="direccion" maxlength="100" autocomplete="street-address">
         </div>
-        <div class="form-row">
+        <div class="form-row" style="display:none;">
           <label for="dni">DNI</label>
           <input type="text" id="dni" name="dni" maxlength="15" pattern="^\d{7,15}$" autocomplete="off">
         </div>
@@ -74,6 +74,40 @@
           <h2 id="articulos-title" style="margin: 0;">Artículos</h2>
           <div id="cotizacionDolar" style="font-size: 0.9rem; color: #666; font-weight: 500;">
             Cotización Dólar: <span id="cotizacionValor">Cargando...</span>
+          </div>
+        </div>
+        
+        <!-- Scanner de Código de Barras -->
+        <div id="barcodeScanner" style="margin-bottom: 1rem; padding: 30px; background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <label for="barcodeQuantity" style="font-weight: 600; color: #495057; min-width: 80px;">
+            Cantidad:
+            </label>
+            <input 
+              type="number" 
+              id="barcodeQuantity" 
+              min="1" 
+              max="999"
+              value="1"
+              placeholder="1"
+              style="width: 80px; padding: 8px 12px; border: 2px solid #28a745; border-radius: 6px; font-size: 1rem; background: white; text-align: center;"
+            />
+            <label for="barcodeInput" style="font-weight: 600; color: #495057; margin-left: 20px; min-width: 120px;">
+            Código de Barras:
+            </label>
+            <input 
+              type="text" 
+              id="barcodeInput" 
+              placeholder="Escanee o escriba el código de barras aquí..."
+              autocomplete="off"
+              style="flex: 1; padding: 8px 12px; border: 2px solid #6c4eb6; border-radius: 6px; font-size: 1rem; background: white;"
+            />
+            <div id="barcodeStatus" style="min-width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+              <!-- Status indicator -->
+            </div>
+          </div>
+          <div style="font-size: 0.85rem; color: #6c757d; margin-top: 6px;">
+            💡 Establezca la cantidad y luego escanee el código de barras para agregar artículos automáticamente.
           </div>
         </div>
         <table class="items-table" aria-label="Artículos de la Orden">
@@ -161,10 +195,6 @@
           <div class="form-row" id="aliasRow" style="display: none;">
             <label for="alias">ALIAS*</label>
             <input type="text" id="alias" name="alias" maxlength="50" style="width:100%; text-transform: uppercase;">
-          </div>
-          <div class="form-row" id="comprobanteRow">
-            <label for="comprobante">Comprobante de transferencia</label>
-            <input type="file" id="comprobante" accept="image/*">
           </div>
         </div>
         <div class="actions" style="margin-left: 24px;">

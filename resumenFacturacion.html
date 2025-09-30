@@ -1479,24 +1479,20 @@
             const ahoraInicioDelDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
             
             Object.entries(pedidos).forEach(([pedidoId, pedido]) => {
-                if (!pedido.fecha) return;
-                
-                const fechaPedido = new Date(pedido.fecha);
-                // Normalizar fecha del pedido al inicio del día
-                const fechaPedidoInicioDelDia = new Date(fechaPedido.getFullYear(), fechaPedido.getMonth(), fechaPedido.getDate());
-                
-                // Solo procesar pedidos despachados/entregados
-                if (pedido.status !== 'DESPACHADO/ENTREGADO') return;
-                
-                totalPedidosProcesados++;
-                
-                // Aplicar filtro de entrega
-                if (!aplicarFiltroEntrega(pedido)) return;
-                
-                // Calcular el índice del período según la temporalidad
-                let indicePeriodo = -1;
-                
-                if (temporalidad === 'mensual') {
+                 if (!pedido.fecha) return;
+                 // OMITIR pedidos con tipoCliente = admin
+                 if (pedido.cliente && pedido.cliente.tipoCliente && pedido.cliente.tipoCliente.toLowerCase() === 'admin') return;
+                 const fechaPedido = new Date(pedido.fecha);
+                 // Normalizar fecha del pedido al inicio del día
+                 const fechaPedidoInicioDelDia = new Date(fechaPedido.getFullYear(), fechaPedido.getMonth(), fechaPedido.getDate());
+                 // Solo procesar pedidos despachados/entregados
+                 if (pedido.status !== 'DESPACHADO/ENTREGADO') return;
+                 totalPedidosProcesados++;
+                 // Aplicar filtro de entrega
+                 if (!aplicarFiltroEntrega(pedido)) return;
+                 // Calcular el índice del período según la temporalidad
+                 let indicePeriodo = -1;
+                 if (temporalidad === 'mensual') {
                     // Solo procesar pedidos del año seleccionado
                     if (fechaPedido.getFullYear() !== year) return;
                     
@@ -3148,9 +3144,10 @@
             `;
             
             pedidos.forEach(pedido => {
+                // OMITIR pedidos con tipoCliente = admin
+                if (pedido.tipoCliente && pedido.tipoCliente.toLowerCase() === 'admin') return;
                 // Capitalizar medio de pago para visualización
                 const medioPagoDisplay = pedido.medioPago.charAt(0).toUpperCase() + pedido.medioPago.slice(1);
-                
                 tablaHTML += `
                     <tr>
                         <td>${pedido.id}</td>

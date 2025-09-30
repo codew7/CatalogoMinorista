@@ -42,6 +42,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('orderForm');
   const itemsBody = document.getElementById('itemsBody');
   const addItemBtn = document.getElementById('addItemBtn');
+  const barcodeInput = document.getElementById('barcodeInput');
+  const barcodeStatus = document.getElementById('barcodeStatus');
+  const barcodeQuantity = document.getElementById('barcodeQuantity');
   // Inicializar bloqueables aquí, después de declarar form, itemsBody, addItemBtn
   bloqueables = [];
   if (form) {
@@ -134,6 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <label style="font-weight:bold;">Tipo de Cliente:</label>
       <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="consumidor final" checked> Consumidor</label>
       <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="mayorista"> Mayorista</label>
+      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="admin"> Administrador</label>
     `;
     clienteSection.appendChild(tipoClienteRow);
     // Guardar referencia a los radios
@@ -167,7 +171,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const items = data.values || [];
       articulosDisponibles = items.filter(item => item[4]?.toLowerCase() !== 'no disponible');
       articulosDisponibles.forEach(item => {
-        articulosPorCodigo[item[2]] = item;
+        // Usar Columna L (índice 11) para códigos de barras (puede contener múltiples códigos separados por comas)
+        if (item[11]) {
+          const codigosBarras = item[11].split(',');
+          codigosBarras.forEach(codigo => {
+            const codigoLimpio = codigo.trim();
+            if (codigoLimpio) { // Solo agregar códigos no vacíos
+              articulosPorCodigo[codigoLimpio] = item;
+            }
+          });
+        }
         articulosPorNombre[item[3]] = item;
       });
       
@@ -181,6 +194,9 @@ document.addEventListener('DOMContentLoaded', function() {
       setControlesBloqueados(false);
       // Mantener tipoCliente como solo lectura
       radiosTipoCliente.forEach(radio => radio.disabled = true);
+      
+      // Inicializar scanner de código de barras después de cargar artículos
+      initializeBarcodeScanner();
     })
     .catch(() => {
       // Si falla la carga, mantener controles deshabilitados
@@ -254,8 +270,8 @@ function getTipoCliente() {
         
         const hoverImg = document.createElement('img');
         hoverImg.src = imagenUrl;
-        hoverImg.style.width = '150px';
-        hoverImg.style.height = '150px';
+        hoverImg.style.width = '300px';
+        hoverImg.style.height = '300px';
         hoverImg.style.objectFit = 'cover';
         hoverImg.style.display = 'block';
         hoverImg.style.borderRadius = '4px';
@@ -340,6 +356,7 @@ function getTipoCliente() {
     if (!nombre || !articulosPorNombre[nombre]) {
       // Si no hay artículo, limpiar campos
       item.codigo = '';
+      item.codigoBarras = '';
       item.nombre = '';
       item.valorU = 0;
       item.valorC = 0;
@@ -353,13 +370,21 @@ function getTipoCliente() {
     const currentTipo = getTipoCliente();
     
     // Asignar campos básicos
-    item.codigo = art[2] || '';
+    item.codigo = art[2] || ''; // Código interno (Columna C)
+    item.codigoBarras = art[11] || ''; // Código de barras (Columna L)
     item.nombre = art[3] || '';
     
     // Asignar valorU según tipo de cliente
-    let valorRaw = currentTipo === 'consumidor final' ? (art[4] || '0') : (art[6] || '0');
-    valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
-    item.valorU = parseInt(valorRaw) || 0;
+      let valorRaw;
+      if (currentTipo === 'admin') {
+        valorRaw = art[7] || '0';
+      } else if (currentTipo === 'consumidor final') {
+        valorRaw = art[4] || '0';
+      } else {
+        valorRaw = art[6] || '0';
+      }
+      valorRaw = valorRaw.replace(/\$/g, '').replace(/[.,]/g, '');
+      item.valorU = parseInt(valorRaw) || 0;
     
     // Asignar valorC desde columna H (índice 7)
     let valorCRaw = art[7] || '0';
@@ -509,6 +534,56 @@ function getTipoCliente() {
   function handleSelectChange(selectElement, idx) {
     const nombreSel = selectElement.value;
     const row = selectElement.closest('tr');
+    
+    // Verificar si el producto ya existe en otra fila
+    if (nombreSel) {
+      const existingIndex = items.findIndex((item, index) => 
+        index !== idx && item.nombre === nombreSel
+      );
+      
+      // Mostrar popup con imagen y nombre del artículo seleccionado
+      const primeraImagen = obtenerPrimeraImagen(nombreSel);
+      if (primeraImagen) {
+        showPopup(`${nombreSel}`, '', true, primeraImagen);
+      } else {
+        showPopup(`${nombreSel}`, '', true);
+      }
+      
+      if (existingIndex !== -1) {
+        // Sumar cantidad al producto existente
+        items[existingIndex].cantidad += items[idx].cantidad;
+        
+        // Actualizar la fila existente
+        const existingRow = itemsBody.querySelector(`tr[data-idx="${existingIndex}"]`);
+        if (existingRow) {
+          const cantidadInput = existingRow.querySelector('.cantidad');
+          const valorTotalCell = existingRow.querySelector('.valorTotal');
+          
+          cantidadInput.value = items[existingIndex].cantidad;
+          valorTotalCell.textContent = (items[existingIndex].cantidad * items[existingIndex].valorU).toLocaleString('es-AR', {maximumFractionDigits:0});
+          
+          // Highlight temporal de la fila existente
+          existingRow.style.backgroundColor = '#fff3cd';
+          setTimeout(() => {
+            existingRow.style.backgroundColor = '';
+          }, 1500);
+        }
+        
+        // Remover la fila actual
+        removeItem(idx);
+        
+        // Mostrar popup igual que al agregar por primera vez
+        const primeraImagen = obtenerPrimeraImagen(nombreSel);
+        let mensajeCantidad = `${nombreSel}`;
+        if (primeraImagen) {
+          showPopup(mensajeCantidad, '', true, primeraImagen);
+        } else {
+          showPopup(mensajeCantidad, '', true);
+        }
+        
+        return;
+      }
+    }
     
     // Usar función auxiliar para actualizar todos los campos consistentemente
     actualizarCamposArticulo(items[idx], nombreSel);
@@ -792,7 +867,7 @@ function getTipoCliente() {
       }
     }
     
-    const newItem = { codigo: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '', seleccionado: '', valorG: 0 };
+    const newItem = { codigo: '', codigoBarras: '', nombre: '', cantidad: 1, valorU: 0, valorC: 0, categoria: '', seleccionado: '', valorG: 0 };
     items.push(newItem);
     
     const newIdx = items.length - 1;
@@ -819,6 +894,247 @@ function getTipoCliente() {
       // Cálculos después de configurar
       debouncedCalculations();
     });
+  }
+
+  // === SCANNER DE CÓDIGO DE BARRAS ===
+  function initializeBarcodeScanner() {
+    if (!barcodeInput || !barcodeStatus) return;
+    
+    let scanTimeout;
+    let isScanning = false;
+    
+    // Configurar estado inicial
+    showBarcodeStatus('ready');
+    
+    barcodeInput.addEventListener('input', function(e) {
+      const value = e.target.value.trim();
+      
+      // Limpiar timeout anterior
+      clearTimeout(scanTimeout);
+      
+      if (value.length > 0) {
+        isScanning = true;
+        showBarcodeStatus('scanning');
+        
+        // Detectar fin de escaneo (pausa en escritura)
+        scanTimeout = setTimeout(() => {
+          processBarcodeInput(value);
+        }, 100); // 100ms de pausa para detectar fin de escaneo
+      }
+    });
+    
+    // También procesar al presionar Enter
+    barcodeInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        clearTimeout(scanTimeout);
+        const value = e.target.value.trim();
+        if (value.length > 0) {
+          processBarcodeInput(value);
+        }
+      }
+    });
+    
+    // Auto-focus al campo cuando se hace clic en el área del scanner
+    const scannerArea = document.getElementById('barcodeScanner');
+    if (scannerArea) {
+      scannerArea.addEventListener('click', function() {
+        barcodeInput.focus();
+      });
+    }
+    
+    // Validar campo de cantidad - solo números positivos
+    if (barcodeQuantity) {
+      barcodeQuantity.addEventListener('input', function() {
+        let value = parseInt(this.value) || 1;
+        if (value < 1) value = 1;
+        if (value > 999) value = 999;
+        this.value = value;
+      });
+      
+      // Seleccionar todo el texto al hacer focus para fácil edición
+      barcodeQuantity.addEventListener('focus', function() {
+        this.select();
+      });
+    }
+  }
+  
+  function processBarcodeInput(barcode) {
+    if (!barcode || barcode.length < 3) {
+      showBarcodeStatus('error', 'Código muy corto');
+      clearBarcodeInput();
+      return;
+    }
+    
+    // Obtener cantidad especificada (por defecto 1)
+    const cantidadEspecificada = barcodeQuantity ? (parseInt(barcodeQuantity.value) || 1) : 1;
+    
+    // Buscar artículo por código
+    const articulo = articulosPorCodigo[barcode];
+    
+    if (!articulo) {
+      showBarcodeStatus('error', 'Código no encontrado');
+      showPopup(`❌ Código de barras "${barcode}" no encontrado en el inventario.`, '❌', false);
+      clearBarcodeInput();
+      return;
+    }
+    
+    // Verificar disponibilidad
+    if (articulo[4]?.toLowerCase() === 'no disponible') {
+      showBarcodeStatus('error', 'Artículo no disponible');
+      showPopup(`⚠️ El artículo "${articulo[3]}" no está disponible.`, '⚠️', false);
+      clearBarcodeInput();
+      return;
+    }
+    
+    // Verificar si el artículo ya existe en la lista
+    const existingItemIndex = items.findIndex(item => item.nombre === articulo[3]);
+    
+    if (existingItemIndex !== -1) {
+      // Incrementar cantidad del artículo existente por la cantidad especificada
+      items[existingItemIndex].cantidad += cantidadEspecificada;
+      
+      // Actualizar la fila visualmente
+      const existingRow = itemsBody.querySelector(`tr[data-idx="${existingItemIndex}"]`);
+      if (existingRow) {
+        const cantidadInput = existingRow.querySelector('.cantidad');
+        const valorTotalCell = existingRow.querySelector('.valorTotal');
+        
+        if (cantidadInput) {
+          cantidadInput.value = items[existingItemIndex].cantidad;
+        }
+        
+        if (valorTotalCell) {
+          const valorTotal = items[existingItemIndex].cantidad * items[existingItemIndex].valorU;
+          valorTotalCell.textContent = valorTotal.toLocaleString('es-AR', {maximumFractionDigits:0});
+        }
+        
+        // Actualizar valorG
+        if (items[existingItemIndex].valorC) {
+          items[existingItemIndex].valorG = (items[existingItemIndex].valorU - items[existingItemIndex].valorC) * items[existingItemIndex].cantidad;
+        }
+        
+        // Highlight temporal de la fila
+        existingRow.style.backgroundColor = '#e8f5e8';
+        setTimeout(() => {
+          existingRow.style.backgroundColor = '';
+        }, 1500);
+      }
+      
+      // Mostrar información del código específico escaneado
+      const codigosDisponibles = articulo[11] ? articulo[11].split(',').map(c => c.trim()).filter(c => c) : [];
+      const esMultipleCodigo = codigosDisponibles.length > 1;
+      const infoCodigoExtra = esMultipleCodigo ? ` (Código: ${barcode})` : '';
+      
+      showBarcodeStatus('success', `+${cantidadEspecificada} ${articulo[3]}`);
+      // Obtener primera imagen del artículo
+      const primeraImagen = obtenerPrimeraImagen(articulo[3]);
+      const mensajeCantidad = cantidadEspecificada === 1 ? 
+        `Cantidad incrementada: ${articulo[3]} (${items[existingItemIndex].cantidad} unidades)${infoCodigoExtra}` :
+        `Agregadas ${cantidadEspecificada} unidades: ${articulo[3]} (${items[existingItemIndex].cantidad} unidades total)${infoCodigoExtra}`;
+      showPopup(mensajeCantidad, '', true, primeraImagen);
+    } else {
+      // Agregar nuevo artículo usando la misma lógica que el método manual
+      const newItem = {
+        codigo: '',
+        codigoBarras: '',
+        nombre: articulo[3] || '', // Solo asignar el nombre inicialmente
+        cantidad: cantidadEspecificada,
+        valorU: 0,
+        valorC: 0,
+        categoria: '',
+        seleccionado: '',
+        valorG: 0
+      };
+      
+      // Usar la función existente para actualizar todos los campos correctamente
+      actualizarCamposArticulo(newItem, articulo[3]);
+      
+      // Restaurar la cantidad especificada (que podría haber sido sobrescrita)
+      newItem.cantidad = cantidadEspecificada;
+      
+      // Recalcular valorG con la cantidad correcta
+      newItem.valorG = (newItem.valorU - newItem.valorC) * newItem.cantidad;
+      
+      items.push(newItem);
+      const newIdx = items.length - 1;
+      const row = createRowElement(newItem, newIdx);
+      itemsBody.appendChild(row);
+      
+      // Configurar event listeners para la nueva fila
+      setupRowEventListeners(row, newIdx);
+      
+      // Highlight temporal de la nueva fila
+      row.style.backgroundColor = '#e8f5e8';
+      setTimeout(() => {
+        row.style.backgroundColor = '';
+      }, 1500);
+      
+      // Mostrar información del código específico escaneado
+      const codigosDisponibles = articulo[11] ? articulo[11].split(',').map(c => c.trim()).filter(c => c) : [];
+      const esMultipleCodigo = codigosDisponibles.length > 1;
+      const infoCodigoExtra = esMultipleCodigo ? ` (Código: ${barcode})` : '';
+      
+      showBarcodeStatus('success', `Agregado: ${articulo[3]}`);
+      // Obtener primera imagen del artículo
+      const primeraImagen = obtenerPrimeraImagen(articulo[3]);
+      const mensajeNuevo = cantidadEspecificada === 1 ? 
+        `Artículo agregado: ${articulo[3]}${infoCodigoExtra}` :
+        `Artículo agregado: ${articulo[3]} (${cantidadEspecificada} unidades)${infoCodigoExtra}`;
+      showPopup(mensajeNuevo, '', true, primeraImagen);
+    }
+    
+    // Recalcular totales
+    debouncedCalculations();
+    
+    // Limpiar input y restablecer cantidad para el próximo escaneo
+    setTimeout(() => {
+      clearBarcodeInput();
+      resetBarcodeQuantity();
+    }, 1000);
+  }
+  
+  function showBarcodeStatus(type, message = '') {
+    if (!barcodeStatus) return;
+    
+    barcodeStatus.innerHTML = '';
+    
+    switch (type) {
+      case 'ready':
+        barcodeStatus.innerHTML = '🔍';
+        barcodeStatus.style.color = '#6c757d';
+        barcodeStatus.title = 'Listo para escanear';
+        break;
+      case 'scanning':
+        barcodeStatus.innerHTML = '⏳';
+        barcodeStatus.style.color = '#007bff';
+        barcodeStatus.title = 'Escaneando...';
+        break;
+      case 'success':
+        barcodeStatus.innerHTML = '✅';
+        barcodeStatus.style.color = '#28a745';
+        barcodeStatus.title = message || 'Artículo encontrado';
+        setTimeout(() => showBarcodeStatus('ready'), 2000);
+        break;
+      case 'error':
+        barcodeStatus.innerHTML = '❌';
+        barcodeStatus.style.color = '#dc3545';
+        barcodeStatus.title = message || 'Error en escaneo';
+        setTimeout(() => showBarcodeStatus('ready'), 3000);
+        break;
+    }
+  }
+  
+  function clearBarcodeInput() {
+    if (barcodeInput) {
+      barcodeInput.value = '';
+    }
+  }
+  
+  function resetBarcodeQuantity() {
+    if (barcodeQuantity) {
+      barcodeQuantity.value = 1;
+    }
   }
 
 addItemBtn.addEventListener('click', addNewItem);
@@ -1055,7 +1371,9 @@ addItemBtn.addEventListener('click', addNewItem);
       // FORZAR ACTUALIZACIÓN de todos los campos desde Google Sheets antes de guardar
       if (item.nombre && articulosPorNombre[item.nombre]) {
         const art = articulosPorNombre[item.nombre];
-        // Forzar actualización de categoria y seleccionado
+        // Forzar actualización de codigo, codigoBarras, categoria y seleccionado
+        item.codigo = art[2] || '';
+        item.codigoBarras = art[11] || '';
         item.categoria = art[0] || '';
         item.seleccionado = art[9] || '';
         // Forzar actualización de valorC
@@ -1064,6 +1382,8 @@ addItemBtn.addEventListener('click', addNewItem);
         item.valorC = parseInt(valorCRaw) || 0;
       } else {
         // Si no hay artículo válido, limpiar campos
+        item.codigo = '';
+        item.codigoBarras = '';
         item.categoria = '';
         item.seleccionado = '';
         item.valorC = 0;
@@ -1109,7 +1429,7 @@ addItemBtn.addEventListener('click', addNewItem);
           locked: true,
           adminViewed: true,
           cliente: { nombre, telefono, direccion, dni, email, tipoCliente },
-          items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria, seleccionado: it.seleccionado, valorG: it.valorG })),
+          items: items.map(it => ({ codigo: it.codigo, codigoBarras: it.codigoBarras, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria, seleccionado: it.seleccionado, valorG: it.valorG })),
           pagos: {
             medioPago,
             recargo,
@@ -1210,7 +1530,7 @@ addItemBtn.addEventListener('click', addNewItem);
   }
 
   // --- POPUP MODAL ---
-  function showPopup(message, emoji, autoClose) {
+  function showPopup(message, emoji, autoClose, imageUrl = null) {
     // Remove existing popup if any
     const old = document.getElementById('popupPedidoMsg');
     if (old) old.remove();
@@ -1226,8 +1546,20 @@ addItemBtn.addEventListener('click', addNewItem);
     overlay.style.alignItems = 'center';
     overlay.style.justifyContent = 'center';
     overlay.style.zIndex = '99999';
+    
+    // Crear imagen si se proporciona URL
+    const imageHtml = imageUrl ? `
+      <div style="margin-bottom: 16px;">
+     <img src="${imageUrl}" 
+       style="width: 250px; height: 250px; object-fit: cover; border-radius: 8px; border: 2px solid #e0e0e0;" 
+       alt="Imagen del artículo"
+       onerror="this.style.display='none'">
+      </div>
+    ` : '';
+    
     overlay.innerHTML = `
       <div style="background:#fff;padding:32px 24px;border-radius:16px;box-shadow:0 4px 32px #0002;min-width:320px;max-width:90vw;display:flex;flex-direction:column;align-items:center;">
+        ${imageHtml}
         <div style="font-size:3rem;">${emoji}</div>
         <div style="font-size:1.3rem;margin:18px 0 10px 0;text-align:center;">${message}</div>
         <button id="popupPedidoOk" style="margin-top:10px;background:#6c4eb6;color:#fff;padding:8px 32px;border:none;border-radius:6px;font-size:1.1rem;cursor:pointer;">Ok</button>
@@ -1246,7 +1578,7 @@ addItemBtn.addEventListener('click', addNewItem);
     if (autoClose) {
       setTimeout(() => {
         if (overlay.parentNode) overlay.remove();
-      }, 2500);
+      }, 5000);
     }
     // Soporte Enter/Escape
     function keyHandler(e) {
@@ -1297,6 +1629,7 @@ addItemBtn.addEventListener('click', addNewItem);
       // Rellenar items
       items = (pedido.items || []).map(it => ({
         codigo: it.codigo || '',
+        codigoBarras: it.codigoBarras || '',
         nombre: it.nombre || '',
         cantidad: it.cantidad || 1,
         valorU: it.valorU || 0,
@@ -1383,7 +1716,9 @@ addItemBtn.addEventListener('click', addNewItem);
         // FORZAR ACTUALIZACIÓN de todos los campos desde Google Sheets antes de guardar
         if (item.nombre && articulosPorNombre[item.nombre]) {
           const art = articulosPorNombre[item.nombre];
-          // Forzar actualización de categoria y seleccionado
+          // Forzar actualización de codigo, codigoBarras, categoria y seleccionado
+          item.codigo = art[2] || '';
+          item.codigoBarras = art[11] || '';
           item.categoria = art[0] || '';
           item.seleccionado = art[9] || '';
           // Forzar actualización de valorC
@@ -1392,6 +1727,8 @@ addItemBtn.addEventListener('click', addNewItem);
           item.valorC = parseInt(valorCRaw) || 0;
         } else {
           // Si no hay artículo válido, limpiar campos
+          item.codigo = '';
+          item.codigoBarras = '';
           item.categoria = '';
           item.seleccionado = '';
           item.valorC = 0;
@@ -1445,7 +1782,7 @@ addItemBtn.addEventListener('click', addNewItem);
             locked: true,
             adminViewed: true,
             cliente: { nombre: form.nombre.value.trim(), telefono: form.telefono.value.trim(), direccion: form.direccion.value.trim(), dni: form.dni.value.trim(), email: form.email.value.trim().toLowerCase(), tipoCliente: document.querySelector('input[name="tipoCliente"]:checked')?.value || '' },
-            items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria, seleccionado: it.seleccionado, valorG: it.valorG })),
+            items: items.map(it => ({ codigo: it.codigo, codigoBarras: it.codigoBarras, nombre: it.nombre, cantidad: it.cantidad, valorU: it.valorU, valorC: it.valorC, categoria: it.categoria, seleccionado: it.seleccionado, valorG: it.valorG })),
             pagos: {
               medioPago: form.medioPago.value,
               recargo,
@@ -1990,15 +2327,12 @@ function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, 
 
   // Mostrar/ocultar alias y comprobante de transferencia según medio de pago
   function actualizarVisibilidadComprobanteTransferencia() {
-    const comprobanteRow = document.getElementById('comprobanteRow');
     const aliasRow = document.getElementById('aliasRow');
-    if (!comprobanteRow || !aliasRow) return;
+    if (!aliasRow) return;
     if (form.medioPago.value === 'Transferencia' || form.medioPago.value === 'Parcial') {
       aliasRow.style.display = '';
-      comprobanteRow.style.display = '';
     } else {
       aliasRow.style.display = 'none';
-      comprobanteRow.style.display = 'none';
     }
   }
   // Ejecutar al cargar
