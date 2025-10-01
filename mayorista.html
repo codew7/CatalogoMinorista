@@ -646,7 +646,7 @@
             </select>
             <button id="todos" style="margin-left: 10px;">Mostrar Todos</button>
             <label style="display: flex; align-items: center; font-weight: bold; margin-left: 10px; background-color: #e8f5e8; border: 1px solid #4CAF50; color: #4CAF50; padding: 4px 8px; border-radius: 4px; font-size: 0.95em;">
-                <input type="checkbox" id="filtroDisponibles" style="margin-right: 12px; accent-color: #4CAF50; width: 18px; height: 18px;">
+                <input type="checkbox" id="filtroDisponibles" checked style="margin-right: 12px; accent-color: #4CAF50; width: 18px; height: 18px;">
                 <span style="color: #4CAF50; font-weight: bold;"> Solo Disponibles</span>
             </label>
         </div>
@@ -778,12 +778,47 @@
                 if (!items || items.length === 0) throw new Error("No se encontraron datos en la hoja.");
                 
                 // Filtrar para ocultar artículos con etiqueta "No disponible"
-                // y ordenar descendente por el código (índice 2)
+                // y ordenar descendente por la fecha (índice 12 - columna M)
                 productos = items
                     .filter(item => item[4].toLowerCase() !== 'no disponible') //FILTRAR NO DISPONIBLE
-                    .sort((a, b) => parseInt(b[2]) - parseInt(a[2]));
+                    .sort((a, b) => {
+                        // Función para convertir fecha DD/MM/YYYY a objeto Date
+                        function parsearFecha(fechaStr) {
+                            if (!fechaStr || fechaStr === '' || fechaStr === null || fechaStr === undefined) {
+                                return new Date(1900, 0, 1); // Fecha muy antigua
+                            }
+                            
+                            // Si está en formato DD/MM/YYYY
+                            if (fechaStr.includes('/')) {
+                                const partes = fechaStr.split('/');
+                                if (partes.length === 3) {
+                                    const dia = parseInt(partes[0]);
+                                    const mes = parseInt(partes[1]) - 1; // Los meses en JS van de 0-11
+                                    const año = parseInt(partes[2]);
+                                    return new Date(año, mes, dia);
+                                }
+                            }
+                            
+                            // Si no puede parsearse, devolver fecha antigua
+                            return new Date(1900, 0, 1);
+                        }
+                        
+                        // Obtener las fechas de la columna M (índice 12)
+                        const dateA = parsearFecha(a[12]);
+                        const dateB = parsearFecha(b[12]);
+                        
+                        // Ordenar por fecha descendente (más recientes primero)
+                        return dateB - dateA;
+                    });
                 
                 mostrarPagina(1);
+                
+                // Aplicar filtros si el checkbox "Solo Disponibles" está marcado por defecto
+                setTimeout(() => {
+                    if (document.getElementById('filtroDisponibles').checked) {
+                        aplicarFiltros();
+                    }
+                }, 50);
                 
                 // Refrescar información de stock una vez que los productos estén cargados
                 setTimeout(() => {
