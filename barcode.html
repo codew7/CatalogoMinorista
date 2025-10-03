@@ -6,6 +6,9 @@
     <title>Registro de Códigos de Barras</title>
     <link rel="icon" href="faviconnegro.png" type="image/png">
     
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     
@@ -314,6 +317,71 @@
             color: #6c757d;
         }
         
+        /* Layout de dos columnas */
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        .form-column {
+            width: 100%;
+        }
+        
+        .image-column {
+            width: 100%;
+        }
+        
+        .product-image-container {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .image-placeholder {
+            color: #6c757d;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-placeholder i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+        
+        .image-placeholder p {
+            margin: 0;
+            font-weight: 500;
+        }
+        
+        .product-image {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            object-fit: contain;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .product-image-container.has-image {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-style: solid;
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             body {
@@ -334,6 +402,19 @@
             
             .form-control {
                 font-size: 16px; /* Evita zoom en iOS */
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .product-image-container {
+                min-height: 150px;
+            }
+            
+            .image-placeholder i {
+                font-size: 36px;
             }
             
             .historial-header {
@@ -381,31 +462,36 @@
             <h1>Registro de Códigos de Barras</h1>
         </div>
         
-        <form id="barcodeForm">
-            <div class="form-group">
-                <label for="articuloSelect">Artículo *</label>
-                <select id="articuloSelect" class="form-control" required>
-                    <option value="">Cargando artículos...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <input type="text" id="codigoArticulo" class="form-control" readonly placeholder="Código Interno">
+        <div class="main-content">
+            <div class="form-column">
+                <form id="barcodeForm">
+                    <div class="form-group">
+                        <label for="articuloSelect">Artículo *</label>
+                        <select id="articuloSelect" class="form-control" required>
+                            <option value="">Seleccione un artículo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="codigoArticulo" class="form-control" readonly placeholder="Código Interno">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="codigoBarras">Código de Barras *</label>
+                        <input type="text" id="codigoBarras" class="form-control" required placeholder="Escanee o escriba el código de barras" autocomplete="off">
+                    </div>
+                </form>
             </div>
             
-            <div class="form-group">
-                <label for="codigoBarras">Código de Barras *</label>
-                <input type="text" id="codigoBarras" class="form-control" required placeholder="Escanee o escriba el código de barras" autocomplete="off">
-                <div class="barcode-info">
-                    <p>💡 Coloque el cursor en este campo y use su lector de códigos de barras para escanear automáticamente.</p>
+            <div class="image-column">
+                <div class="product-image-container">
+                    <div class="image-placeholder" id="imagePlaceholder">
+                        <i class="fas fa-image"></i>
+                        <p>Imagen del artículo</p>
+                    </div>
+                    <img id="productImage" class="product-image" style="display: none;" alt="Imagen del producto">
                 </div>
             </div>
-            
-            <div class="btn-container">
-                <button type="submit" id="submitBtn" class="btn btn-primary">
-                    Registrar
-                </button>
-            </div>
-        </form>
+        </div>
         
         <div id="message" style="display: none;"></div>
         
@@ -416,9 +502,23 @@
                 <!-- Botón de actualizar eliminado -->
             </div>
             
+            <!-- Campo de búsqueda -->
+            <div class="form-group">
+                <input type="text" id="busquedaHistorial" class="form-control" placeholder="Buscar por artículo, código interno o código de barras...">
+            </div>
+            
             <div id="historialContainer">
                 <div class="loading-historial">
                     Cargando historial...
+                </div>
+            </div>
+            
+            <!-- Controles de paginación -->
+            <div id="paginacionContainer" style="display: none;">
+                <div class="pagination-controls" style="text-align: center; margin-top: 20px;">
+                    <button id="btnAnterior" class="btn btn-secondary" style="margin-right: 10px;" disabled>← Anterior</button>
+                    <span id="infoPagina" style="margin: 0 15px; color: #6c757d;"></span>
+                    <button id="btnSiguiente" class="btn btn-secondary" style="margin-left: 10px;" disabled>Siguiente →</button>
                 </div>
             </div>
         </div>
@@ -433,12 +533,15 @@
         // Variables globales
         let articulosDisponibles = [];
         let articulosPorNombre = {};
+        let todosLosRegistros = [];
+        let registrosFiltrados = [];
+        let paginaActual = 1;
+        const registrosPorPagina = 20;
         
         // Elementos del DOM
         const articuloSelect = document.getElementById('articuloSelect');
         const codigoArticulo = document.getElementById('codigoArticulo');
         const codigoBarras = document.getElementById('codigoBarras');
-        const submitBtn = document.getElementById('submitBtn');
         const messageDiv = document.getElementById('message');
         const form = document.getElementById('barcodeForm');
         
@@ -452,6 +555,49 @@
             setTimeout(() => {
                 messageDiv.style.display = 'none';
             }, 5000);
+        }
+        
+        // Función para mostrar imagen del artículo seleccionado
+        function mostrarImagenArticulo(imageUrls) {
+            const imagePlaceholder = document.getElementById('imagePlaceholder');
+            const productImage = document.getElementById('productImage');
+            const container = document.querySelector('.product-image-container');
+            
+            if (imageUrls && imageUrls.trim() !== '') {
+                // Tomar solo el primer enlace si hay varios separados por comas
+                const firstImageUrl = imageUrls.split(',')[0].trim();
+                
+                if (firstImageUrl) {
+                    // Ocultar placeholder y mostrar imagen
+                    imagePlaceholder.style.display = 'none';
+                    productImage.src = firstImageUrl;
+                    productImage.style.display = 'block';
+                    container.classList.add('has-image');
+                    
+                    // Manejar error de carga de imagen
+                    productImage.onerror = function() {
+                        console.log('Error cargando imagen:', firstImageUrl);
+                        ocultarImagenArticulo();
+                    };
+                    
+                    return;
+                }
+            }
+            
+            // Si no hay imagen válida, ocultar
+            ocultarImagenArticulo();
+        }
+        
+        // Función para ocultar imagen del artículo
+        function ocultarImagenArticulo() {
+            const imagePlaceholder = document.getElementById('imagePlaceholder');
+            const productImage = document.getElementById('productImage');
+            const container = document.querySelector('.product-image-container');
+            
+            imagePlaceholder.style.display = 'flex';
+            productImage.style.display = 'none';
+            productImage.src = '';
+            container.classList.remove('has-image');
         }
         
         // Función para cargar artículos desde Google Sheets
@@ -510,8 +656,12 @@
                     if (nombreArticulo && articulosPorNombre[nombreArticulo]) {
                         const articulo = articulosPorNombre[nombreArticulo];
                         codigoArticulo.value = articulo[2] || '';
+                        
+                        // Mostrar imagen del artículo
+                        mostrarImagenArticulo(articulo[1]);
                     } else {
                         codigoArticulo.value = '';
+                        ocultarImagenArticulo();
                     }
                 });
                 
@@ -527,8 +677,17 @@
         // Función para registrar código de barras SOLO en Firebase
         async function registrarCodigoBarras(codigo, articulo, codigoBarrasValue) {
             try {
-                showMessage('Registrando código de barras...', 'info');
+                showMessage('Verificando código de barras...', 'info');
                 form.classList.add('loading');
+
+                const db = firebase.database();
+                const ref = db.ref('codigosBarras');
+                
+                // Verificar si el código de barras ya existe
+                const snapshot = await ref.orderByChild('codigoBarras').equalTo(codigoBarrasValue).once('value');
+                if (snapshot.exists()) {
+                    throw new Error('Error al procesar el código de barras');
+                }
 
                 const timestamp = new Date().toLocaleString('es-AR', {
                     timeZone: 'America/Argentina/Buenos_Aires'
@@ -541,101 +700,234 @@
                     codigoBarras: codigoBarrasValue
                 };
 
-                const db = firebase.database();
-                const ref = db.ref('codigosBarras');
                 await ref.push(barcodeData);
 
-                showMessage('✅ Código de barras registrado exitosamente en Firebase', 'success');
+                showMessage('✅ Código de barras registrado exitosamente', 'success');
 
                 // Limpiar formulario después del registro exitoso
                 $(articuloSelect).val(null).trigger('change');
                 codigoArticulo.value = '';
                 codigoBarras.value = '';
 
-                // Actualizar historial
-                cargarHistorial();
+                // Actualizar historial manteniendo la búsqueda actual
+                const terminoBusqueda = document.getElementById('busquedaHistorial').value;
+                await cargarTodosLosRegistros();
+                filtrarRegistros(terminoBusqueda);
                 
                 // Enfocar en el select para el siguiente registro
                 setTimeout(() => {
                     $(articuloSelect).select2('open');
                 }, 1000);
             } catch (error) {
-                console.error('Error registrando código de barras en Firebase:', error);
+                // No mostrar detalles del error en consola para duplicados
+                if (error.message !== 'Error al procesar el código de barras') {
+                    console.error('Error registrando código de barras en Firebase:', error);
+                }
                 showMessage('❌ Error al registrar el código de barras. Inténtelo nuevamente.', 'error');
             } finally {
                 form.classList.remove('loading');
             }
         }
         
-        // Función para cargar historial desde Firebase
+        // Función para cargar todos los registros desde Firebase
+        async function cargarTodosLosRegistros() {
+            try {
+                const db = firebase.database();
+                const ref = db.ref('codigosBarras');
+                
+                const snapshot = await ref.once('value');
+                todosLosRegistros = [];
+                
+                snapshot.forEach((childSnapshot) => {
+                    const registro = childSnapshot.val();
+                    registro.key = childSnapshot.key;
+                    todosLosRegistros.push(registro);
+                });
+                
+                // Ordenar por timestamp descendente usando la función centralizada
+                todosLosRegistros = ordenarRegistrosPorFecha(todosLosRegistros);
+                
+                // Inicializar registros filtrados con todos los registros
+                registrosFiltrados = [...todosLosRegistros];
+                paginaActual = 1;
+                
+            } catch (error) {
+                console.error('Error cargando registros:', error);
+                todosLosRegistros = [];
+                registrosFiltrados = [];
+            }
+        }
+
+        // Función para parsear fechas de diferentes formatos (movida fuera para reutilizar)
+        function parseFecha(fechaStr) {
+            if (!fechaStr) return 0;
+            
+            // Buscar formato específico argentino: dd/mm/yyyy, hh:mm:ss
+            const matchCompleto = fechaStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2}):(\d{2})/);
+            if (matchCompleto) {
+                const [_, d, m, y, h, min, s] = matchCompleto;
+                const fecha = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), parseInt(h), parseInt(min), parseInt(s));
+                return fecha.getTime();
+            }
+            
+            // Buscar formato dd/mm/yyyy hh:mm:ss (sin coma)
+            const match = fechaStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[\s]*(\d{1,2}):(\d{2}):(\d{2})/);
+            if (match) {
+                const [_, d, m, y, h, min, s] = match;
+                const fecha = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), parseInt(h), parseInt(min), parseInt(s));
+                return fecha.getTime();
+            }
+            
+            // Buscar solo fecha dd/mm/yyyy
+            const match2 = fechaStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (match2) {
+                const [_, d, m, y] = match2;
+                const fecha = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                return fecha.getTime();
+            }
+            
+            // Intenta convertir a Date directamente como último recurso
+            let fecha = Date.parse(fechaStr);
+            if (!isNaN(fecha)) {
+                return fecha;
+            }
+            
+            return 0; // Si no se puede parsear, lo pone al final
+        }
+
+        // Función para ordenar registros por fecha descendente
+        function ordenarRegistrosPorFecha(registros) {
+            return registros.sort((a, b) => {
+                const ta = parseFecha(a.timestamp || '');
+                const tb = parseFecha(b.timestamp || '');
+                return tb - ta; // Descendente: más recientes primero
+            });
+        }
+
+        // Función para filtrar registros según búsqueda
+        function filtrarRegistros(terminoBusqueda) {
+            if (!terminoBusqueda.trim()) {
+                registrosFiltrados = [...todosLosRegistros];
+            } else {
+                const termino = terminoBusqueda.toLowerCase();
+                registrosFiltrados = todosLosRegistros.filter(registro => {
+                    const articulo = (registro.articulo || '').toLowerCase();
+                    const codigo = (registro.codigo || '').toLowerCase();
+                    const codigoBarras = (registro.codigoBarras || '').toLowerCase();
+                    
+                    return articulo.includes(termino) || 
+                           codigo.includes(termino) || 
+                           codigoBarras.includes(termino);
+                });
+            }
+            
+            // SIEMPRE ordenar por fecha después del filtrado
+            registrosFiltrados = ordenarRegistrosPorFecha(registrosFiltrados);
+            
+            paginaActual = 1; // Resetear a primera página
+            mostrarHistorial();
+        }
+
+        // Función para mostrar historial con paginación
+        function mostrarHistorial() {
+            const historialContainer = document.getElementById('historialContainer');
+            const paginacionContainer = document.getElementById('paginacionContainer');
+            
+            if (registrosFiltrados.length === 0) {
+                historialContainer.innerHTML = '<div class="empty-historial">No hay registros que coincidan con la búsqueda</div>';
+                paginacionContainer.style.display = 'none';
+                return;
+            }
+            
+            // Calcular registros para la página actual
+            const inicio = (paginaActual - 1) * registrosPorPagina;
+            const fin = inicio + registrosPorPagina;
+            const registrosPagina = registrosFiltrados.slice(inicio, fin);
+            
+            // Generar tabla
+            let tableHTML = `
+                <table class="historial-table">
+                    <thead>
+                        <tr>
+                            <th class="fecha-hora">Fecha</th>
+                            <th class="codigo">Código</th>
+                            <th>Artículo</th>
+                            <th>BarCode</th>
+                            <th class="acciones"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            registrosPagina.forEach(registro => {
+                // Extraer solo la fecha (dd/mm/yyyy) de registro.timestamp
+                let fechaSolo = 'N/A';
+                if (registro.timestamp) {
+                    // Buscar formato dd/mm/yyyy en el string
+                    const match = registro.timestamp.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+                    fechaSolo = match ? match[1] : registro.timestamp;
+                }
+                tableHTML += `
+                    <tr>
+                        <td class="fecha-hora">${fechaSolo}</td>
+                        <td class="codigo">${registro.codigo || 'N/A'}</td>
+                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${registro.articulo || 'N/A'}">${registro.articulo || 'N/A'}</td>
+                        <td>${registro.codigoBarras || 'N/A'}</td>
+                        <td class="acciones">
+                            <button type="button" class="btn-delete" onclick="eliminarRegistro('${registro.key}')" title="Eliminar registro">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            historialContainer.innerHTML = tableHTML;
+            
+            // Mostrar controles de paginación
+            actualizarPaginacion();
+        }
+
+        // Función para actualizar controles de paginación
+        function actualizarPaginacion() {
+            const paginacionContainer = document.getElementById('paginacionContainer');
+            const btnAnterior = document.getElementById('btnAnterior');
+            const btnSiguiente = document.getElementById('btnSiguiente');
+            const infoPagina = document.getElementById('infoPagina');
+            
+            const totalPaginas = Math.ceil(registrosFiltrados.length / registrosPorPagina);
+            
+            if (totalPaginas <= 1) {
+                paginacionContainer.style.display = 'none';
+                return;
+            }
+            
+            paginacionContainer.style.display = 'block';
+            
+            // Actualizar botones
+            btnAnterior.disabled = paginaActual <= 1;
+            btnSiguiente.disabled = paginaActual >= totalPaginas;
+            
+            // Actualizar información
+            const inicio = (paginaActual - 1) * registrosPorPagina + 1;
+            const fin = Math.min(paginaActual * registrosPorPagina, registrosFiltrados.length);
+            infoPagina.textContent = `${inicio}-${fin} de ${registrosFiltrados.length} registros (Página ${paginaActual} de ${totalPaginas})`;
+        }
+
+        // Función principal para cargar historial
         async function cargarHistorial() {
             const historialContainer = document.getElementById('historialContainer');
             
             try {
                 historialContainer.innerHTML = '<div class="loading-historial">Cargando historial...</div>';
                 
-                const db = firebase.database();
-                const ref = db.ref('codigosBarras');
-                
-                // Obtener los últimos 20 registros ordenados por timestamp
-                const snapshot = await ref.orderByKey().limitToLast(20).once('value');
-                const registros = [];
-                
-                snapshot.forEach((childSnapshot) => {
-                    const registro = childSnapshot.val();
-                    registro.key = childSnapshot.key;
-                    registros.unshift(registro); // Agregar al inicio para orden descendente
-                });
-                
-                if (registros.length === 0) {
-                    historialContainer.innerHTML = '<div class="empty-historial">No hay registros en el historial</div>';
-                    return;
-                }
-                
-                // Generar tabla
-                let tableHTML = `
-                    <table class="historial-table">
-                        <thead>
-                            <tr>
-                                <th class="fecha-hora">Fecha</th>
-                                <th class="codigo">Código</th>
-                                <th>Artículo</th>
-                                <th>BarCode</th>
-                                <th class="acciones"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
-                registros.forEach(registro => {
-                    // Extraer solo la fecha (dd/mm/yyyy) de registro.timestamp
-                    let fechaSolo = 'N/A';
-                    if (registro.timestamp) {
-                        // Buscar formato dd/mm/yyyy en el string
-                        const match = registro.timestamp.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
-                        fechaSolo = match ? match[1] : registro.timestamp;
-                    }
-                    tableHTML += `
-                        <tr>
-                            <td class="fecha-hora">${fechaSolo}</td>
-                            <td class="codigo">${registro.codigo || 'N/A'}</td>
-                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${registro.articulo || 'N/A'}">${registro.articulo || 'N/A'}</td>
-                            <td>${registro.codigoBarras || 'N/A'}</td>
-                            <td class="acciones">
-                                <button type="button" class="btn-delete" onclick="eliminarRegistro('${registro.key}')" title="Eliminar registro">
-                                    🗑️
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                tableHTML += `
-                        </tbody>
-                    </table>
-                `;
-                
-                historialContainer.innerHTML = tableHTML;
+                await cargarTodosLosRegistros();
+                mostrarHistorial();
                 
             } catch (error) {
                 console.error('Error cargando historial:', error);
@@ -655,7 +947,11 @@
                 await ref.remove();
                 
                 showMessage('✅ Registro eliminado exitosamente', 'success');
-                cargarHistorial(); // Recargar historial
+                
+                // Recargar todos los registros y mantener la búsqueda actual
+                const terminoBusqueda = document.getElementById('busquedaHistorial').value;
+                await cargarTodosLosRegistros();
+                filtrarRegistros(terminoBusqueda);
                 
             } catch (error) {
                 console.error('Error eliminando registro:', error);
@@ -684,17 +980,41 @@
                 return;
             }
             
+            // Validar que el código de barras sea solo numérico
+            if (!/^\d+$/.test(codigoBarrasValue)) {
+                showMessage('El código de barras debe contener solo números', 'error');
+                codigoBarras.focus();
+                return;
+            }
+            
             // Registrar código de barras
             registrarCodigoBarras(codigo, nombreArticulo, codigoBarrasValue);
         });
         
         // Event listener para el campo de código de barras (Enter rápido)
         codigoBarras.addEventListener('keypress', function(e) {
+            // Solo permitir números (0-9) y Enter
             if (e.key === 'Enter') {
                 e.preventDefault();
                 if (articuloSelect.value && this.value.trim()) {
                     form.dispatchEvent(new Event('submit'));
                 }
+                return;
+            }
+            
+            // Bloquear caracteres que no sean números
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+                return;
+            }
+        });
+        
+        // Event listener para filtrar contenido pegado
+        codigoBarras.addEventListener('input', function(e) {
+            // Remover cualquier caracter que no sea número
+            let value = this.value.replace(/[^0-9]/g, '');
+            if (this.value !== value) {
+                this.value = value;
             }
         });
         
@@ -707,10 +1027,34 @@
             }
         });
         
-        // Inicializar aplicación
+        // Event listeners para búsqueda y paginación
         document.addEventListener('DOMContentLoaded', function() {
+            // Búsqueda en tiempo real
+            const busquedaInput = document.getElementById('busquedaHistorial');
+            busquedaInput.addEventListener('input', function() {
+                const termino = this.value;
+                filtrarRegistros(termino);
+            });
+            
+            // Botones de paginación
+            document.getElementById('btnAnterior').addEventListener('click', function() {
+                if (paginaActual > 1) {
+                    paginaActual--;
+                    mostrarHistorial();
+                }
+            });
+            
+            document.getElementById('btnSiguiente').addEventListener('click', function() {
+                const totalPaginas = Math.ceil(registrosFiltrados.length / registrosPorPagina);
+                if (paginaActual < totalPaginas) {
+                    paginaActual++;
+                    mostrarHistorial();
+                }
+            });
+            
+            // Inicializar aplicación
             cargarArticulos();
-            cargarHistorial(); // Cargar historial al inicializar
+            cargarHistorial();
         });
         
     </script>
