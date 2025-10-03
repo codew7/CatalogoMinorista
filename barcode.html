@@ -722,6 +722,11 @@
 
                 await ref.push(barcodeData);
 
+                // Llamar al Apps Script Web App para actualizar la hoja
+                fetch('https://script.google.com/macros/s/AKfycbx2HWMhxFSh3X5LJnrgSHjRKrpsPKA3ZiwvlW65Czfi_DNO9wphfx9dLzZwvFoMz5LLXA/exec', {
+                    method: 'POST'
+                });
+
                 showMessage('✅ Código de barras registrado exitosamente', 'success');
 
                 // Limpiar formulario después del registro exitoso
