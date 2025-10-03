@@ -568,17 +568,30 @@
                 const firstImageUrl = imageUrls.split(',')[0].trim();
                 
                 if (firstImageUrl) {
+                    // Limpiar eventos anteriores para evitar acumulación
+                    productImage.onerror = null;
+                    productImage.onload = null;
+                    
                     // Ocultar placeholder y mostrar imagen
                     imagePlaceholder.style.display = 'none';
-                    productImage.src = firstImageUrl;
                     productImage.style.display = 'block';
                     container.classList.add('has-image');
                     
-                    // Manejar error de carga de imagen
+                    // Manejar error de carga de imagen (solo una vez)
                     productImage.onerror = function() {
-                        console.log('Error cargando imagen:', firstImageUrl);
+                        // Evitar loops infinitos de error
+                        this.onerror = null;
+                        console.warn('Error cargando imagen:', firstImageUrl);
                         ocultarImagenArticulo();
                     };
+                    
+                    // Manejar carga exitosa
+                    productImage.onload = function() {
+                        this.onload = null;
+                    };
+                    
+                    // Asignar la URL al final para evitar errores prematuros
+                    productImage.src = firstImageUrl;
                     
                     return;
                 }
@@ -594,9 +607,16 @@
             const productImage = document.getElementById('productImage');
             const container = document.querySelector('.product-image-container');
             
+            // Limpiar eventos para evitar errores residuales
+            productImage.onerror = null;
+            productImage.onload = null;
+            
+            // Limpiar src primero para detener cualquier carga pendiente
+            productImage.src = '';
+            
+            // Actualizar visualización
             imagePlaceholder.style.display = 'flex';
             productImage.style.display = 'none';
-            productImage.src = '';
             container.classList.remove('has-image');
         }
         
@@ -674,6 +694,38 @@
             }
         }
         
+        // Función para actualizar disparador en Google Sheets usando Apps Script
+        async function actualizarDisparadorBarcode() {
+            try {
+                // URL del Google Apps Script que debe ser creado
+                const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+                
+                // Intentar actualizar usando Apps Script si está configurado
+                if (window.APPS_SCRIPT_CONFIG && window.APPS_SCRIPT_CONFIG.DISPARADOR_URL) {
+                    const response = await fetch(window.APPS_SCRIPT_CONFIG.DISPARADOR_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'updateDisparador',
+                            value: 'NEW'
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        console.warn('Error actualizando disparador via Apps Script:', response.statusText);
+                    }
+                } else {
+                    // Método alternativo: Simular escritura directa (requiere configuración adicional)
+                    console.info('Disparador: NEW - Configure APPS_SCRIPT_CONFIG.DISPARADOR_URL para activar la escritura automática');
+                }
+            } catch (error) {
+                console.warn('Error actualizando disparador:', error);
+                // No mostrar error al usuario ya que es una funcionalidad secundaria
+            }
+        }
+        
         // Función para registrar código de barras SOLO en Firebase
         async function registrarCodigoBarras(codigo, articulo, codigoBarrasValue) {
             try {
@@ -701,6 +753,9 @@
                 };
 
                 await ref.push(barcodeData);
+
+                // Actualizar disparador en Google Sheets
+                await actualizarDisparadorBarcode();
 
                 showMessage('✅ Código de barras registrado exitosamente', 'success');
 
@@ -1056,6 +1111,46 @@
             cargarArticulos();
             cargarHistorial();
         });
+        
+        /*
+        CONFIGURACIÓN GOOGLE APPS SCRIPT PARA DISPARADOR:
+        
+        1. Ir a https://script.google.com/
+        2. Crear un nuevo proyecto
+        3. Pegar este código en Code.gs:
+        
+        function doPost(e) {
+          try {
+            const data = JSON.parse(e.postData.contents);
+            
+            if (data.action === 'updateDisparador') {
+              const ss = SpreadsheetApp.openById('1cD50d0-oSTogEe9tYo9ABUSP1ONCy3SAV92zsYYIG84');
+              const sheet = ss.getSheetByName('Disparador_Barcode');
+              
+              if (!sheet) {
+                // Crear la hoja si no existe
+                const newSheet = ss.insertSheet('Disparador_Barcode');
+                newSheet.getRange('A1').setValue(data.value);
+              } else {
+                sheet.getRange('A1').setValue(data.value);
+              }
+              
+              return ContentService.createTextOutput(JSON.stringify({success: true}))
+                .setMimeType(ContentService.MimeType.JSON);
+            }
+          } catch (error) {
+            return ContentService.createTextOutput(JSON.stringify({error: error.toString()}))
+              .setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+        
+        4. Implementar el script y obtener la URL
+        5. Agregar a configAdm.js:
+        
+        window.APPS_SCRIPT_CONFIG = {
+            DISPARADOR_URL: 'https://script.google.com/macros/s/TU_SCRIPT_ID/exec'
+        };
+        */
         
     </script>
 </body>
