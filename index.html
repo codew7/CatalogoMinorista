@@ -163,6 +163,13 @@
             margin-top: 2rem;
         }
 
+        .button-container .nav-button {
+            max-width: 500px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         .nav-button {
             background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
@@ -370,6 +377,10 @@
             word-wrap: break-word;
             overflow-wrap: break-word;
             min-width: 0;
+            min-height: 270px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .contact-card:hover {
@@ -623,17 +634,17 @@
     <!-- Navigation Section -->
     <section class="nav-section">
         <div class="nav-content">
-            <h2>Seleccione su perfil comercial para continuar</h2>
+            <h2>Visita nuestro catálogo online</h2>
 
             
             <div class="button-container">
                 <a href="mayorista.html" class="nav-button mayorista loading">
                     <i class="fas fa-shopping-cart"></i>
-                    <div class="button-title">Catálogo <br> Mayorista</div>
-                    <div class="button-description">Para revendedores y emprendedores</div>
+                    <div class="button-title">Ingresar al <br> Catálogo Mayorista</div>
+                    <div class="button-description" style="display: none;">Para revendedores y emprendedores</div>
                 </a>
                 
-                <a href="minorista.html" class="nav-button loading">
+                <a href="minorista.html" class="nav-button loading" style="display: none;">
                     <i class="fas fa-store"></i>
                     <div class="button-title">Catálogo <br> Consumidor Final</div>
                     <div class="button-description">Para compras personales minoristas</div>
@@ -707,11 +718,8 @@
                 <div class="contact-card loading">
                     <i class="fab fa-whatsapp"></i>
                     <h4>WhatsApp</h4>
-                    <p>
-                        <strong>Mayorista:</strong><br>
-                        <a href="https://api.whatsapp.com/send/?phone=5491121891006" target="_blank">+54 9 11 2189-1006</a><br><br>
-                        <strong>Minorista:</strong><br>
-                        <a href="https://api.whatsapp.com/send/?phone=5491154597288" target="_blank">+54 9 11 5459-7288</a>
+                    
+                        <a href="https://api.whatsapp.com/send/?phone=5491121891006" target="_blank">+54 9 11 2189-1006</a>
                     </p>
                 </div>
                 
