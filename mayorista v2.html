@@ -21,7 +21,7 @@
         const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491121891006"; // MAYORISTA
         //const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491154597288"; // MINORISTA
 
-        const MARQUEE_TEXT = "💲&nbsp; Los valores publicados se encuentran ligados a la cotización del dólar del día &nbsp; 🛒🛍️ &nbsp; Visita nuestro Showroom y comprá sin requisitos minimos de compra &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS"; // MAYORISTA
+        const MARQUEE_TEXT = "💲&nbsp; Valores publicados en dólares o cotización al Blue del día &nbsp;💲 - &nbsp; 🛒 &nbsp; COMPRA MINIMA: 5 articulos (iguales o distintos) &nbsp; 🛍️ &nbsp; - &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS &nbsp; 📦"; // MAYORISTA
         //const MARQUEE_TEXT = "🏪 &nbsp; Visita nuestro Showroom en Vicente López &nbsp; 🛍️ &nbsp; - &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS &nbsp; 📦 &nbsp;"; // MINORISTA
 
         const ITEMPESOS = "6"; // MAYORISTA
@@ -571,12 +571,6 @@
                 <img src="image2.jpg" alt="Imagen 2" style="width:100%;height:100%;object-fit:cover;">
             </picture>
         </div>
-        <div class="carousel-slide">
-            <picture>
-                <source srcset="image3-mobile.jpg" media="(max-width: 600px)">
-                <img src="image3.jpg" alt="Imagen 3" style="width:100%;height:100%;object-fit:cover;">
-            </picture>
-        </div>
     </div>
 </div>
 
@@ -1007,31 +1001,17 @@
                 }
                 card.appendChild(stockInfo);
 
-//                // 5. Valor USD
-//                if (ITEMPESOS == "6") {
-//                    const valorUSD = document.createElement('p');
-//                    valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[5]}`;
-//                    valorUSD.style.marginBottom = '4px';
-//                    card.appendChild(valorUSD);
-//                }
-                
-                // 5. Valor ANTES
+                // 5. Valor USD
                 if (ITEMPESOS == "6") {
                     const valorUSD = document.createElement('p');
-                    valorUSD.innerHTML = `<span style=\"font-size:0.93em;\"><strong>Antes $</strong> <s style=\"color: #e61919;\">${item[13]}</s></span>`;
-                    valorUSD.style.marginBottom = '5px';
+                    valorUSD.innerHTML = `<strong>Valor USD</strong> ${item[5]}`;
+                    valorUSD.style.marginBottom = '2px';
                     card.appendChild(valorUSD);
                 }
 
-//                // 6. Valor $
-//                const valorPesos = document.createElement('p');
-//                valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
-//                valorPesos.style.marginTop = '2px';
-//                card.appendChild(valorPesos);
-
                 // 6. Valor $
                 const valorPesos = document.createElement('p');
-                valorPesos.innerHTML = `<strong>Ahora $</strong> ${item[ITEMPESOS]}`;
+                valorPesos.innerHTML = `<strong>Valor $</strong> ${item[ITEMPESOS]}`;
                 valorPesos.style.marginTop = '2px';
                 card.appendChild(valorPesos);
 
