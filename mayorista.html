@@ -819,16 +819,14 @@
                 
                 mostrarPagina(1);
                 
-                // Aplicar filtros si el checkbox "Solo Disponibles" está marcado por defecto
+                // Primero refrescar la información de stock, luego aplicar filtros
+                // Esto previene la condición de carrera en navegadores móviles
                 setTimeout(() => {
+                    refreshStockInfo();
+                    // Aplicar filtros después de actualizar el stock
                     if (document.getElementById('filtroDisponibles').checked) {
                         aplicarFiltros();
                     }
-                }, 50);
-                
-                // Refrescar información de stock una vez que los productos estén cargados
-                setTimeout(() => {
-                    refreshStockInfo();
                 }, 100);
 
                 // Usar la lista filtrada para obtener categorías
@@ -891,11 +889,14 @@
                     // Filtrar por disponibilidad (solo disponibles y pocas unidades)
                     if (soloDisponibles) {
                         filtrados = filtrados.filter(item => {
-                            let stock = 0;
-                            if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
-                                stock = parseInt(item[10]);
+                            // Extraer y validar el valor de stock
+                            const stockValue = item[10];
+                            if (stockValue === undefined || stockValue === null || stockValue === "") {
+                                return false; // Sin stock
                             }
-                            // Mostrar solo si tiene stock (mayor a 0)
+                            // Convertir a string y limpiar espacios antes de parsear
+                            const stock = parseInt(String(stockValue).trim());
+                            // Mostrar solo si tiene stock válido (mayor a 0)
                             return !isNaN(stock) && stock > 0;
                         });
                     }
