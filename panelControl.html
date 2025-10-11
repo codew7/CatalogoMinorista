@@ -96,15 +96,11 @@
         /* Navigation Grid */
         .nav-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
             width: 100%;
-            max-width: 1000px;
+            max-width: 900px;
             margin-bottom: 2rem;
-        }
-        .nav-grid .row-2 {
-            grid-column: 1 / -1;
-            display: contents;
         }
 
         /* Navigation Cards */
@@ -276,6 +272,133 @@
 
         .modal-overlay.show .modal-content {
             transform: scale(1);
+        }
+
+        /* Modal de administración con sub-botones */
+        .admin-modal-content {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            box-shadow: var(--shadow-xl);
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .admin-modal-content {
+            transform: scale(1);
+        }
+
+        .admin-modal-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--gray-200);
+            padding-bottom: 1rem;
+        }
+
+        .admin-modal-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-modal-subtitle {
+            font-size: 0.95rem;
+            color: var(--gray-600);
+        }
+
+        .admin-submenu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-submenu-btn {
+            background: var(--white);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius);
+            padding: 1.25rem 1rem;
+            text-decoration: none;
+            color: var(--gray-800);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-submenu-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(108, 78, 182, 0.05), rgba(108, 78, 182, 0.1));
+        }
+
+        .admin-submenu-btn-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .admin-submenu-btn-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .admin-modal-close-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--gray-200);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .admin-modal-close-btn:hover {
+            background: var(--gray-300);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .admin-submenu-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .admin-modal-content {
+                padding: 1.5rem;
+            }
+
+            .admin-submenu-btn {
+                padding: 1rem 0.75rem;
+            }
+
+            .admin-submenu-btn-icon {
+                font-size: 1.5rem;
+            }
+
+            .admin-submenu-btn-title {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .admin-submenu-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .modal-title {
@@ -650,38 +773,24 @@
                 <p class="nav-card-description">Gestión de pedidos ingresados por web</p>
             </a>
 
-            <a href="#" class="nav-card blue" tabindex="0" onclick="abrirModal('facturacion', 'resumenFacturacion.html'); return false;">
-                <span class="nav-card-icon">💰</span>
-                <h2 class="nav-card-title">Facturación</h2>
-                <p class="nav-card-description">Resumen y análisis de facturación</p>
+            <!-- Segunda fila - 3 botones -->
+            <a href="consultaStock.html" class="nav-card inventory" tabindex="0" target="_blank">
+                <span class="nav-card-icon">📦</span>
+                <h2 class="nav-card-title">Consulta de Stock</h2>
+                <p class="nav-card-description">Visualización y control de stock</p>
             </a>
 
-            <!-- Segunda fila - 3 botones alineados -->
-            <div class="row-2">
-                <a href="consultaStock.html" class="nav-card inventory" tabindex="0" target="_blank">
-                    <span class="nav-card-icon">📦</span>
-                    <h2 class="nav-card-title">Consulta de Stock</h2>
-                    <p class="nav-card-description">Visualización y control de stock</p>
-                </a>
+            <a href="mayorista.html" class="nav-card blue" tabindex="0" target="_blank">
+                <span class="nav-card-icon">🛒</span>
+                <h2 class="nav-card-title">Catálogo Mayorista</h2>
+                <p class="nav-card-description">Consulta articulos y precios</p>
+            </a>
 
-                <a href="minorista.html" class="nav-card" tabindex="0" target="_blank">
-                    <span class="nav-card-icon">🛍️</span>
-                    <h2 class="nav-card-title">Catálogo Minorista</h2>
-                    <p class="nav-card-description">Consulta articulos y precios</p>
-                </a>
-
-                <a href="mayorista.html" class="nav-card" tabindex="0" target="_blank">
-                    <span class="nav-card-icon">🛒</span>
-                    <h2 class="nav-card-title">Catálogo Mayorista</h2>
-                    <p class="nav-card-description">Consulta articulos y precios</p>
-                </a>
-
-                <a href="#" class="nav-card orange" tabindex="0" onclick="abrirModal('inventario', 'inventario.html'); return false;">
-                    <span class="nav-card-icon">📊</span>
-                    <h2 class="nav-card-title">Gestión Inventario</h2>
-                    <p class="nav-card-description">Control y administración de inventario</p>
-                </a>
-            </div>
+            <a href="#" class="nav-card orange" tabindex="0" onclick="abrirModal('administracion', 'admin'); return false;">
+                <span class="nav-card-icon">🔐</span>
+                <h2 class="nav-card-title">Administración</h2>
+                <p class="nav-card-description">Gestión y configuración del sistema</p>
+            </a>
         </nav>
 
         <!-- Indicadores de usuario -->
@@ -712,6 +821,94 @@
                 <button class="modal-btn secondary" onclick="cerrarModal()">Cancelar</button>
                 <button class="modal-btn primary" onclick="verificarPassword()">Acceder</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal de administración con sub-menú -->
+    <div id="adminModal" class="modal-overlay">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h3 class="admin-modal-title">🔐 Panel de Administración</h3>
+                <p class="admin-modal-subtitle">Herramientas y configuración del sistema</p>
+            </div>
+            
+            <div class="admin-submenu-grid">
+                <!-- Facturación -->
+                <a href="resumenFacturacion.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">💰</span>
+                    <span class="admin-submenu-btn-title">Facturación</span>
+                </a>
+
+                <!-- Gestión de Inventario -->
+                <a href="inventario.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">📊</span>
+                    <span class="admin-submenu-btn-title">Gestión Inventario</span>
+                </a>
+
+                <!-- Barcode -->
+                <a href="barcode.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">📱</span>
+                    <span class="admin-submenu-btn-title">Código de Barras</span>
+                </a>
+
+                <!-- Clientes -->
+                <a href="clientes.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">👥</span>
+                    <span class="admin-submenu-btn-title">Clientes</span>
+                </a>
+
+                <!-- Control de Artículos -->
+                <a href="controlArticulos.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">📦</span>
+                    <span class="admin-submenu-btn-title">Control Artículos</span>
+                </a>
+
+                <!-- Control de Transferencias -->
+                <a href="controlTransferencias.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">🔄</span>
+                    <span class="admin-submenu-btn-title">Control Transferencias</span>
+                </a>
+
+                <!-- Cuentas Clientes -->
+                <a href="cuentasClientes.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">💳</span>
+                    <span class="admin-submenu-btn-title">Cuentas Clientes</span>
+                </a>
+
+                <!-- Historial Recientes Total -->
+                <a href="historialRecientesTotal.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">📜</span>
+                    <span class="admin-submenu-btn-title">Historial Total</span>
+                </a>
+
+                <!-- Capital Inventario -->
+                <a href="capitalInventario.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">💵</span>
+                    <span class="admin-submenu-btn-title">Capital Inventario</span>
+                </a>
+
+                <!-- Cuentas -->
+                <a href="cuentas.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">🏦</span>
+                    <span class="admin-submenu-btn-title">Cuentas</span>
+                </a>
+
+                <!-- Cuentas Proveedores -->
+                <a href="cuentasProveedores.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">🏢</span>
+                    <span class="admin-submenu-btn-title">Cuentas Proveedores</span>
+                </a>
+
+                <!-- Transferencias -->
+                <a href="transferencias.html" class="admin-submenu-btn" target="_blank">
+                    <span class="admin-submenu-btn-icon">💱</span>
+                    <span class="admin-submenu-btn-title">Transferencias</span>
+                </a>
+            </div>
+
+            <button class="admin-modal-close-btn" onclick="cerrarModalAdministracion()">
+                <i class="bi bi-x-circle"></i> Cerrar
+            </button>
         </div>
     </div>
 
@@ -791,12 +988,14 @@
 
         // Variables para el modal de autenticación
         let urlDestino = '';
+        let accionModal = ''; // 'redirect' para abrir URL, 'admin' para abrir panel admin
         const passwordCorrecta = '47623212';
 
         // Función para abrir el modal
         function abrirModal(tipo, url) {
             console.log('Abriendo modal para:', tipo, 'URL:', url);
             urlDestino = url;
+            accionModal = (url === 'admin') ? 'admin' : 'redirect';
             const modal = document.getElementById('authModal');
             const passwordInput = document.getElementById('passwordInput');
             
@@ -820,13 +1019,10 @@
             const passwordInput = document.getElementById('passwordInput');
             const password = passwordInput.value;
             
-            console.log('Verificando contraseña. URL destino:', urlDestino);
+            console.log('Verificando contraseña. Acción:', accionModal, 'URL destino:', urlDestino);
             
             if (password === passwordCorrecta) {
-                console.log('Contraseña correcta, redirigiendo a:', urlDestino);
-                
-                // Guardar la URL antes de cualquier operación
-                const urlParaAbrir = urlDestino;
+                console.log('Contraseña correcta');
                 
                 // Mostrar mensaje de éxito
                 passwordInput.style.borderColor = '#10b981';
@@ -834,24 +1030,36 @@
                 passwordInput.value = '';
                 passwordInput.placeholder = 'Acceso concedido...';
                 
-                // Ejecutar redirección inmediatamente (esto funciona)
-                if (urlParaAbrir) {
-                    try {
-                        window.open(urlParaAbrir, '_blank');
-                        console.log('Ventana abierta exitosamente');
-                    } catch (error) {
-                        console.error('Error al abrir ventana:', error);
-                        alert('Error al abrir la ventana: ' + error.message);
-                    }
+                // Ejecutar acción según el tipo
+                if (accionModal === 'admin') {
+                    // Abrir modal de administración
+                    console.log('Abriendo panel de administración');
+                    setTimeout(() => {
+                        cerrarModal();
+                        const adminModal = document.getElementById('adminModal');
+                        adminModal.classList.add('show');
+                    }, 500);
                 } else {
-                    console.error('URL está vacía');
-                    alert('Error: URL de destino no válida');
+                    // Redirigir a URL (comportamiento anterior)
+                    const urlParaAbrir = urlDestino;
+                    if (urlParaAbrir) {
+                        try {
+                            window.open(urlParaAbrir, '_blank');
+                            console.log('Ventana abierta exitosamente');
+                        } catch (error) {
+                            console.error('Error al abrir ventana:', error);
+                            alert('Error al abrir la ventana: ' + error.message);
+                        }
+                    } else {
+                        console.error('URL está vacía');
+                        alert('Error: URL de destino no válida');
+                    }
+                    
+                    // Cerrar modal después de la redirección
+                    setTimeout(() => {
+                        cerrarModal();
+                    }, 800);
                 }
-                
-                // Cerrar modal después de la redirección
-                setTimeout(() => {
-                    cerrarModal();
-                }, 800);
                 
             } else {
                 // Efecto de error
@@ -870,10 +1078,17 @@
             }
         }
 
+        // Función para cerrar el modal de administración
+        function cerrarModalAdministracion() {
+            const adminModal = document.getElementById('adminModal');
+            adminModal.classList.remove('show');
+        }
+
         // Event listener para el modal
         document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById('authModal');
             const passwordInput = document.getElementById('passwordInput');
+            const adminModal = document.getElementById('adminModal');
             
             // Event listeners para los botones de logout
             const logoutBtn = document.getElementById('logoutBtn');
@@ -886,10 +1101,17 @@
                 logoutBtnUser.addEventListener('click', cerrarSesion);
             }
             
-            // Cerrar modal al hacer clic fuera
+            // Cerrar modal de autenticación al hacer clic fuera
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
                     cerrarModal();
+                }
+            });
+            
+            // Cerrar modal de administración al hacer clic fuera
+            adminModal.addEventListener('click', function(e) {
+                if (e.target === adminModal) {
+                    cerrarModalAdministracion();
                 }
             });
             
@@ -903,8 +1125,13 @@
             
             // Manejar tecla Escape
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && modal.classList.contains('show')) {
-                    cerrarModal();
+                if (e.key === 'Escape') {
+                    if (modal.classList.contains('show')) {
+                        cerrarModal();
+                    }
+                    if (adminModal.classList.contains('show')) {
+                        cerrarModalAdministracion();
+                    }
                 }
             });
         });
