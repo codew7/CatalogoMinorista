@@ -89,6 +89,127 @@ document.addEventListener('DOMContentLoaded', function() {
 
   let items = [];
 
+  // === DETECCIÓN GLOBAL DE ESCÁNER DE CÓDIGO DE BARRAS ===
+  let barcodeBuffer = '';
+  let barcodeTimeout = null;
+  let isProcessingBarcode = false;
+  const BARCODE_INPUT_SPEED = 50; // Los scanners escriben en menos de 50ms
+  const MIN_BARCODE_LENGTH = 3;
+  
+  // Listener global para detectar input rápido del escáner
+  document.addEventListener('keypress', function(e) {
+    // Ignorar si ya estamos procesando un código
+    if (isProcessingBarcode) {
+      return;
+    }
+    
+    // Ignorar si ya estamos en el campo de código de barras
+    if (document.activeElement === barcodeInput) {
+      return;
+    }
+    
+    // Ignorar si estamos en un textarea o en campos específicos que necesitan input normal
+    const activeElement = document.activeElement;
+    if (activeElement && (
+      activeElement.tagName === 'TEXTAREA' ||
+      activeElement.classList.contains('select2-search__field') ||
+      activeElement.id === 'nombre' ||
+      activeElement.id === 'telefono' ||
+      activeElement.id === 'direccion' ||
+      activeElement.id === 'dni' ||
+      activeElement.id === 'email' ||
+      activeElement.id === 'observaciones'
+    )) {
+      return;
+    }
+    
+    // Ignorar teclas especiales y Enter
+    if (e.key === 'Enter' || e.key === 'Tab' || e.ctrlKey || e.altKey || e.metaKey) {
+      return;
+    }
+    
+    // Acumular caracteres
+    barcodeBuffer += e.key;
+    
+    // Limpiar timeout anterior
+    clearTimeout(barcodeTimeout);
+    
+    // Establecer nuevo timeout
+    barcodeTimeout = setTimeout(() => {
+      // Si el buffer tiene contenido después del timeout, no es un scanner
+      // (el usuario escribe más lento)
+      barcodeBuffer = '';
+    }, BARCODE_INPUT_SPEED);
+    
+    // Si acumulamos suficientes caracteres rápidamente, es probable que sea un scanner
+    if (barcodeBuffer.length >= MIN_BARCODE_LENGTH) {
+      // Prevenir que el input vaya al campo actual
+      e.preventDefault();
+      
+      // Redirigir al campo de código de barras
+      if (barcodeInput && !isProcessingBarcode) {
+        // Si no estamos en el campo correcto, mover el foco
+        if (document.activeElement !== barcodeInput) {
+          // Limpiar el buffer del campo actual si es un input
+          if (activeElement && activeElement.tagName === 'INPUT') {
+            // Restaurar el valor original (sin los caracteres del scanner)
+            const currentValue = activeElement.value || '';
+            const charsToRemove = barcodeBuffer.length - 1; // -1 porque el último carácter está en e.key
+            if (currentValue.length >= charsToRemove) {
+              activeElement.value = currentValue.substring(0, currentValue.length - charsToRemove);
+            }
+          }
+          
+          // Mostrar indicador visual
+          if (barcodeStatus) {
+            showBarcodeStatus('scanning');
+          }
+        }
+      }
+      
+      // Continuar esperando más caracteres del scanner
+      clearTimeout(barcodeTimeout);
+      barcodeTimeout = setTimeout(() => {
+        // Cuando termina el escaneo, procesar el código
+        if (barcodeInput && barcodeBuffer.length >= MIN_BARCODE_LENGTH && !isProcessingBarcode) {
+          isProcessingBarcode = true;
+          
+          // Enfocar el campo de código de barras
+          barcodeInput.focus();
+          
+          // Limpiar y establecer el valor
+          barcodeInput.value = barcodeBuffer.trim();
+          
+          // Procesar el código directamente (sin disparar Enter)
+          processBarcodeInput(barcodeBuffer.trim());
+          
+          // Resetear después de un pequeño delay
+          setTimeout(() => {
+            isProcessingBarcode = false;
+          }, 200);
+        }
+        barcodeBuffer = '';
+      }, 100); // Esperar 100ms después del último carácter
+    }
+  });
+  
+  // Limpiar buffer si cambiamos de campo manualmente
+  document.addEventListener('focusin', function(e) {
+    if (e.target !== barcodeInput && barcodeBuffer.length > 0) {
+      barcodeBuffer = '';
+      clearTimeout(barcodeTimeout);
+    }
+  });
+  
+  // Auto-enfocar el campo de código de barras al cargar la página
+  window.addEventListener('load', function() {
+    setTimeout(() => {
+      if (barcodeInput) {
+        barcodeInput.focus();
+      }
+    }, 500);
+  });
+
   // === COTIZACIÓN DÓLAR ===
   const cotizacionValorElement = document.getElementById('cotizacionValor');
   let cotizacionActual = null;
@@ -135,8 +256,8 @@ document.addEventListener('DOMContentLoaded', function() {
     tipoClienteRow.id = 'tipoClienteRow';
     tipoClienteRow.innerHTML = `
       <label style="font-weight:bold;">Tipo de Cliente:</label>
-      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="consumidor final" checked> Consumidor</label>
-      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="mayorista"> Mayorista</label>
+      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="consumidor final"> Consumidor</label>
+      <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="mayorista" checked> Mayorista</label>
       <label style="margin-left:10px;"><input type="radio" name="tipoCliente" value="admin"> Administrador</label>
     `;
     clienteSection.appendChild(tipoClienteRow);
@@ -508,6 +629,21 @@ function getTipoCliente() {
             this.dispatchEvent(new Event('change', { bubbles: true }));
           }, 0);
         });
+        
+        // Manejar cierre del selector sin selección
+        $select.on('select2:close', function(e) {
+          setTimeout(() => {
+            // Verificar si la fila está vacía (sin artículo seleccionado)
+            const currentItem = items[idx];
+            if (currentItem && !currentItem.nombre) {
+              // Si es la última fila y está vacía, eliminarla
+              const isLastRow = idx === items.length - 1;
+              if (isLastRow) {
+                removeItem(idx);
+              }
+            }
+          }, 100);
+        });
       } catch (error) {
         console.warn('Error inicializando Select2:', error);
       }
@@ -541,14 +677,6 @@ function getTipoCliente() {
         index !== idx && item.nombre === nombreSel
       );
       
-      // Mostrar popup con imagen y nombre del artículo seleccionado
-      const primeraImagen = obtenerPrimeraImagen(nombreSel);
-      if (primeraImagen) {
-        showPopup(`${nombreSel}`, '', true, primeraImagen);
-      } else {
-        showPopup(`${nombreSel}`, '', true);
-      }
-      
       if (existingIndex !== -1) {
         // Sumar cantidad al producto existente
         items[existingIndex].cantidad += items[idx].cantidad;
@@ -572,17 +700,14 @@ function getTipoCliente() {
         // Remover la fila actual
         removeItem(idx);
         
-        // Mostrar popup igual que al agregar por primera vez
-        const primeraImagen = obtenerPrimeraImagen(nombreSel);
-        let mensajeCantidad = `${nombreSel}`;
-        if (primeraImagen) {
-          showPopup(mensajeCantidad, '', true, primeraImagen);
-        } else {
-          showPopup(mensajeCantidad, '', true);
-        }
+        // Mostrar notificación toast con imagen
+        showBarcodeNotification(nombreSel, items[existingIndex].cantidad, true);
         
         return;
       }
+      
+      // Si es un artículo nuevo (no existe duplicado), mostrar notificación
+      showBarcodeNotification(nombreSel, items[idx].cantidad, false);
     }
     
     // Usar función auxiliar para actualizar todos los campos consistentemente
@@ -906,22 +1031,6 @@ function getTipoCliente() {
     // Configurar estado inicial
     showBarcodeStatus('ready');
     
-    barcodeInput.addEventListener('input', function(e) {
-      const value = e.target.value.trim();
-      
-      // Limpiar timeout anterior
-      clearTimeout(scanTimeout);
-      
-      if (value.length > 0) {
-        isScanning = true;
-        showBarcodeStatus('scanning');
-        
-        // Detectar fin de escaneo (pausa en escritura)
-        scanTimeout = setTimeout(() => {
-          processBarcodeInput(value);
-        }, 100); // 100ms de pausa para detectar fin de escaneo
-      }
-    });
     
     // También procesar al presionar Enter
     barcodeInput.addEventListener('keydown', function(e) {
@@ -1027,12 +1136,8 @@ function getTipoCliente() {
       const infoCodigoExtra = esMultipleCodigo ? ` (Código: ${barcode})` : '';
       
       showBarcodeStatus('success', `+${cantidadEspecificada} ${articulo[3]}`);
-      // Obtener primera imagen del artículo
-      const primeraImagen = obtenerPrimeraImagen(articulo[3]);
-      const mensajeCantidad = cantidadEspecificada === 1 ? 
-        `Cantidad incrementada: ${articulo[3]} (${items[existingItemIndex].cantidad} unidades)${infoCodigoExtra}` :
-        `Agregadas ${cantidadEspecificada} unidades: ${articulo[3]} (${items[existingItemIndex].cantidad} unidades total)${infoCodigoExtra}`;
-      showPopup(mensajeCantidad, '', true, primeraImagen);
+      // Mostrar notificación con imagen del artículo
+      showBarcodeNotification(articulo[3], items[existingItemIndex].cantidad, true);
     } else {
       // Agregar nuevo artículo usando la misma lógica que el método manual
       const newItem = {
@@ -1076,12 +1181,8 @@ function getTipoCliente() {
       const infoCodigoExtra = esMultipleCodigo ? ` (Código: ${barcode})` : '';
       
       showBarcodeStatus('success', `Agregado: ${articulo[3]}`);
-      // Obtener primera imagen del artículo
-      const primeraImagen = obtenerPrimeraImagen(articulo[3]);
-      const mensajeNuevo = cantidadEspecificada === 1 ? 
-        `Artículo agregado: ${articulo[3]}${infoCodigoExtra}` :
-        `Artículo agregado: ${articulo[3]} (${cantidadEspecificada} unidades)${infoCodigoExtra}`;
-      showPopup(mensajeNuevo, '', true, primeraImagen);
+      // Mostrar notificación con imagen del artículo
+      showBarcodeNotification(articulo[3], cantidadEspecificada, false);
     }
     
     // Recalcular totales
@@ -1135,6 +1236,99 @@ function getTipoCliente() {
     if (barcodeQuantity) {
       barcodeQuantity.value = 1;
     }
+  }
+
+  // === FUNCIÓN PARA MOSTRAR NOTIFICACIÓN CON IMAGEN (TOAST) ===
+  function showBarcodeNotification(nombreArticulo, cantidad, isIncrement = false) {
+    // Obtener imagen del artículo
+    const imagenUrl = obtenerPrimeraImagen(nombreArticulo);
+    
+    // Remover notificación anterior si existe
+    const oldNotif = document.getElementById('barcodeToast');
+    if (oldNotif) oldNotif.remove();
+    
+    // Crear contenedor de notificación
+    const toast = document.createElement('div');
+    toast.id = 'barcodeToast';
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      padding: 16px;
+      z-index: 10000;
+      min-width: 320px;
+      max-width: 400px;
+      animation: slideIn 0.3s ease-out;
+      border-left: 4px solid #28a745;
+    `;
+    
+    // Crear contenido
+    const imageHtml = imagenUrl ? 
+      `<img src="${imagenUrl}" 
+            style="width: 100%; height: 350px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;" 
+            alt="${nombreArticulo}"
+            onerror="this.style.display='none'">` : '';
+    
+    const cantidadText = cantidad > 1 ? ` (${cantidad} unidades)` : '';
+    const accionText = isIncrement ? '✅ Cantidad actualizada' : '✅ Artículo agregado';
+    
+    toast.innerHTML = `
+      ${imageHtml}
+      <div style="font-weight: 600; font-size: 14px; color: #28a745; margin-bottom: 6px;">
+        ${accionText}
+      </div>
+      <div style="font-size: 15px; color: #333; font-weight: 500;">
+        ${nombreArticulo}${cantidadText}
+      </div>
+    `;
+    
+    // Agregar estilos de animación
+    if (!document.getElementById('barcodeToastStyles')) {
+      const style = document.createElement('style');
+      style.id = 'barcodeToastStyles';
+      style.textContent = `
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes slideOut {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(toast);
+    
+    // Cerrar al hacer clic
+    toast.addEventListener('click', () => {
+      toast.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(() => toast.remove(), 300);
+    });
+    
+    // Auto-cerrar después de 4 segundos
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => toast.remove(), 300);
+      }
+    }, 4000);
   }
 
 addItemBtn.addEventListener('click', addNewItem);
@@ -2097,7 +2291,7 @@ form.nombre.addEventListener('blur', function() {
 });
 
 // Modal vistoso para registrar o editar cliente
-function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, direccionPrellenado, dniPrellenado, emailPrellenado, tipoClientePrellenado = 'consumidor final', esEdicion = false) {
+function mostrarModalRegistroCliente(nombrePrellenado = '', telefonoPrellenado, direccionPrellenado, dniPrellenado, emailPrellenado, tipoClientePrellenado = 'mayorista', esEdicion = false) {
   let modal = document.getElementById('modalRegistroCliente');
   if (!modal) {
     modal = document.createElement('div');
