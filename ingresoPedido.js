@@ -582,6 +582,10 @@ function getTipoCliente() {
     const removeBtn = row.querySelector('.remove-btn');
     const imgElement = row.querySelector('.articulo-img');
     
+    // Flag para rastrear si se seleccionó un artículo
+    let itemWasSelected = false;
+    let closeTimeout = null;
+    
     // Event listener para select (throttled)
     let selectChangeTimeout;
     select.addEventListener('change', function() {
@@ -623,7 +627,16 @@ function getTipoCliente() {
           }
         });
         
+        // Marcar cuando se abre el selector
+        $select.on('select2:open', function(e) {
+          itemWasSelected = false;
+          clearTimeout(closeTimeout);
+        });
+        
         $select.on('select2:select', function(e) {
+          // Marcar que se seleccionó un artículo
+          itemWasSelected = true;
+          
           // Usar setTimeout para no bloquear el hilo principal
           setTimeout(() => {
             this.dispatchEvent(new Event('change', { bubbles: true }));
@@ -632,17 +645,22 @@ function getTipoCliente() {
         
         // Manejar cierre del selector sin selección
         $select.on('select2:close', function(e) {
-          setTimeout(() => {
-            // Verificar si la fila está vacía (sin artículo seleccionado)
-            const currentItem = items[idx];
-            if (currentItem && !currentItem.nombre) {
-              // Si es la última fila y está vacía, eliminarla
-              const isLastRow = idx === items.length - 1;
-              if (isLastRow) {
-                removeItem(idx);
+          clearTimeout(closeTimeout);
+          closeTimeout = setTimeout(() => {
+            // Solo eliminar si NO se seleccionó ningún artículo
+            if (!itemWasSelected) {
+              const currentItem = items[idx];
+              if (currentItem && !currentItem.nombre) {
+                // Si es la última fila y está vacía, eliminarla
+                const isLastRow = idx === items.length - 1;
+                if (isLastRow) {
+                  removeItem(idx);
+                }
               }
             }
-          }, 100);
+            // Resetear el flag para la próxima vez
+            itemWasSelected = false;
+          }, 150);
         });
       } catch (error) {
         console.warn('Error inicializando Select2:', error);
@@ -654,6 +672,7 @@ function getTipoCliente() {
       select: $select,
       cleanup: function() {
         clearTimeout(selectChangeTimeout);
+        clearTimeout(closeTimeout);
         if (hoverCleanup) hoverCleanup();
         try {
           if ($select.hasClass('select2-hidden-accessible')) {
