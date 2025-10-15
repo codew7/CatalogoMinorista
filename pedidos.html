@@ -297,6 +297,7 @@
   <div id="fechaIngreso" style="text-align:center;color:#666;font-size:0.95em;margin-bottom:10px"></div>
   <div id="nombreCliente" style="text-align:center;font-weight:bold;font-size:1.1em;margin-bottom:5px"></div>
   <div id="direccionCliente" style="text-align:center;margin-bottom:5px"></div>
+  <div id="localidadCliente" style="text-align:center;margin-bottom:5px"></div>
   <div id="provinciaCliente" style="text-align:center;margin-bottom:5px"></div>
   <div id="dniCliente" style="text-align:center;margin-bottom:5px"></div>
   <div id="telefonoCliente" style="text-align:center;margin-bottom:5px"></div>
@@ -447,6 +448,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     const cliente = pedidoActual.cliente || {};
     document.getElementById('nombreCliente').textContent = cliente.nombre || '';
     document.getElementById('direccionCliente').textContent = cliente.direccion || '';
+    document.getElementById('localidadCliente').textContent = cliente.localidad || '';
     document.getElementById('provinciaCliente').textContent = cliente.provincia || '';
     document.getElementById('dniCliente').textContent = cliente.dni ? `DNI: ${cliente.dni}` : '';
     if (cliente.telefono) {
@@ -1821,8 +1823,11 @@ if (!modalEditCliente) {
       <h3>Editar datos del cliente</h3>
       <input id="editNombre" type="text" placeholder="Nombre y Apellido" style="width:100%;margin-bottom:8px;">
       <input id="editDireccion" type="text" placeholder="Dirección Completa" style="width:100%;margin-bottom:8px;">
+      <input id="editLocalidad" type="text" placeholder="Localidad" style="width:100%;margin-bottom:8px;">
       <select id="editProvincia" style="width:100%;margin-bottom:8px;">
         <option value="">Seleccione Provincia</option>
+        <option value="CABA">CABA</option>
+        <option value="Gran Buenos Aires">Gran Buenos Aires</option>
         <option value="Buenos Aires">Buenos Aires</option>
         <option value="Catamarca">Catamarca</option>
         <option value="Chaco">Chaco</option>
@@ -1862,6 +1867,7 @@ editarBtn.onclick = () => {
   // Permitir editar datos personales si el pedido está abierto o si es admin
   if (!admin && pedidoActual.locked) return;
   document.getElementById('editNombre').value = pedidoActual.cliente?.nombre || '';
+  document.getElementById('editLocalidad').value = pedidoActual.cliente?.localidad || '';
   document.getElementById('editDireccion').value = pedidoActual.cliente?.direccion || '';
   document.getElementById('editProvincia').value = pedidoActual.cliente?.provincia || '';
   document.getElementById('editDni').value = pedidoActual.cliente?.dni || '';
@@ -1877,6 +1883,7 @@ document.getElementById('closeEditCliente').onclick = () => {
 const guardarEditBtn = document.getElementById('guardarEditCliente');
 guardarEditBtn.onclick = () => {
   const nuevoNombre = document.getElementById('editNombre').value.trim();
+  const nuevaLocalidad = document.getElementById('editLocalidad').value.trim();
   const nuevaDireccion = document.getElementById('editDireccion').value.trim();
   const nuevaProvincia = document.getElementById('editProvincia').value;
   const nuevoDni = document.getElementById('editDni').value.trim();
@@ -1889,6 +1896,7 @@ guardarEditBtn.onclick = () => {
   }
   pedidoRef.update({
     'cliente/nombre': nuevoNombre,
+    'cliente/localidad': nuevaLocalidad,
     'cliente/direccion': nuevaDireccion,
     'cliente/provincia': nuevaProvincia,
     'cliente/dni': nuevoDni,
@@ -1902,6 +1910,7 @@ guardarEditBtn.onclick = () => {
           if (snap.exists()) {
             Object.keys(snap.val()).forEach(key => {
               updates[key + '/nombre'] = nuevoNombre;
+              updates[key + '/localidad'] = nuevaLocalidad;
               updates[key + '/direccion'] = nuevaDireccion;
               updates[key + '/provincia'] = nuevaProvincia;
               updates[key + '/dni'] = nuevoDni;
@@ -1910,6 +1919,7 @@ guardarEditBtn.onclick = () => {
           } else {
             const nuevoCliente = {
               nombre: nuevoNombre,
+              localidad: nuevaLocalidad,
               direccion: nuevaDireccion,
               provincia: nuevaProvincia,
               dni: nuevoDni,
@@ -1955,7 +1965,7 @@ document.getElementById('ImprimirBtn').onclick = () => {
     </style>
     </head><body>
     <div class="info"><b>Nombre:</b> ${cliente.nombre || ''} <br>
-      <b>Dirección:</b> ${cliente.direccion || ''} <br>
+      <b>Dirección:</b> ${cliente.direccion || ''} - ${cliente.localidad || ''} <br>
       <b>Provincia:</b> ${cliente.provincia || ''} <br>
       <b>Teléfono:</b> ${cliente.telefono || ''} <br>
       <b>DNI:</b> ${cliente.dni || ''} <br>
