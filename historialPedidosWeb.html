@@ -124,6 +124,7 @@
     th.col-fecha, td.col-fecha { width: 10%; min-width: 80px; }
     th.col-entrega, td.col-entrega { width: 10%; min-width: 80px; }
     th.col-estado, td.col-estado { width: 10%; min-width: 80px; }
+    th.col-unidades, td.col-unidades { width: 6%; min-width: 40px; }
     th.col-nota, td.col-nota { width: 18%; min-width: 120px; }
     th.col-contacto, td.col-contacto { width: 7%; min-width: 40px; }
   th.col-eliminar, td.col-eliminar { width: 7%; min-width: 40px; text-align: center; vertical-align: middle; }
@@ -133,6 +134,7 @@
       th.col-fecha, td.col-fecha,
       th.col-entrega, td.col-entrega,
       th.col-estado, td.col-estado { min-width: 60px; }
+      th.col-unidades, td.col-unidades { min-width: 32px; }
       th.col-nota, td.col-nota { min-width: 80px; }
       th.col-contacto, td.col-contacto,
       th.col-eliminar, td.col-eliminar { min-width: 32px; }
@@ -276,6 +278,7 @@
   <th class="col-fecha">Fecha</th>
   <th class="col-entrega">Entrega</th>
   <th class="col-estado">Estado</th>
+  <th class="col-unidades">U.</th>
   <th class="col-nota">Nota</th>
   <th class="col-contacto"></th>
   <th class="col-eliminar"></th>
@@ -585,9 +588,9 @@
         } else if (!provincia) {
           tipoEntrega = 'Retiro';
         } else if (p.tipoEntrega !== 'Showroom') {
-          if (provincia !== 'Buenos Aires' && provincia !== 'CABA') {
+          if (provincia !== 'Gran Buenos Aires' && provincia !== 'CABA') {
             tipoEntrega = 'Envio';
-          } else if (provincia === 'Buenos Aires' || provincia === 'CABA') {
+          } else if (provincia === ' Gran Buenos Aires' || provincia === 'CABA') {
             tipoEntrega = 'Envio?';
           } else {
             tipoEntrega = 'Envio';
@@ -613,6 +616,15 @@
   const estadoCell = tr.insertCell();
   estadoCell.className = 'col-estado';
   estadoCell.textContent = estado;
+
+  /* --- Unidades totales --- */
+  const unidadesCell = tr.insertCell();
+  unidadesCell.className = 'col-unidades';
+  let totalUnidades = 0;
+  if (Array.isArray(p.items)) {
+    totalUnidades = p.items.reduce((sum, item) => sum + (parseInt(item.cantidad) || 0), 0);
+  }
+  unidadesCell.textContent = totalUnidades;
 
         /* --- 8. Nota --- */
         const notaCell = tr.insertCell();
