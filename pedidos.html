@@ -741,19 +741,21 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     // solo pinto si ya tengo los datos de Sheets cargados
     if (Object.keys(sheetValorMap).length > 0) renderItems();
 
-    // Bloqueo por status
-    const bloqueado = pedidoActual.locked || pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO';
-    document.getElementById('agregarItemBtn').disabled = bloqueado;
-    // Permitir guardar para admin autenticado aunque esté bloqueado
+    // Bloqueo por status - permitir modificaciones de tabla para admin autenticado cuando está cerrado
     const user = firebase.auth().currentUser;
-    document.getElementById('guardarBtn').disabled = bloqueado && !(admin && user);
-    document.getElementById('cancelarBtn').disabled = bloqueado;
+    const bloqueado = pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO';
+    const bloqueadoCompleto = bloqueado || (pedidoActual.locked && !(admin && user));
+    
+    document.getElementById('agregarItemBtn').disabled = bloqueadoCompleto;
+    // Permitir guardar para admin autenticado aunque esté bloqueado
+    document.getElementById('guardarBtn').disabled = bloqueadoCompleto;
+    document.getElementById('cancelarBtn').disabled = bloqueadoCompleto;
 
     // Bloquear radios de pago e entrega si bloqueado
     const pagoRadios = document.getElementsByName('tipoPago');
-    for (let r of pagoRadios) r.disabled = bloqueado && !(admin && firebase.auth().currentUser);
+    for (let r of pagoRadios) r.disabled = bloqueadoCompleto;
     const entregaRadios = document.getElementsByName('tipoEntrega');
-    for (let r of entregaRadios) r.disabled = bloqueado && !(admin && firebase.auth().currentUser);
+    for (let r of entregaRadios) r.disabled = bloqueadoCompleto;
 
     // visibilidad de botones según rol/estado
     document.getElementById('cerrarBtn').style.display   =
@@ -948,8 +950,10 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     tbl.innerHTML = headerHTML;
     
     let total = 0;
-    // Bloquea si está cerrado, despachado o cancelado
-    const bloqueado = pedidoActual.locked || pedidoActual.estado === 'Despachado' || pedidoActual.status === 'CANCELADO';
+    // Bloquea si está despachado o cancelado, o si está cerrado y no es admin autenticado
+    const user = firebase.auth().currentUser;
+    const bloqueado = pedidoActual.status === 'CANCELADO' || pedidoActual.status === 'DESPACHADO/ENTREGADO' || 
+                      (pedidoActual.locked && !(admin && user));
     
     pedidoActual.items.forEach((it, idx) => {
       // Usar directamente valorU desde el item (ya viene en pesos)
@@ -1029,8 +1033,8 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       /* 4) valor unitario $ - EDITABLE SOLO PARA ADMIN */
       const valorCell = row.insertCell(admin ? 4 : 3);
       
-      if (admin && !bloqueado) {
-        // Para administradores: campo editable
+      if (admin && (pedidoActual.status !== 'CANCELADO' && pedidoActual.status !== 'DESPACHADO/ENTREGADO')) {
+        // Para administradores: campo editable (excepto cuando está cancelado o despachado)
         const valorInput = document.createElement('input');
         valorInput.type = 'number';
         valorInput.min = 0;
