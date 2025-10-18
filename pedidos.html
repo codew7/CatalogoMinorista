@@ -312,8 +312,7 @@
   <div style="text-align:center;margin-top:20px;">
   <button id="agregarItemBtn" class="accion-btn">Agregar Artículos</button>
   <button id="guardarBtn" class="accion-btn">Guardar Cambios</button>
-  <button id="cerrarBtn" class="accion-btn">Cerrar Pedido</button>
-  <button id="reabrirBtn" class="accion-btn">Reabrir Pedido</button>
+  <button id="toggleEstadoBtn" class="accion-btn">Cerrar Pedido</button>
   <button id="cancelarBtn" class="accion-btn">Cancelar Pedido</button>
   <button id="hablarBtn" class="accion-btn" style="background:#2196F3;display:none;">Chat</button>
   <button id="ImprimirBtn" class="accion-btn" style="display:none;background:#888;">Imprimir</button>
@@ -757,12 +756,20 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     const entregaRadios = document.getElementsByName('tipoEntrega');
     for (let r of entregaRadios) r.disabled = bloqueadoCompleto;
 
-    // visibilidad de botones según rol/estado
-    document.getElementById('cerrarBtn').style.display   =
-      admin && !bloqueado ? 'inline-block' : 'none';
-
-    document.getElementById('reabrirBtn').style.display  =
-      admin &&  pedidoActual.locked ? 'inline-block' : 'none';
+    // visibilidad y texto del botón toggle según rol/estado
+    const toggleBtn = document.getElementById('toggleEstadoBtn');
+    if (admin && pedidoActual.status !== 'CANCELADO') {
+      toggleBtn.style.display = 'inline-block';
+      if (pedidoActual.locked || pedidoActual.status === 'DESPACHADO/ENTREGADO') {
+        toggleBtn.textContent = 'Reabrir Pedido';
+        toggleBtn.onclick = reabrirPedido;
+      } else {
+        toggleBtn.textContent = 'Cerrar Pedido';
+        toggleBtn.onclick = cerrarPedido;
+      }
+    } else {
+      toggleBtn.style.display = 'none';
+    }
 
     // Mostrar botón Imprimir Rótulo solo para admin
     // (eliminado)
@@ -1587,7 +1594,7 @@ document.getElementById('guardarBtn').onclick = async () => {
 };
 
 
-document.getElementById('cerrarBtn').onclick = () => {
+const cerrarPedido = () => {
   // Validar que ambos radios estén seleccionados
   const tipoPago = document.querySelector('input[name="tipoPago"]:checked');
   const tipoEntrega = document.querySelector('input[name="tipoEntrega"]:checked');
@@ -1701,7 +1708,7 @@ document.getElementById('cerrarBtn').onclick = () => {
     .catch(() => alert("Error al cerrar el pedido"));
 };
 
-  document.getElementById('reabrirBtn').onclick = async () => {
+const reabrirPedido = async () => {
   if (!admin || !pedidoActual.locked) return;            // solo admin y pedido cerrado
   if (!confirm("¿Querés reabrir este pedido?")) return;
   // Determinar quién modifica
