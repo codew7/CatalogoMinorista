@@ -235,6 +235,15 @@
             box-shadow: 0 15px 35px rgba(255, 107, 53, 0.4);
         }
 
+        .nav-button.personalizacion {
+            background: linear-gradient(135deg, #9C27B0 0%, #E1BEE7 100%);
+            box-shadow: 0 8px 25px rgba(156, 39, 176, 0.3);
+        }
+
+        .nav-button.personalizacion:hover {
+            box-shadow: 0 15px 35px rgba(156, 39, 176, 0.4);
+        }
+
         /* About Section */
         .about {
             padding: 4rem 0;
@@ -380,7 +389,8 @@
             min-height: 270px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
+            align-items: center;
         }
 
         .contact-card:hover {
@@ -389,14 +399,16 @@
         }
 
         .contact-card i {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
+            font-size: 2.2rem;
+            margin-right: 20px;
+            margin-bottom: 0;
             color: #a9e062;
+            vertical-align: middle;
         }
 
         .contact-card h4 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            margin-bottom: 0.7rem;
             font-weight: 600;
         }
 
@@ -412,6 +424,7 @@
             color: #a9e062;
             text-decoration: none;
             transition: color 0.3s ease;
+            font-size: 1.1rem;
         }
 
         .contact-card a:hover {
@@ -641,7 +654,13 @@
                 <a href="mayorista.html" class="nav-button mayorista loading">
                     <i class="fas fa-shopping-cart"></i>
                     <div class="button-title">Ingresar al <br> Catálogo</div>
-                    <div class="button-description" style="display: none;">Para revendedores y emprendedores</div>
+                    <div class="button-description">Listado completo de nuestros articulos con sus precios siempre actualizados</div>
+                </a>
+                
+                <a href="personalizacion.html" class="nav-button personalizacion loading">
+                    <i class="fas fa-cogs"></i>
+                    <div class="button-title">Personaliza tú<br> Catálogo</div>
+                    <div class="button-description">Crea tu propio enlace con nombre y porcentaje de ganancia personalizados</div>
                 </a>
                 
                 <a href="minorista.html" class="nav-button loading" style="display: none;">
@@ -707,28 +726,21 @@
             <h3 class="loading">Contáctanos</h3>
             
             <div class="contact-grid">
-                <div class="contact-card loading">
-                    <i class="fas fa-phone"></i>
-                    <h4>Teléfono</h4>
-                    <p>
-                        <a href="tel:+5491121891006">+54 9 11 2189-1006</a>
-                    </p>
-                </div>
-                
-                <div class="contact-card loading">
-                    <i class="fab fa-whatsapp"></i>
-                    <h4>WhatsApp</h4>
-                    <p>
-                        <a href="https://api.whatsapp.com/send/?phone=5491121891006" target="_blank">+54 9 11 2189-1006</a>
-                    </p>
-                </div>
-                
-                <div class="contact-card loading">
-                    <i class="fas fa-envelope"></i>
-                    <h4>Email</h4>
-                    <p>
-                        <a href="mailto:distribuidorahomepoint@gmail.com">distribuidorahomepoint@gmail.com</a>
-                    </p>
+                <div class="contact-card loading unified-contact">
+                    <ul style="list-style:none; padding:0; margin:0;">
+                        <li style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 1.5rem;">
+                            <i class="fas fa-phone"></i>
+                            <a href="tel:+5491121891006">+54 9 11 2189-1006</a>
+                        </li>
+                        <li style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 1.5rem;">
+                            <i class="fab fa-whatsapp"></i>
+                            <a href="https://api.whatsapp.com/send/?phone=5491121891006" target="_blank"> WhatsApp</a>
+                        </li>
+                        <li style="display: flex; align-items: center; justify-content: flex-start;">
+                            <i class="fas fa-envelope"></i>
+                            <a href="mailto:distribuidorahomepoint@gmail.com">distribuidorahomepoint@gmail.com</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
             
@@ -791,7 +803,7 @@
         });
 
         // Precargar páginas de destino para mejor experiencia
-        const preloadPages = ['mayorista.html', 'minorista.html'];
+        const preloadPages = ['mayorista.html', 'minorista.html', 'personalizacion.html'];
         preloadPages.forEach(page => {
             const link = document.createElement('link');
             link.rel = 'prefetch';
@@ -802,7 +814,14 @@
         // Analytics de clics en botones (opcional)
         document.querySelectorAll('.nav-button').forEach(button => {
             button.addEventListener('click', function() {
-                const buttonType = this.classList.contains('mayorista') ? 'Mayorista' : 'Minorista';
+                let buttonType = 'Desconocido';
+                if (this.classList.contains('mayorista')) {
+                    buttonType = 'Mayorista';
+                } else if (this.classList.contains('personalizacion')) {
+                    buttonType = 'Personalización';
+                } else {
+                    buttonType = 'Minorista';
+                }
                 console.log(`Usuario seleccionó: ${buttonType}`);
                 // Aquí puedes agregar código para analytics (Google Analytics, etc.)
             });
