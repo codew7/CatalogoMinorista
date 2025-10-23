@@ -337,10 +337,12 @@
             transform: translateX(100%);
             transition: transform 0.3s ease;
             z-index: 1000;
+            display: none;
         }
 
         .notification.show {
             transform: translateX(0);
+            display: block;
         }
 
         /* Responsive Design */
@@ -424,7 +426,7 @@
 
     <!-- Notification -->
     <div id="notification" class="notification">
-        <i class="fas fa-check"></i> ¡URL copiada al portapapeles!
+    <i class="fas fa-check"></i> ¡URL copiada al portapapeles!
     </div>
 
     <!-- Header -->
@@ -470,11 +472,10 @@
                         type="number" 
                         id="profitPercentage" 
                         name="profitPercentage" 
-                        placeholder="Ej: 20, 35, 50..."
+                        placeholder="Ej: 15, 20, 35..."
                         min="0"
                         max="200"
                         step="1"
-                        required
                     >
                     <div class="form-help">
                         💰 Porcentaje que se agregará al precio base (0-200%)
@@ -503,7 +504,7 @@
                 </button>
                 <button class="visit-btn" onclick="visitCatalog()">
                     <i class="fas fa-external-link-alt"></i>
-                    Visitar Catálogo
+                    Visitar tu Catálogo
                 </button>
             </div>
         </div>
@@ -528,6 +529,20 @@
     </div>
 
     <script>
+        // Ocultar notificación al cargar la página
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('notification').classList.remove('show');
+        });
+        
+        // Mostrar notificación al copiar el enlace
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
         let generatedUrl = '';
 
         document.getElementById('customizationForm').addEventListener('submit', function(e) {
@@ -536,20 +551,26 @@
             const catalogName = document.getElementById('catalogName').value.trim();
             const profitPercentage = document.getElementById('profitPercentage').value.trim();
             
-            if (!catalogName || !profitPercentage) {
-                alert('⚠️ Por favor, completa todos los campos');
+            if (!catalogName) {
+                alert('⚠️ Por favor, completa el nombre del catálogo');
                 return;
             }
             
-            if (profitPercentage < 0 || profitPercentage > 200) {
-                alert('⚠️ El porcentaje debe estar entre 0 y 200');
-                return;
+            if (profitPercentage) {
+                if (profitPercentage < 0 || profitPercentage > 200) {
+                    alert('⚠️ El porcentaje debe estar entre 0 y 200');
+                    return;
+                }
             }
             
             // Generar la URL personalizada con dominio fijo
             const baseUrl = 'https://catalogo.dev.ar/';
             const encodedName = encodeURIComponent(catalogName);
-            generatedUrl = `${baseUrl}?n=${encodedName}&${profitPercentage}`;
+            if (profitPercentage) {
+                generatedUrl = `${baseUrl}?n=${encodedName}&${profitPercentage}`;
+            } else {
+                generatedUrl = `${baseUrl}?n=${encodedName}`;
+            }
 
             // Mostrar el resultado
             document.getElementById('urlDisplay').textContent = generatedUrl;
