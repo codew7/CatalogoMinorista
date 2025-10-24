@@ -1329,7 +1329,7 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     }
     pagoDiv.style = 'margin-top:18px;text-align:left;width:100%';
 
-        // Línea gris sutil
+    // Línea gris sutil
     let lineaDiv2 = document.getElementById('linea2');
     if (!lineaDiv2) {
       lineaDiv2 = document.createElement('div');
@@ -1376,6 +1376,42 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
     }
     entregaDiv.style = 'margin-top:18px;text-align:left;width:100%';
 
+    // Línea gris sutil
+    let lineaDiv3 = document.getElementById('linea3');
+    if (!lineaDiv3) {
+      lineaDiv3 = document.createElement('div');
+      lineaDiv3.id = 'linea3';
+      lineaDiv3.style = 'border-top:1px solid #ddd;margin:8px 0 6px 0;width:100%';
+      totalPagoWrap.appendChild(lineaDiv3);
+    } else if (!totalPagoWrap.contains(lineaDiv2)) {
+      totalPagoWrap.appendChild(lineaDiv);
+    }
+
+    // === Campo Nota (solo visible para admin) ===
+    let notaDiv = document.getElementById('notaDiv');
+    if (admin && !notaDiv) {
+      notaDiv = document.createElement('div');
+      notaDiv.id = 'notaDiv';
+      notaDiv.innerHTML = `
+        <div style="display:flex;align-items:center;margin-top:15px;width:100%;max-width:none;">
+          <div style="font-weight:bold;min-width:120px;">Nota</div>
+          <div style="flex:1;max-width:none;">
+            <input type="text" id="notaTextarea" list="notaEstadosDatalist" placeholder="Seleccionar o escribir estado..." 
+              style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-family:Arial,sans-serif;font-size:0.95em;box-sizing:border-box;">
+            <datalist id="notaEstadosDatalist">
+              <option value="en preparacion">
+              <option value="esperando pago">
+              <option value="esperando respuesta">
+              <option value="cotizar">
+            </datalist>
+          </div>
+        </div>
+      `;
+      totalPagoWrap.appendChild(notaDiv);
+    } else if (admin && !totalPagoWrap.contains(notaDiv)) {
+      totalPagoWrap.appendChild(notaDiv);
+    }
+
     // === Seleccionar radio buttons según lo guardado ===
     setTimeout(() => {
       // Tipo de Pago
@@ -1389,6 +1425,12 @@ let admin = false; // Declarar admin al principio para evitar errores de hoistin
       const entregaValue = pedidoActual.tipoEntrega || null;
       for (let r of entregaRadios) {
         r.checked = (entregaValue !== null && r.value === entregaValue);
+      }
+      
+      // Cargar valor de Nota si existe y es admin
+      const notaTextarea = document.getElementById('notaTextarea');
+      if (notaTextarea && admin && pedidoActual.nota) {
+        notaTextarea.value = pedidoActual.nota;
       }
       
       // Cargar valor del ALIAS si existe y es admin
@@ -1520,6 +1562,15 @@ document.getElementById('guardarBtn').onclick = async () => {
       adminViewedValue = true;
     }
 
+    // Obtener nota (solo si es admin)
+    let nota = '';
+    if (admin) {
+      const notaTextarea = document.getElementById('notaTextarea');
+      if (notaTextarea) {
+        nota = notaTextarea.value.trim();
+      }
+    }
+
     // Preparar datos para actualizar (incluye items completos con valores preservados)
     const updateData = {
       items: itemsParaGuardar, // Array completo con cambios pero valores preservados
@@ -1531,6 +1582,11 @@ document.getElementById('guardarBtn').onclick = async () => {
       lastModifiedBy: lastModifiedBy,
       lastModifiedEmail: lastModifiedEmail
     };
+
+    // Agregar nota solo si es admin y tiene contenido
+    if (admin && nota) {
+      updateData.nota = nota;
+    }
 
     // Preparar promesas para actualización
     const promises = [

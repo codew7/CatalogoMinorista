@@ -127,7 +127,7 @@
     th.col-unidades, td.col-unidades { width: 6%; min-width: 40px; }
     th.col-nota, td.col-nota { width: 18%; min-width: 120px; }
     th.col-contacto, td.col-contacto { width: 7%; min-width: 40px; }
-  th.col-eliminar, td.col-eliminar { width: 7%; min-width: 40px; text-align: center; vertical-align: middle; }
+  th.col-eliminar, td.col-eliminar { width: 10%; min-width: 90px; text-align: center; vertical-align: middle; }
     @media (max-width: 900px) {
       th.col-indicador, td.col-indicador { min-width: 20px; }
       th.col-nombre, td.col-nombre { min-width: 80px; }
@@ -137,7 +137,7 @@
       th.col-unidades, td.col-unidades { min-width: 32px; }
       th.col-nota, td.col-nota { min-width: 80px; }
       th.col-contacto, td.col-contacto,
-      th.col-eliminar, td.col-eliminar { min-width: 32px; }
+      th.col-eliminar, td.col-eliminar { min-width: 80px; }
     }
     .cerrar{background:#4CAF50;color:#fff}
     .cerrado{background:#9e9e9e;color:#fff;cursor:not-allowed}
@@ -280,7 +280,6 @@
   <th class="col-estado">Estado</th>
   <th class="col-unidades">U.</th>
   <th class="col-nota">Nota</th>
-  <th class="col-contacto"></th>
   <th class="col-eliminar"></th>
 </tr>
 
@@ -288,6 +287,14 @@
     <tbody></tbody>
   </table>
   </div>
+
+<!-- Datalist para las opciones de nota -->
+<datalist id="notaEstadosDatalist">
+  <option value="en preparacion">
+  <option value="esperando pago">
+  <option value="esperando respuesta">
+  <option value="cotizar">
+</datalist>
 
 <script>
   // Declarar variables globales y db
@@ -629,13 +636,27 @@
         /* --- 8. Nota --- */
         const notaCell = tr.insertCell();
         notaCell.className = 'col-nota';
-        const notaInput = document.createElement('textarea');
+        const notaInput = document.createElement('input');
+        notaInput.type = 'text';
         notaInput.className = 'nota-input';
         notaInput.value = p.nota || '';
-        notaInput.placeholder = 'Agregar nota...';
-        notaInput.rows = 1;
+        notaInput.placeholder = 'Seleccionar o escribir estado...';
+        notaInput.setAttribute('list', 'notaEstadosDatalist');
         
-        // Guardar nota en Firebase cuando se modifique
+        // Manejar selección del datalist para reemplazar el texto existente
+        notaInput.addEventListener('focus', function() {
+          // Guardar el valor actual
+          this.setAttribute('data-valor-anterior', this.value);
+        });
+        
+        notaInput.addEventListener('change', function() {
+          // Este evento se dispara cuando se selecciona una opción del datalist
+          const nuevaNota = this.value.trim();
+          db.ref(`pedidos/${p.id}`).update({ nota: nuevaNota })
+            .catch(() => console.error('Error al guardar la nota'));
+        });
+        
+        // Guardar nota en Firebase cuando se modifique manualmente
         let timeoutId;
         notaInput.addEventListener('input', () => {
           clearTimeout(timeoutId);
@@ -648,9 +669,22 @@
         
         notaCell.appendChild(notaInput);
 
-        /* --- 9. Contacto (icono WhatsApp) --- */
-  const contactoCell = tr.insertCell();
-  contactoCell.className = 'col-contacto';
+        /* --- 9. Acciones (llamada, compartir y eliminar) --- */
+        const acciones = tr.insertCell();
+        acciones.className = 'col-eliminar';
+        acciones.style.textAlign = 'center';
+        acciones.style.verticalAlign = 'middle';
+        acciones.style.padding = '4px';
+        
+        // Contenedor flex para los botones
+        const botonesContainer = document.createElement('div');
+        botonesContainer.style.display = 'flex';
+        botonesContainer.style.gap = '6px';
+        botonesContainer.style.justifyContent = 'center';
+        botonesContainer.style.alignItems = 'center';
+        botonesContainer.style.flexWrap = 'nowrap';
+        
+        // Botón Llamar/WhatsApp
         const telefono = p.cliente?.telefono ? p.cliente.telefono.replace(/[^\d]/g, '') : '';
         let telClean = telefono;
         if (telClean.startsWith('0')) telClean = telClean.substring(1);
@@ -658,18 +692,25 @@
         const btnTel = document.createElement('button');
         btnTel.innerHTML = '<i class="bi bi-telephone-fill"></i>';
         btnTel.title = 'Contactar por WhatsApp';
-        btnTel.style.background = '#2196F3';
+        btnTel.style.background = '#25D366';
         btnTel.style.color = '#fff';
         btnTel.style.borderRadius = '50%';
-        btnTel.style.width = '22px';
-        btnTel.style.height = '22px';
+        btnTel.style.width = '26px';
+        btnTel.style.height = '26px';
         btnTel.style.display = 'flex';
         btnTel.style.alignItems = 'center';
         btnTel.style.justifyContent = 'center';
-        btnTel.style.fontSize = '0.95em';
+        btnTel.style.fontSize = '0.85em';
         btnTel.style.boxShadow = 'none';
-        btnTel.style.margin = '0 auto';
+        btnTel.style.border = 'none';
+        btnTel.style.cursor = 'pointer';
+        btnTel.style.padding = '0';
+        btnTel.style.flexShrink = '0';
         btnTel.disabled = !telClean;
+        if (!telClean) {
+          btnTel.style.opacity = '0.5';
+          btnTel.style.cursor = 'not-allowed';
+        }
         btnTel.onclick = () => {
           if (telClean) {
             window.open(`https://api.whatsapp.com/send/?phone=${telClean}`, '_blank');
@@ -677,28 +718,59 @@
             alert('Teléfono no disponible');
           }
         };
-        contactoCell.appendChild(btnTel);
-
-        /* --- 10. Acciones --- */
-        const acciones = tr.insertCell();
-        acciones.className = 'col-eliminar';
-        acciones.style.textAlign = 'center';
-        acciones.style.verticalAlign = 'middle';
-        // Botón Eliminar centrado
+        botonesContainer.appendChild(btnTel);
+        
+        // Botón Copiar URL
+        const btnCopiar = document.createElement('button');
+        btnCopiar.innerHTML = '<i class="bi bi-link-45deg"></i>';
+        btnCopiar.title = 'Copiar URL del pedido';
+        btnCopiar.style.background = '#FFA726';
+        btnCopiar.style.color = '#fff';
+        btnCopiar.style.borderRadius = '50%';
+        btnCopiar.style.width = '26px';
+        btnCopiar.style.height = '26px';
+        btnCopiar.style.display = 'flex';
+        btnCopiar.style.alignItems = 'center';
+        btnCopiar.style.justifyContent = 'center';
+        btnCopiar.style.fontSize = '1em';
+        btnCopiar.style.boxShadow = 'none';
+        btnCopiar.style.border = 'none';
+        btnCopiar.style.cursor = 'pointer';
+        btnCopiar.style.padding = '0';
+        btnCopiar.style.flexShrink = '0';
+        btnCopiar.onclick = () => {
+          // Crear URL sin el parámetro admin=true
+          const urlBase = window.location.origin + '/pedidos.html?id=' + p.id;
+          navigator.clipboard.writeText(urlBase).then(() => {
+            btnCopiar.innerHTML = '<i class="bi bi-check-lg"></i>';
+            setTimeout(() => {
+              btnCopiar.innerHTML = '<i class="bi bi-link-45deg"></i>';
+            }, 2000);
+          }).catch(err => {
+            alert('No se pudo copiar la URL');
+            console.error('Error al copiar:', err);
+          });
+        };
+        botonesContainer.appendChild(btnCopiar);
+        
+        // Botón Eliminar
         const btnEliminar = document.createElement('button');
         btnEliminar.innerHTML = '<i class="bi bi-x-lg"></i>';
         btnEliminar.title = 'Eliminar';
         btnEliminar.style.background = '#f44336';
         btnEliminar.style.color = '#fff';
         btnEliminar.style.borderRadius = '50%';
-        btnEliminar.style.width = '22px';
-        btnEliminar.style.height = '22px';
+        btnEliminar.style.width = '26px';
+        btnEliminar.style.height = '26px';
         btnEliminar.style.display = 'flex';
         btnEliminar.style.alignItems = 'center';
         btnEliminar.style.justifyContent = 'center';
-        btnEliminar.style.fontSize = '0.95em';
+        btnEliminar.style.fontSize = '0.85em';
         btnEliminar.style.boxShadow = 'none';
-        btnEliminar.style.margin = '0 auto';
+        btnEliminar.style.border = 'none';
+        btnEliminar.style.cursor = 'pointer';
+        btnEliminar.style.padding = '0';
+        btnEliminar.style.flexShrink = '0';
         btnEliminar.onclick = () => {
           mostrarModalClave(() => {
             if (confirm('¿Está seguro que desea eliminar este pedido? Esta acción es irreversible.')) {
@@ -707,7 +779,9 @@
             }
           });
         };
-        acciones.appendChild(btnEliminar);
+        botonesContainer.appendChild(btnEliminar);
+        
+        acciones.appendChild(botonesContainer);
 
         tbody.appendChild(tr);
       });
