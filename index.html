@@ -254,6 +254,103 @@
             box-shadow: 0 15px 35px rgba(156, 39, 176, 0.4);
         }
 
+        /* WhatsApp Community Section */
+        .whatsapp-community {
+            padding: 4rem 0;
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .whatsapp-community::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none"><polygon fill="rgba(76,175,80,0.03)" points="1000,100 1000,0 0,100"/></svg>');
+        }
+
+        .whatsapp-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .whatsapp-card {
+            background: white;
+            padding: 3rem 2.5rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            border: 2px solid rgba(37, 211, 102, 0.1);
+        }
+
+        .whatsapp-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .whatsapp-card > i {
+            font-size: 4rem;
+            color: #25D366;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .whatsapp-card h3 {
+            font-size: 2.2rem;
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .whatsapp-card p {
+            font-size: 1.2rem;
+            color: #555;
+            line-height: 1.7;
+            margin-bottom: 2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .whatsapp-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 1.2rem 3rem;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+        }
+
+        .whatsapp-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 35px rgba(37, 211, 102, 0.5);
+        }
+
+        .whatsapp-button i {
+            font-size: 1.5rem;
+        }
+
         /* About Section */
         .about {
             padding: 4rem 0;
@@ -374,7 +471,7 @@
         .contact h3 {
             font-size: 2.5rem;
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             font-weight: 600;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
@@ -386,34 +483,55 @@
         }
 
         .contact-card {
-            background: rgba(255,255,255,0.1);
-            padding: 1.5rem;
-            border-radius: 15px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: transform 0.3s ease;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            text-align: left;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
             word-wrap: break-word;
             overflow-wrap: break-word;
             min-width: 0;
-            min-height: 270px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
         }
 
         .contact-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255,255,255,0.15);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+        }
+
+        .contact-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-card li {
+            display: flex;
+            align-items: center;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .contact-card li:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact-card li:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            transform: translateX(5px);
+            border-left-color: #45a049;
         }
 
         .contact-card i {
-            font-size: 2.2rem;
-            margin-right: 20px;
-            margin-bottom: 0;
-            color: #a9e062;
-            vertical-align: middle;
+            font-size: 1.8rem;
+            margin-right: 1.2rem;
+            color: #4CAF50;
+            min-width: 30px;
+            text-align: center;
         }
 
         .contact-card h4 {
@@ -425,21 +543,22 @@
         .contact-card p {
             font-size: 1.1rem;
             line-height: 1.6;
-            opacity: 0.95;
+            color: #333;
             word-break: break-word;
             overflow-wrap: break-word;
         }
 
         .contact-card a {
-            color: #a9e062;
+            color: #333;
             text-decoration: none;
             transition: color 0.3s ease;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
+            font-weight: 500;
+            flex: 1;
         }
 
         .contact-card a:hover {
-            color: white;
-            text-decoration: underline;
+            color: #4CAF50;
         }
 
         .showroom-info {
@@ -525,6 +644,31 @@
                 max-width: 100%;
             }
 
+            .whatsapp-community {
+                padding: 3rem 0;
+            }
+
+            .whatsapp-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .whatsapp-card > i {
+                font-size: 3rem;
+            }
+
+            .whatsapp-card h3 {
+                font-size: 1.8rem;
+            }
+
+            .whatsapp-card p {
+                font-size: 1.1rem;
+            }
+
+            .whatsapp-button {
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+            }
+
             .contact-card {
                 padding: 2rem;
                 max-width: 100%;
@@ -579,6 +723,27 @@
 
             .contact {
                 padding: 3rem 0;
+            }
+
+            .whatsapp-community {
+                padding: 2rem 0;
+            }
+
+            .whatsapp-card {
+                padding: 1.5rem 1rem;
+            }
+
+            .whatsapp-card h3 {
+                font-size: 1.5rem;
+            }
+
+            .whatsapp-card p {
+                font-size: 1rem;
+            }
+
+            .whatsapp-button {
+                padding: 0.9rem 1.5rem;
+                font-size: 1rem;
             }
 
             .about-card {
@@ -682,6 +847,21 @@
         </div>
     </section>
 
+    <!-- WhatsApp Community Section -->
+    <section class="whatsapp-community">
+        <div class="whatsapp-content">
+            <div class="whatsapp-card loading">
+                <i class="fab fa-whatsapp"></i>
+                <h3>¡Unite a Nuestra Comunidad de WhatsApp!</h3>
+                <p>No te pierdas nuestras novedades exclusivas, ofertas especiales y lanzamientos de productos. Enterate primero de todo lo que tenemos para vos y tu negocio.</p>
+                <a href="https://chat.whatsapp.com/EbV8i1minPS7yqYn51CToK" target="_blank" class="whatsapp-button">
+                    <i class="fab fa-whatsapp"></i>
+                    Unirme Ahora
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- About Section -->
     <section class="about">
         <div class="about-content">
@@ -736,17 +916,17 @@
             <h3 class="loading">Contáctanos</h3>
             
             <div class="contact-grid">
-                <div class="contact-card loading unified-contact">
-                    <ul style="list-style:none; padding:0; margin:0;">
-                        <li style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 1.5rem;">
+                <div class="contact-card loading">
+                    <ul>
+                        <li>
                             <i class="fas fa-phone"></i>
                             <a href="tel:+5491121891006">+54 9 11 2189-1006</a>
                         </li>
-                        <li style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 1.5rem;">
+                        <li>
                             <i class="fab fa-whatsapp"></i>
-                            <a href="https://api.whatsapp.com/send/?phone=5491121891006" target="_blank"> WhatsApp</a>
+                            <a href="https://api.whatsapp.com/send/?phone=5491121891006" target="_blank">WhatsApp</a>
                         </li>
-                        <li style="display: flex; align-items: center; justify-content: flex-start;">
+                        <li>
                             <i class="fas fa-envelope"></i>
                             <a href="mailto:distribuidorahomepoint@gmail.com">distribuidorahomepoint@gmail.com</a>
                         </li>
