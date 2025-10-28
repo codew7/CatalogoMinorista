@@ -684,6 +684,131 @@
             margin-bottom: 0.3rem;
         }
 
+        /* Reviews Section */
+        .reviews {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 4rem 0;
+            position: relative;
+        }
+
+        .reviews-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .reviews h3 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .reviews-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        .reviews-subtitle i {
+            color: #4CAF50;
+            margin-right: 0.5rem;
+        }
+
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .review-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .review-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .review-name {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .review-date {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .review-stars {
+            color: #FFD700;
+            font-size: 1.1rem;
+            white-space: nowrap;
+        }
+
+        .review-text {
+            color: #555;
+            line-height: 1.7;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        .review-icon {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 3rem;
+            color: #4CAF50;
+            opacity: 0.1;
+        }
+
+        .review-card.hidden {
+            display: none;
+        }
+
+        .show-more-btn {
+            display: block;
+            margin: 3rem auto 0;
+            padding: 1rem 3rem;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .show-more-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .show-more-btn.hidden {
+            display: none;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .hero h2 {
@@ -806,6 +931,23 @@
 
             .about {
                 padding: 3rem 0;
+            }
+
+            .reviews {
+                padding: 2rem 0;
+            }
+
+            .reviews h3 {
+                font-size: 2rem;
+            }
+
+            .reviews-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .review-card {
+                padding: 1.5rem;
             }
 
             .contact {
@@ -1002,6 +1144,22 @@
         </div>
     </section>
 
+    <!-- Reviews Section -->
+    <section class="reviews">
+        <div class="reviews-content">
+            <h3 class="loading">⭐ Reseñas de Nuestros Clientes</h3>
+            <p class="reviews-subtitle loading"><i class="fas fa-clock"></i> Las reseñas más recientes</p>
+            
+            <div class="reviews-grid" id="reviewsGrid">
+                <!-- Las reseñas se cargan dinámicamente desde rws.js -->
+            </div>
+
+            <button class="show-more-btn" id="showMoreBtn" onclick="toggleReviews()">
+                <i class="fas fa-chevron-down"></i> Ver más reseñas
+            </button>
+        </div>
+    </section>
+
     <!-- Contact Section -->
     <section class="contact">
         <div class="contact-content">
@@ -1053,6 +1211,9 @@
             </div>
         </div>
     </footer>
+
+    <!-- Script de reseñas -->
+    <script src="rws.js"></script>
 
     <script>
         // Smooth scrolling para enlaces internos
