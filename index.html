@@ -809,6 +809,167 @@
             display: none;
         }
 
+        /* Review Form Styles */
+        .review-form-card {
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+            border-left: 4px solid #4CAF50;
+            padding: 2.5rem;
+        }
+
+        .new-review-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        .new-review-header i {
+            font-size: 2rem;
+            color: #4CAF50;
+        }
+
+        .new-review-header h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .review-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group label i {
+            color: #4CAF50;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.9rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Inter', 'Arial', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .star-rating i {
+            color: #FFD700;
+            transition: all 0.2s ease;
+        }
+
+        .star-rating i:hover,
+        .star-rating i.hover {
+            transform: scale(1.2);
+        }
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .submit-review-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            align-self: center;
+        }
+
+        .submit-review-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .submit-review-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            animation: fadeInScale 0.5s ease-out;
+        }
+
+        .success-message i {
+            font-size: 4rem;
+            color: #4CAF50;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .success-message h4 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-message p {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .hero h2 {
@@ -948,6 +1109,18 @@
 
             .review-card {
                 padding: 1.5rem;
+            }
+
+            .review-form-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .star-rating {
+                font-size: 1.5rem;
+            }
+
+            .submit-review-btn {
+                width: 100%;
             }
 
             .contact {
@@ -1148,7 +1321,7 @@
     <section class="reviews">
         <div class="reviews-content">
             <h3 class="loading">⭐ Reseñas de Nuestros Clientes</h3>
-            <p class="reviews-subtitle loading"><i class="fas fa-clock"></i> Las reseñas más recientes</p>
+            <p class="reviews-subtitle loading"><i class="fas fa-clock"></i> Reseñas más recientes</p>
             
             <div class="reviews-grid" id="reviewsGrid">
                 <!-- Las reseñas se cargan dinámicamente desde rws.js -->
