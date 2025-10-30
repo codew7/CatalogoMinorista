@@ -147,12 +147,31 @@
     .cancelado-row {background: #e0e0e0 !important;color: #888;}
 
     #filtroStatusBtns {
+      width: 100%;
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 5px;
+    }
+    .filtro-row {
+      display: flex;
+      flex-direction: row;
       justify-content: center;
       align-items: center;
-      margin-top: 20px;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    @media (max-width: 600px) {
+      .filtro-row {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      #filtroStatusBtns {
+        gap: 6px;
+      }
     }
 
     /* Estilos para indicadores de usuario */
@@ -290,10 +309,13 @@
 
 <!-- Datalist para las opciones de nota -->
 <datalist id="notaEstadosDatalist">
-  <option value="en preparacion">
-  <option value="esperando pago">
   <option value="esperando respuesta">
-  <option value="cotizar">
+  <option value="esperando cierre">
+  <option value="espera cotización">
+  <option value="esperando pago">
+  <option value="pago">
+  <option value="retira">
+  <option value="no responde">
 </datalist>
 
 <script>
@@ -408,8 +430,11 @@
 
   function renderBotonesFiltro() {
     filtroStatusBtns.innerHTML = '';
-    // Filtros de estado
-    estados.forEach(est => {
+    // Primera fila: Abierto, Cerrado, Entrega, Cancel
+    const row1 = document.createElement('div');
+    row1.className = 'filtro-row';
+    ['Abierto', 'Cerrado', 'Entrega', 'Cancel'].forEach(label => {
+      const est = estados.find(e => e.label === label);
       const btn = document.createElement('button');
       btn.textContent = est.label;
       btn.style.background = statusSeleccionados.includes(est.value) ? est.color : '#fff';
@@ -426,7 +451,6 @@
           if (statusSeleccionados.includes(est.value)) {
             statusSeleccionados = statusSeleccionados.filter(s => s !== est.value);
           } else {
-            // Solo puede haber ABIERTO, CERRADO o ambos
             if (statusSeleccionados.includes('ABIERTO') || statusSeleccionados.includes('CERRADO')) {
               statusSeleccionados.push(est.value);
             } else {
@@ -434,19 +458,22 @@
             }
           }
         } else {
-          // Si es otro estado, mostrar solo ese
           statusSeleccionados = [est.value];
         }
         renderBotonesFiltro();
         renderTabla();
       };
-      filtroStatusBtns.appendChild(btn);
+      row1.appendChild(btn);
     });
+    filtroStatusBtns.appendChild(row1);
 
-    // Filtros de entrega
+    // Segunda fila: Retiro, Envio, Todos
+    const row2 = document.createElement('div');
+    row2.className = 'filtro-row';
+    // Retiro
     const btnRetiro = document.createElement('button');
     btnRetiro.textContent = 'Retiro';
-    btnRetiro.style.background = entregaSeleccionada === 'Retiro' ? '#FFD600' : '#fff'; // amarillo activo
+    btnRetiro.style.background = entregaSeleccionada === 'Retiro' ? '#FFD600' : '#fff';
     btnRetiro.style.color = entregaSeleccionada === 'Retiro' ? '#333' : '#333';
     btnRetiro.style.border = '1.5px solid #FFD600';
     btnRetiro.style.borderRadius = '18px';
@@ -458,11 +485,11 @@
       renderBotonesFiltro();
       renderTabla();
     };
-    filtroStatusBtns.appendChild(btnRetiro);
-
+    row2.appendChild(btnRetiro);
+    // Envio
     const btnEnvio = document.createElement('button');
     btnEnvio.textContent = 'Envio';
-    btnEnvio.style.background = entregaSeleccionada === 'Envio' ? '#FFD600' : '#fff'; // amarillo activo
+    btnEnvio.style.background = entregaSeleccionada === 'Envio' ? '#FFD600' : '#fff';
     btnEnvio.style.color = entregaSeleccionada === 'Envio' ? '#333' : '#333';
     btnEnvio.style.border = '1.5px solid #FFD600';
     btnEnvio.style.borderRadius = '18px';
@@ -474,9 +501,8 @@
       renderBotonesFiltro();
       renderTabla();
     };
-    filtroStatusBtns.appendChild(btnEnvio);
-
-    // Botón para ver todos
+    row2.appendChild(btnEnvio);
+    // Todos
     const btnTodos = document.createElement('button');
     btnTodos.textContent = 'Todos';
     btnTodos.style.background = statusSeleccionados.length === 0 && !entregaSeleccionada ? '#4CAF50' : '#fff';
@@ -492,7 +518,8 @@
       renderBotonesFiltro();
       renderTabla();
     };
-    filtroStatusBtns.appendChild(btnTodos);
+    row2.appendChild(btnTodos);
+    filtroStatusBtns.appendChild(row2);
   }
 
   renderBotonesFiltro();
