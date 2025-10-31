@@ -663,38 +663,60 @@
         /* --- 8. Nota --- */
         const notaCell = tr.insertCell();
         notaCell.className = 'col-nota';
+        // Contenedor para nota y fecha
+        const notaCont = document.createElement('div');
+        notaCont.style.display = 'flex';
+        notaCont.style.flexDirection = 'column';
+        notaCont.style.alignItems = 'flex-start';
+
         const notaInput = document.createElement('input');
         notaInput.type = 'text';
         notaInput.className = 'nota-input';
         notaInput.value = p.nota || '';
         notaInput.placeholder = 'Seleccionar o escribir estado...';
         notaInput.setAttribute('list', 'notaEstadosDatalist');
-        
+
+        // Fecha de última actualización
+        const notaFecha = p.notaFecha ? new Date(p.notaFecha) : null;
+        const fechaLabel = document.createElement('span');
+        fechaLabel.style.fontSize = '0.8em';
+        fechaLabel.style.color = '#888';
+        fechaLabel.style.marginTop = '2px';
+  fechaLabel.textContent = (notaFecha && (p.nota && p.nota.trim() !== '')) ? `${notaFecha.toLocaleDateString('es-AR')}` : '';
+
         // Manejar selección del datalist para reemplazar el texto existente
         notaInput.addEventListener('focus', function() {
-          // Guardar el valor actual
           this.setAttribute('data-valor-anterior', this.value);
         });
-        
-        notaInput.addEventListener('change', function() {
-          // Este evento se dispara cuando se selecciona una opción del datalist
-          const nuevaNota = this.value.trim();
-          db.ref(`pedidos/${p.id}`).update({ nota: nuevaNota })
+
+        function actualizarNota(nuevaNota) {
+          const ahora = Date.now();
+          db.ref(`pedidos/${p.id}`).update({ nota: nuevaNota, notaFecha: ahora })
+            .then(() => {
+              fechaLabel.textContent = (nuevaNota && nuevaNota.trim() !== '')
+                ? `Última actualización: ${new Date(ahora).toLocaleDateString('es-AR')} ${new Date(ahora).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`
+                : '';
+            })
             .catch(() => console.error('Error al guardar la nota'));
+        }
+
+        notaInput.addEventListener('change', function() {
+          const nuevaNota = this.value.trim();
+          actualizarNota(nuevaNota);
         });
-        
-        // Guardar nota en Firebase cuando se modifique manualmente
+
         let timeoutId;
         notaInput.addEventListener('input', () => {
           clearTimeout(timeoutId);
           timeoutId = setTimeout(() => {
             const nuevaNota = notaInput.value.trim();
-            db.ref(`pedidos/${p.id}`).update({ nota: nuevaNota })
-              .catch(() => console.error('Error al guardar la nota'));
-          }, 5000); // Esperar 5 segundos después de que el usuario deje de escribir
+            actualizarNota(nuevaNota);
+          }, 5000);
         });
-        
-        notaCell.appendChild(notaInput);
+
+        notaCont.appendChild(notaInput);
+        notaCont.appendChild(fechaLabel);
+        notaCell.appendChild(notaCont);
 
         /* --- 9. Acciones (llamada, compartir y eliminar) --- */
         const acciones = tr.insertCell();
