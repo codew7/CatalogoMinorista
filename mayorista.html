@@ -411,24 +411,243 @@
 
         .modal{
             position:fixed;inset:0;
-            background:rgba(0,0,0,.6);
-            display:none;                /* se muestra con JS */
+            background:rgba(0,0,0,.7);
+            backdrop-filter: blur(4px);
+            display:none;
             justify-content:center;align-items:center;
             z-index:3000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-content{
-            background:#fff;padding:20px;border-radius:8px;max-width:400px;width:90%;
-            box-shadow:0 2px 6px rgba(0,0,0,.3);text-align:center
+            background:#fff;
+            padding:0;
+            border-radius:16px;
+            max-width:500px;
+            width:90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow:0 10px 40px rgba(0,0,0,.2);
+            animation: slideIn 0.4s ease;
         }
 
-        .modal-content input{
-            width:100%;padding:8px;margin:6px 0;box-sizing:border-box
+        .modal-header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 16px 16px 0 0;
+            text-align: center;
         }
 
-        .modal-content button{
-            background:#4CAF50;color:#fff;border:none;padding:10px 20px;border-radius:5px;
-            cursor:pointer;margin-top:10px
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .modal-header p {
+            margin: 8px 0 0 0;
+            opacity: 0.95;
+            font-size: 0.95em;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .user-type-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            background: #f5f5f5;
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .user-type-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            background: transparent;
+            color: #666;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .user-type-btn:hover {
+            background: #e8e8e8;
+            color: #333;
+        }
+
+        .user-type-btn.active {
+            background: white;
+            color: #4CAF50;
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
+        }
+
+        .form-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .form-group label .optional {
+            color: #999;
+            font-weight: 400;
+            font-size: 0.9em;
+        }
+
+        .modal-content input,
+        .modal-content select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .modal-content input:focus,
+        .modal-content select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .modal-content input::placeholder {
+            color: #999;
+        }
+
+        .modal-footer {
+            padding: 20px 30px 30px 30px;
+        }
+
+        .modal-content button#continuarBtn {
+            width: 100%;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: #fff;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .modal-content button#continuarBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+        }
+
+        .modal-content button#continuarBtn:active {
+            transform: translateY(0);
+        }
+
+        .info-text {
+            background: #f0f7ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            color: #1976D2;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Responsive modal styles */
+        @media (max-width: 600px) {
+            .modal-content {
+                max-width: 95%;
+                width: 95%;
+            }
+
+            .modal-header {
+                padding: 20px 20px;
+            }
+
+            .modal-header h2 {
+                font-size: 1.3em;
+            }
+
+            .modal-header p {
+                font-size: 0.9em;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .modal-footer {
+                padding: 15px 20px 20px 20px;
+            }
+
+            .user-type-btn {
+                padding: 12px 15px;
+                font-size: 0.9em;
+            }
+
+            .user-type-btn i {
+                display: none;
+            }
+
+            .modal-content input,
+            .modal-content select {
+                padding: 10px 12px;
+                font-size: 0.9em;
+            }
+
+            .form-group label {
+                font-size: 0.85em;
+            }
+
+            .info-text {
+                font-size: 0.85em;
+                padding: 10px 12px;
+            }
+
+            .modal-content button#continuarBtn {
+                padding: 12px 18px;
+                font-size: 1em;
+            }
         }
 
         .stock-info {
@@ -844,47 +1063,114 @@
 
     <!-- === Modal solicitar datos de cliente === -->
     <div id="clienteModal" class="modal">
-    <div class="modal-content">
-        <p><strong>Si es tu primera compra, por favor ingresa:</strong></p>
-        <input id="nombreInput"     type="text" placeholder="Nombre y Apellido">
-        <input id="emailInput" type="email" placeholder="Email">
-        <input id="telefonoInput"   type="tel"  placeholder="Teléfono">
-        <input id="direccionInput"  type="text" placeholder="Dirección (en caso de requerir envío)">
-        <input id="localidadInput"  type="text" placeholder="Localidad (en caso de requerir envío)">      
-        <select id="provinciaInput" style="width:100%;padding:8px;margin:6px 0;box-sizing:border-box">
-          <option value="">Provincia (en caso de requerir envío)</option>
-          <option value="CABA">CABA</option>
-          <option value="Gran Buenos Aires">Gran Buenos Aires</option>
-          <option value="Buenos Aires">Buenos Aires</option>
-          <option value="Catamarca">Catamarca</option>
-          <option value="Chaco">Chaco</option>
-          <option value="Chubut">Chubut</option>
-          <option value="Córdoba">Córdoba</option>
-          <option value="Corrientes">Corrientes</option>
-          <option value="Entre Ríos">Entre Ríos</option>
-          <option value="Formosa">Formosa</option>
-          <option value="Jujuy">Jujuy</option>
-          <option value="La Pampa">La Pampa</option>
-          <option value="La Rioja">La Rioja</option>
-          <option value="Mendoza">Mendoza</option>
-          <option value="Misiones">Misiones</option>
-          <option value="Neuquén">Neuquén</option>
-          <option value="Río Negro">Río Negro</option>
-          <option value="Salta">Salta</option>
-          <option value="San Juan">San Juan</option>
-          <option value="San Luis">San Luis</option>
-          <option value="Santa Cruz">Santa Cruz</option>
-          <option value="Santa Fe">Santa Fe</option>
-          <option value="Santiago del Estero">Santiago del Estero</option>
-          <option value="Tierra del Fuego">Tierra del Fuego</option>
-          <option value="Tucumán">Tucumán</option>
-        </select>
-        <input id="dniNuevoInput" type="tel" placeholder="DNI (en caso de requerir envío)">
-        <hr>
-        <p><strong>Si ya sos cliente, por favor ingresa tu email:</strong></p>
-        <input id="emailClienteInput" type="email" placeholder="Email registrado">
-        <button id="continuarBtn">Continuar</button>
-    </div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-shopping-cart"></i> Finalizar Pedido</h2>
+                <p>Completa tus datos para continuar</p>
+            </div>
+            
+            <div class="modal-body">
+                <div class="user-type-selector">
+                    <button class="user-type-btn active" id="btnNuevoUsuario" type="button">
+                        <i class="fas fa-user-plus"></i>
+                        Nuevo Cliente
+                    </button>
+                    <button class="user-type-btn" id="btnUsuarioRegistrado" type="button">
+                        <i class="fas fa-user-check"></i>
+                        Ya soy Cliente
+                    </button>
+                </div>
+
+                <!-- Formulario para usuarios nuevos -->
+                <div id="formNuevoUsuario" class="form-section active">
+                    <div class="info-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Completa todos los campos para registrarte y realizar tu primer pedido</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Nombre y Apellido</label>
+                        <input id="nombreInput" type="text" placeholder="Ingresa tu nombre completo" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input id="emailInput" type="email" placeholder="tu@email.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input id="telefonoInput" type="tel" placeholder="Ingresa tu teléfono" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Dirección <span class="optional">(opcional, para envíos)</span></label>
+                        <input id="direccionInput" type="text" placeholder="Calle y número">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Localidad <span class="optional">(opcional, para envíos)</span></label>
+                        <input id="localidadInput" type="text" placeholder="Tu localidad">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Provincia <span class="optional">(opcional, para envíos)</span></label>
+                        <select id="provinciaInput">
+                            <option value="">Selecciona tu provincia</option>
+                            <option value="CABA">CABA</option>
+                            <option value="Gran Buenos Aires">Gran Buenos Aires</option>
+                            <option value="Buenos Aires">Buenos Aires</option>
+                            <option value="Catamarca">Catamarca</option>
+                            <option value="Chaco">Chaco</option>
+                            <option value="Chubut">Chubut</option>
+                            <option value="Córdoba">Córdoba</option>
+                            <option value="Corrientes">Corrientes</option>
+                            <option value="Entre Ríos">Entre Ríos</option>
+                            <option value="Formosa">Formosa</option>
+                            <option value="Jujuy">Jujuy</option>
+                            <option value="La Pampa">La Pampa</option>
+                            <option value="La Rioja">La Rioja</option>
+                            <option value="Mendoza">Mendoza</option>
+                            <option value="Misiones">Misiones</option>
+                            <option value="Neuquén">Neuquén</option>
+                            <option value="Río Negro">Río Negro</option>
+                            <option value="Salta">Salta</option>
+                            <option value="San Juan">San Juan</option>
+                            <option value="San Luis">San Luis</option>
+                            <option value="Santa Cruz">Santa Cruz</option>
+                            <option value="Santa Fe">Santa Fe</option>
+                            <option value="Santiago del Estero">Santiago del Estero</option>
+                            <option value="Tierra del Fuego">Tierra del Fuego</option>
+                            <option value="Tucumán">Tucumán</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>DNI <span class="optional">(opcional, para envíos)</span></label>
+                        <input id="dniNuevoInput" type="tel" placeholder="Número de documento">
+                    </div>
+                </div>
+
+                <!-- Formulario para usuarios registrados -->
+                <div id="formUsuarioRegistrado" class="form-section">
+                    <div class="info-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Ingresa tu email registrado para autocompletar tus datos</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email Registrado</label>
+                        <input id="emailClienteInput" type="email" placeholder="tu@email.com" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="continuarBtn">
+                    <i class="fas fa-check-circle"></i> Continuar con el Pedido
+                </button>
+            </div>
+        </div>
     </div>
 
     <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 86%; margin: 10px auto; border-radius: 10px;">
@@ -959,6 +1245,36 @@
         </div>
     </div>
 </div>
+
+<script>
+// Script para manejar el cambio entre formularios de usuarios nuevos y registrados
+document.addEventListener('DOMContentLoaded', function() {
+    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
+    const btnUsuarioRegistrado = document.getElementById('btnUsuarioRegistrado');
+    const formNuevoUsuario = document.getElementById('formNuevoUsuario');
+    const formUsuarioRegistrado = document.getElementById('formUsuarioRegistrado');
+
+    btnNuevoUsuario.addEventListener('click', function() {
+        // Activar botón de nuevo usuario
+        btnNuevoUsuario.classList.add('active');
+        btnUsuarioRegistrado.classList.remove('active');
+        
+        // Mostrar formulario de nuevo usuario
+        formNuevoUsuario.classList.add('active');
+        formUsuarioRegistrado.classList.remove('active');
+    });
+
+    btnUsuarioRegistrado.addEventListener('click', function() {
+        // Activar botón de usuario registrado
+        btnUsuarioRegistrado.classList.add('active');
+        btnNuevoUsuario.classList.remove('active');
+        
+        // Mostrar formulario de usuario registrado
+        formUsuarioRegistrado.classList.add('active');
+        formNuevoUsuario.classList.remove('active');
+    });
+});
+</script>
 
 </body>
 </html>
