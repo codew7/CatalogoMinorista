@@ -274,9 +274,6 @@
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="Buscar por código o nombre...">
             <button id="clearBtn" title="Limpiar búsqueda">✕</button>
-            <button id="refreshStockBtn" class="refresh-btn" title="Actualizar Stock">
-                <i class="bi bi-arrow-clockwise"></i>
-            </button>
             <small id="lastUpdateInfo" class="last-update-info"></small>
         </div>
         <div class="table-responsive">
@@ -286,8 +283,6 @@
                         <th>Código</th>
                         <th>Nombre</th>
                         <th>Stock Actual</th>
-                        <th>Precio Consumidor</th>
-                        <th>Precio Mayorista</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -460,7 +455,7 @@
             function renderTable(data) {
                 tableBody.innerHTML = '';
                 if (data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-dark);">Sin resultados</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--gray-dark);">Sin resultados</td></tr>';
                     return;
                 }
 
@@ -472,17 +467,12 @@
                     if (item.stock <= 0) stockClass = 'stock-zero';
                     else if (item.stock <= 5) stockClass = 'stock-low';
 
-                    let precioConsumidor = (typeof item.precioConsumidor === 'number' && !isNaN(item.precioConsumidor)) ? item.precioConsumidor : 0;
-                    let precioMayorista = (typeof item.precioMayorista === 'number' && !isNaN(item.precioMayorista)) ? item.precioMayorista : 0;
-
                     const row = document.createElement('tr');
                     row.className = stockClass;
                     row.innerHTML = `
                         <td>${item.codigo || ''}</td>
                         <td>${item.nombre || ''}</td>
                         <td>${typeof item.stock === 'number' ? item.stock : 0}</td>
-                        <td>$${precioConsumidor.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</td>
-                        <td>$${precioMayorista.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</td>
                     `;
                     fragment.appendChild(row);
                 });
@@ -539,8 +529,6 @@
                     stockData = values.slice(1).map(row => ({
                         codigo: row[2] || '',
                         nombre: row[3] || '',
-                        precioConsumidor: Number((row[4] || '0').replace(/,/g, '')),
-                        precioMayorista: Number((row[6] || '0').replace(/,/g, '')),
                         stock: Number(row[10]) || 0
                     }));
                     // Ordenar alfabéticamente por nombre
