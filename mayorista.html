@@ -511,6 +511,14 @@
             display: block;
         }
 
+        .modal-body .info-text.initial {
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            color: #333;
+            text-align: center;
+            font-size: 1em;
+        }
+
         .form-group {
             margin-bottom: 18px;
             text-align: left;
@@ -593,6 +601,154 @@
             gap: 10px;
         }
 
+        /* Estilos para el modal de confirmación */
+        .confirmacion-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .confirmacion-section:last-child {
+            border-bottom: none;
+        }
+
+        .info-card {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-item label {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .info-item span {
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .pedido-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pedido-item {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .pedido-item:hover {
+            background: #f0f0f0;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-nombre {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .item-detalles {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .item-precio {
+            font-weight: 700;
+            color: #4CAF50;
+            font-size: 1.1em;
+            text-align: right;
+            min-width: 100px;
+        }
+
+        .total-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 3px solid #4CAF50;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f0f9f0 0%, #e8f5e8 100%);
+            border-radius: 8px;
+            font-size: 1.2em;
+        }
+
+        .total-row strong {
+            color: #4CAF50;
+            font-size: 1.3em;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: #f5f5f5;
+            color: #666;
+            border: 2px solid #ddd;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+            border-color: #ccc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: #fff;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+        }
+
         /* Responsive modal styles */
         @media (max-width: 600px) {
             .modal-content {
@@ -647,6 +803,26 @@
             .modal-content button#continuarBtn {
                 padding: 12px 18px;
                 font-size: 1em;
+            }
+
+            .info-card {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .btn-secondary, .btn-primary {
+                width: 100%;
+            }
+
+            .total-row {
+                font-size: 1em;
+            }
+
+            .total-row strong {
+                font-size: 1.1em;
             }
         }
 
@@ -1071,7 +1247,7 @@
             
             <div class="modal-body">
                 <div class="user-type-selector">
-                    <button class="user-type-btn active" id="btnNuevoUsuario" type="button">
+                    <button class="user-type-btn" id="btnNuevoUsuario" type="button">
                         <i class="fas fa-user-plus"></i>
                         Nuevo Cliente
                     </button>
@@ -1081,8 +1257,13 @@
                     </button>
                 </div>
 
+                <div id="initialMessage" class="info-text initial">
+                    <i class="fas fa-hand-pointer"></i>
+                    <span>Selecciona una opción arriba para continuar</span>
+                </div>
+
                 <!-- Formulario para usuarios nuevos -->
-                <div id="formNuevoUsuario" class="form-section active">
+                <div id="formNuevoUsuario" class="form-section">
                     <div class="info-text">
                         <i class="fas fa-info-circle"></i>
                         <span>Completa todos los campos para registrarte y realizar tu primer pedido</span>
@@ -1173,6 +1354,49 @@
         </div>
     </div>
 
+    <!-- === Modal de Confirmación del Pedido === -->
+    <div id="confirmacionModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-clipboard-check"></i> Confirmar Pedido</h2>
+                <p>Revisa los detalles antes de confirmar</p>
+            </div>
+            
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <!-- Información del Cliente -->
+                <div class="confirmacion-section">
+                    <h3 style="color: #4CAF50; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-user"></i> Información del Cliente
+                    </h3>
+                    <div id="clienteInfo" class="info-card"></div>
+                </div>
+
+                <!-- Detalle del Pedido -->
+                <div class="confirmacion-section">
+                    <h3 style="color: #4CAF50; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-shopping-bag"></i> Detalle del Pedido
+                    </h3>
+                    <div id="pedidoDetalle" class="pedido-items"></div>
+                    <div class="total-section">
+                        <div class="total-row">
+                            <span>Total del Pedido:</span>
+                            <strong id="totalPedido">$0</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="display: flex; gap: 10px;">
+                <button id="volverBtn" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Catálogo
+                </button>
+                <button id="confirmarBtn" class="btn-primary">
+                    <i class="fas fa-check-circle"></i> Confirmar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer style="text-align: center; padding: 20px; background-color: #FFFFFF; width: 86%; margin: 10px auto; border-radius: 10px;">
         <img src="logo.png" alt="Logo de HomePoint" width="200" style="display: block; margin: 0 auto;">
         <div style="margin: 18px 0 20px 0; display: flex; justify-content: center; gap: 30px; align-items: center;">
@@ -1253,8 +1477,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnUsuarioRegistrado = document.getElementById('btnUsuarioRegistrado');
     const formNuevoUsuario = document.getElementById('formNuevoUsuario');
     const formUsuarioRegistrado = document.getElementById('formUsuarioRegistrado');
+    const initialMessage = document.getElementById('initialMessage');
 
     btnNuevoUsuario.addEventListener('click', function() {
+        // Ocultar mensaje inicial
+        if (initialMessage) initialMessage.style.display = 'none';
+        
         // Activar botón de nuevo usuario
         btnNuevoUsuario.classList.add('active');
         btnUsuarioRegistrado.classList.remove('active');
@@ -1265,6 +1493,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     btnUsuarioRegistrado.addEventListener('click', function() {
+        // Ocultar mensaje inicial
+        if (initialMessage) initialMessage.style.display = 'none';
+        
         // Activar botón de usuario registrado
         btnUsuarioRegistrado.classList.add('active');
         btnNuevoUsuario.classList.remove('active');
@@ -1272,6 +1503,114 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mostrar formulario de usuario registrado
         formUsuarioRegistrado.classList.add('active');
         formNuevoUsuario.classList.remove('active');
+    });
+});
+
+// Función global para mostrar el modal de confirmación
+function mostrarModalConfirmacion() {
+    const confirmacionModal = document.getElementById('confirmacionModal');
+    const clienteModal = document.getElementById('clienteModal');
+    
+    // Cerrar el modal de cliente y resetear su estado
+    clienteModal.style.display = 'none';
+    
+    // Resetear botones del modal de cliente
+    const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
+    const btnUsuarioRegistrado = document.getElementById('btnUsuarioRegistrado');
+    const formNuevoUsuario = document.getElementById('formNuevoUsuario');
+    const formUsuarioRegistrado = document.getElementById('formUsuarioRegistrado');
+    const initialMessage = document.getElementById('initialMessage');
+    
+    // Restaurar estado inicial
+    btnNuevoUsuario.classList.remove('active');
+    btnUsuarioRegistrado.classList.remove('active');
+    formNuevoUsuario.classList.remove('active');
+    formUsuarioRegistrado.classList.remove('active');
+    if (initialMessage) initialMessage.style.display = 'flex';
+    
+    // Construir información del cliente
+    const clienteInfo = document.getElementById('clienteInfo');
+    const datosCliente = datosExtraCliente; // Variable global del mayorista.js
+    
+    let infoHTML = '';
+    if (datosCliente.nombre) {
+        infoHTML += `<div class="info-item"><label>Nombre:</label><span>${datosCliente.nombre}</span></div>`;
+    }
+    if (datosCliente.email) {
+        infoHTML += `<div class="info-item"><label>Email:</label><span>${datosCliente.email}</span></div>`;
+    }
+    if (datosCliente.telefono) {
+        infoHTML += `<div class="info-item"><label>Teléfono:</label><span>${datosCliente.telefono}</span></div>`;
+    }
+    if (datosCliente.direccion) {
+        infoHTML += `<div class="info-item"><label>Dirección:</label><span>${datosCliente.direccion}</span></div>`;
+    }
+    if (datosCliente.localidad) {
+        infoHTML += `<div class="info-item"><label>Localidad:</label><span>${datosCliente.localidad}</span></div>`;
+    }
+    if (datosCliente.provincia) {
+        infoHTML += `<div class="info-item"><label>Provincia:</label><span>${datosCliente.provincia}</span></div>`;
+    }
+    if (datosCliente.dni) {
+        infoHTML += `<div class="info-item"><label>DNI:</label><span>${datosCliente.dni}</span></div>`;
+    }
+    
+    clienteInfo.innerHTML = infoHTML;
+    
+    // Construir detalle del pedido
+    const pedidoDetalle = document.getElementById('pedidoDetalle');
+    let detalleHTML = '';
+    let total = 0;
+    
+    carrito.forEach(item => {
+        const subtotal = parseFloat(item.precio.replace(/[^0-9.-]+/g, '')) * item.cantidad;
+        total += subtotal;
+        
+        detalleHTML += `
+            <div class="pedido-item">
+                <div class="item-info">
+                    <div class="item-nombre">${item.nombre}</div>
+                    <div class="item-detalles">
+                        Código: ${item.codigo} | Cantidad: ${item.cantidad} | Precio unit: $${item.precio}
+                    </div>
+                </div>
+                <div class="item-precio">
+                    $${subtotal.toFixed(2)}
+                </div>
+            </div>
+        `;
+    });
+    
+    pedidoDetalle.innerHTML = detalleHTML;
+    document.getElementById('totalPedido').textContent = `$${total.toFixed(2)}`;
+    
+    // Mostrar el modal de confirmación
+    confirmacionModal.style.display = 'flex';
+}
+
+// Manejadores de botones del modal de confirmación
+document.addEventListener('DOMContentLoaded', function() {
+    const volverBtn = document.getElementById('volverBtn');
+    const confirmarBtn = document.getElementById('confirmarBtn');
+    const confirmacionModal = document.getElementById('confirmacionModal');
+    
+    // Botón Volver - cierra el modal de confirmación
+    volverBtn.addEventListener('click', function() {
+        confirmacionModal.style.display = 'none';
+        // El carrito se mantiene intacto
+    });
+    
+    // Botón Confirmar - ejecuta el envío del pedido
+    confirmarBtn.addEventListener('click', function() {
+        confirmacionModal.style.display = 'none';
+        enviarPedidoFinal(); // Función del mayorista.js
+    });
+    
+    // Cerrar modal al hacer clic fuera
+    confirmacionModal.addEventListener('mousedown', function(e) {
+        if (e.target === confirmacionModal) {
+            confirmacionModal.style.display = 'none';
+        }
     });
 });
 </script>
