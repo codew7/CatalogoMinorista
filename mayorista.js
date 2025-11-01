@@ -1,1 +1,1459 @@
-const _0x25b592=_0x3e44;(function($,x){let e=_0x3e44,t=$();for(;;)try{let a=parseInt(e(512))/1+parseInt(e(375))/2*(parseInt(e(597))/3)+-parseInt(e(517))/4+parseInt(e(623))/5+-parseInt(e(586))/6*(-parseInt(e(497))/7)+parseInt(e(364))/8*(-parseInt(e(622))/9)+parseInt(e(582))/10*(-parseInt(e(492))/11);if(674261===a)break;t.push(t.shift())}catch(i){t.push(t.shift())}})(_0x35a9,674261),emailjs.init(_0x25b592(493));const WHATSAPP_URL=_0x25b592(629),MARQUEE_TEXT=_0x25b592(537),ITEMPESOS="6";firebase[_0x25b592(465)](firebaseConfig);const db=firebase[_0x25b592(610)](),carouselImages=document[_0x25b592(593)](_0x25b592(607)),slides=document[_0x25b592(532)](_0x25b592(426));let currentIndex=0;function updateCarousel(){let $=_0x25b592,x=-(100*currentIndex);carouselImages[$(515)].transform=$(615)+x+"%)"}function _0x3e44($,x){let e=_0x35a9();return(_0x3e44=function($,x){return e[$-=356]})($,x)}setInterval(()=>{let $=_0x25b592;currentIndex=(currentIndex+1)%slides[$(613)],updateCarousel()},5e3);const ITEMS_PER_PAGE=30;let productos=[],datosFiltrados=[],currentPage=1,carrito=[],currentLightboxImages=[],currentImageIndex=0;const urlParams=new URLSearchParams(window[_0x25b592(590)][_0x25b592(604)]),pedidoEditId=urlParams[_0x25b592(625)](_0x25b592(461)),modoEdicion=!!pedidoEditId;if(modoEdicion){let $=document.createElement(_0x25b592(447));$.textContent=_0x25b592(621)+pedidoEditId,$.id=_0x25b592(632),$[_0x25b592(515)].cssText="\n      position: fixed;\n      top: 0;\n      left: 0;\n      width: 100vw;\n      z-index: 3001;\n      background: #fff7c2;\n      padding: 10px 0;\n      text-align: center;\n      font-weight: bold;\n      font-size: 1.1em;\n      box-shadow: 0 2px 8px #0002;\n      border-bottom: 2px solid #ffe066;\n    ",document[_0x25b592(451)].appendChild($),document.body[_0x25b592(515)][_0x25b592(429)]=_0x25b592(627)}const loadingOverlay=document[_0x25b592(593)]("loadingOverlay");fetch(_0x25b592(491)+GOOGLE_SHEETS_CONFIG[_0x25b592(390)]+"/values/"+GOOGLE_SHEETS_CONFIG[_0x25b592(387)]+_0x25b592(609)+GOOGLE_SHEETS_CONFIG.API_KEY)[_0x25b592(432)]($=>{let x=_0x25b592;if(!$.ok)throw Error(x(431)+$.statusText);return $[x(545)]()})[_0x25b592(432)]($=>{let x=_0x25b592;loadingOverlay&&(loadingOverlay[x(515)][x(381)]=x(557));let e=$[x(528)];if(!e||0===e[x(613)])throw Error("No se encontraron datos en la hoja.");datosFiltrados=productos=e[x(486)]($=>$[4][x(392)]()!==x(485))[x(577)](($,x)=>{function e($){let x=_0x3e44;if(!$||""===$||null==$)return new Date(1900,0,1);if($[x(595)]("/")){let e=$[x(576)]("/");if(3===e[x(613)]){let t=parseInt(e[0]),a=parseInt(e[1])-1,i=parseInt(e[2]);return new Date(i,a,t)}}return new Date(1900,0,1)}let t=e($[12]),a=e(x[12]);return a-t}),window[x(453)](0,0),mostrarPagina(1),setTimeout(()=>{let $=x;refreshStockInfo(),document[$(593)]("filtroDisponibles")[$(534)]&&o(),setTimeout(()=>{primeraCarga=!1},100)},100);let t=new Set(productos[x(402)]($=>$[0])),a=document[x(593)](x(459)),i=Array[x(482)](t).filter($=>$&&""!==$[x(594)]())[x(577)](($,e)=>$[x(408)](e,"es",{sensitivity:x(518)}));function o(){let $=x,e=document[$(593)]($(459))[$(566)],t=document.getElementById($(383))[$(566)].toLowerCase(),a=document.getElementById($(611))[$(534)],i=productos;"todos"!==e&&(i=i[$(486)]($=>$[0]===e)),""!==t[$(594)]()&&(i=i[$(486)](x=>x[3][$(392)]().includes(t)||x[2][$(392)]()[$(595)](t))),a&&(i=i.filter($=>{let x=$[10];if(null==x||""===x)return!1;let e=parseInt(String(x).trim());return!isNaN(e)&&e>0})),datosFiltrados=i,mostrarPagina(1,i)}i[x(553)]($=>{let e=x,t=document.createElement("option");t[e(566)]=$,t[e(567)]=$,a[e(624)](t)}),a[x(508)](x(405),()=>{o()}),document[x(593)](x(383))[x(508)]("input",$=>{o()}),document[x(593)](x(611))[x(508)](x(405),()=>{o()}),document[x(593)](x(521))[x(508)](x(509),()=>{let $=x;document[$(593)]($(459))[$(566)]=$(521),document.getElementById($(383)).value="",document.getElementById($(611))[$(534)]=!1,datosFiltrados=productos,mostrarPagina(1)})})[_0x25b592(541)]($=>{let x=_0x25b592;loadingOverlay&&(loadingOverlay.style[x(381)]="none"),console[x(428)]("Error al cargar los datos:",$),document.querySelector("#error")[x(567)]=$[x(399)]});let primeraCarga=!0;function mostrarPagina($,x=productos){let e=_0x25b592;currentPage=$,x[e(613)];let t=($-1)*30,a=x.slice(t,t+30);cargarGrid(a),actualizarPaginacion($,x),document.activeElement!==document[e(593)](e(383))&&setTimeout(()=>{let $=e;if(primeraCarga)window.scrollTo({top:0,behavior:$(416)});else{let x=document.getElementById($(459));if(x){let t=x[$(480)](),a=window[$(616)]||document[$(474)][$(605)];window[$(453)]({top:t[$(501)]+a-20,behavior:$(588)})}}},0)}function cargarGrid($){let x=_0x25b592,e=document[x(593)]("catalogo");e[x(504)]="",$[x(553)]($=>{let t=x,a=document[t(437)](t(447));a[t(573)].add("card");let i=document[t(437)](t(365));if(i[t(410)]="hidden",i[t(566)]=$[2],a[t(624)](i),isValidImageUrl($[1])){let o=[];-1!==$[1].indexOf(",")?o=$[1][t(576)](",")[t(402)]($=>$[t(594)]()):o[t(362)]($[1]);let n=document[t(437)](t(514));n[t(371)]=o[0],n[t(564)]=t(404),n.onerror=function(){let $=t;this[$(371)]=$(479)},n.addEventListener(t(509),()=>{abrirLightbox(o)}),a[t(624)](n)}let d=document.createElement("h3");d[t(567)]=$[3],a[t(624)](d);let r=document.createElement("div");r[t(573)][t(510)]("info"),r[t(567)]="C\xf3digo: "+$[2],a[t(624)](r);let l=document[t(437)](t(447));l[t(573)][t(510)]("stock-info"),l[t(515)][t(583)]=t(559),l.style.fontWeight=t(519);let _=0;void 0!==$[10]&&null!==$[10]&&""!==$[10]&&(_=parseInt($[10])),isNaN(_)?l[t(504)]='<span style="color: #ff9800;">✗ Sin stock</span>':_<=0?l.innerHTML=t(394):_<=10?l[t(504)]=t(502):l[t(504)]='<span style="color: #4CAF50;">✓ Disponible</span>',a[t(624)](l);{let c=document[t(437)]("p");c[t(504)]=t(527)+$[13]+t(379),c[t(515)][t(425)]=t(560),a[t(624)](c)}let s=document.createElement("p");s[t(504)]="<strong>Ahora $</strong> "+$["6"],s[t(515)].marginTop="2px",a[t(624)](s);let u=document[t(437)](t(447));u[t(515)][t(381)]=t(361),u[t(515)][t(384)]=t(520),u.style[t(434)]=t(520),u[t(515)][t(435)]=t(560),u[t(515)][t(631)]=t(526);let b=document[t(437)](t(447));b[t(515)][t(381)]=t(557),b[t(515)][t(384)]="center",b[t(515)][t(435)]="5px",b[t(515)].transition="all 0.3s ease",b[t(515)][t(468)]="0";let f=document[t(437)](t(417));f[t(504)]="-",f.style[t(457)]=t(550),f[t(515)].fontSize="16px",f[t(515)].height=t(400),f.style[t(530)]=t(400),f[t(515)][t(477)]="#ff9800",f.style[t(397)]="#fff",f.style[t(581)]=t(572),f[t(515)][t(505)]=t(626),f[t(515)][t(606)]=t(427);let p=document[t(437)]("input");p[t(410)]="number",p.min="1",p[t(566)]="1",p[t(515)][t(530)]=t(526),p[t(515)][t(584)]=t(400),p.style[t(457)]=t(560),p[t(515)][t(481)]="center",p.style.border=t(443),p[t(515)][t(505)]=t(626);let m=document[t(437)]("button");m[t(504)]="+",m[t(515)][t(457)]="5px 10px",m[t(515)][t(388)]=t(448),m[t(515)][t(584)]=t(400),m[t(515)][t(530)]=t(400),m[t(515)][t(477)]="#ff9800",m[t(515)][t(397)]=t(439),m[t(515)].border=t(572),m[t(515)][t(505)]=t(626),m[t(515)][t(606)]=t(427),b[t(624)](f),b[t(624)](p),b[t(624)](m);let g=document[t(437)](t(417));function I(){let x=t,e=parseInt(p.value);if(e>0){let a=carrito[x(554)]($=>$[x(393)]===d[x(567)]);a?a[x(422)]=e:agregarAlCarrito(d[x(567)],$[6],e,$[2],$[0],$[7][x(523)]()[x(433)](/[,\.]/g,""),$[6].toString()[x(433)](/[,\.]/g,"")),actualizarCarrito()}}g[t(504)]=t(568),g[t(515)][t(457)]=t(549),g[t(515)][t(388)]=t(448),g[t(515)][t(584)]=t(526),g[t(515)][t(530)]=t(526),g[t(515)][t(477)]=t(603),g[t(515)].color=t(439),g.style[t(581)]=t(635),g.style[t(505)]=t(626),g[t(515)][t(606)]="pointer",g[t(515)].transition=t(363),g[t(573)].add(t(637)),!isNaN(_)&&_>0?(p.max=_,p[t(552)]=t(580)+_+t(562)):(g[t(356)]=!0,g[t(515)][t(477)]=t(565),g[t(515)][t(478)]="#cccccc",g[t(515)][t(606)]=t(494),g[t(552)]=t(634)),g[t(508)](t(509),()=>{let x=t,e=0;if(void 0!==$[10]&&null!==$[10]&&""!==$[10]&&(e=parseInt($[10])),isNaN(e)||e<=0){alert(x(585));return}p[x(566)]="1",I(),function $(){let x=t;g[x(515)][x(468)]="0",g[x(515)][x(630)]="scale(0.8)",setTimeout(()=>{let $=x;g[$(515)][$(381)]=$(557),b[$(515)].display=$(361),setTimeout(()=>{let x=$;b[x(515)][x(468)]="1",b[x(515)][x(630)]="scale(1)"},50)},150)}()}),m.addEventListener(t(509),()=>{let x=t,e=0;void 0!==$[10]&&null!==$[10]&&""!==$[10]&&(e=parseInt($[10]));let a=parseInt(p[x(566)]);if(!isNaN(e)&&a>=e){alert(x(455)+e+" unidades disponibles.");return}p.value=a+1,I()}),f[t(508)](t(509),()=>{let $=t,x=parseInt(p[$(566)]);if(x>1)p[$(566)]=x-1,I();else{let e=carrito[$(554)](x=>x.nombre===d[$(567)]);if(e){let a=carrito.indexOf(e);carrito[$(569)](a,1),actualizarCarrito()}b[$(515)][$(468)]="0",b[$(515)][$(630)]=$(413),setTimeout(()=>{let x=$;b[x(515)][x(381)]=x(557),g.style[x(381)]="block",g[x(515)][x(468)]="0",g.style.transform=x(413),setTimeout(()=>{let $=x;g[$(515)][$(468)]="1",g[$(515)][$(630)]=$(373)},50)},150)}}),p.addEventListener("change",()=>{let x=t,e=parseInt(p[x(566)]),a=0;void 0!==$[10]&&null!==$[10]&&""!==$[10]&&(a=parseInt($[10])),e<=0?p[x(566)]="1":!isNaN(a)&&e>a&&(alert(x(455)+a+x(484)),p[x(566)]=a),I()}),u.appendChild(g),u[t(624)](b),a[t(624)](u),e[t(624)](a)})}function _0x35a9(){let $=["\xa1Pedido encontrado! Redirigiendo...","querySelectorAll","verPedidoBtn","checked","status","emailInput","\uD83D\uDCB2&nbsp; Los valores publicados se encuentran ligados a la cotizaci\xf3n del d\xf3lar del d\xeda &nbsp; \uD83D\uDED2\uD83D\uDECD️ &nbsp; Visita nuestro Showroom y compr\xe1 sin requisitos minimos de compra &nbsp; \uD83D\uDE9A &nbsp; ENV\xcdOS A TODO EL PA\xcdS","ultimoPedidoEmailInput","href","flexDirection","catch","buscarBtnText","className","telefono","json","close","mayorista","#e6f7ff","10px 10px","5px 10px","remove","title","forEach","find","orderByChild","now","none","innerWidth","5px 0","5px","Email del cliente no v\xe1lido o vac\xedo."," unidades disponibles","querySelector","loading","#cccccc","value","textContent",'<i class="fas fa-cart-plus"></i>',"splice","onclick","offsetWidth","1px solid #ff9800","classList","dniNuevoInput","equalTo","split","sort","once","items","M\xe1ximo ","border","60tFohXO","margin","height","Este producto no tiene stock disponible.","78zRiSVl","emailClienteInput","smooth","#2f855a","location","https://www.home-point.com.ar/pedidos.html?id=","template_xqo1j5z","getElementById","trim","includes","precio","4611DuuhBL",".cart-container","prev-btn","fas fa-exclamation-circle","key","stopPropagation","#4CAF50","search","scrollTop","cursor","carousel-images","limitToFirst","?key=","database","filtroDisponibles","contains","length","open","translateX(","pageYOffset","tipoCliente",'input[type="hidden"]',"El carrito est\xe1 vac\xedo.","Anterior","⚙️ Est\xe1s agregando art\xedculos al pedido #","1402542eJzXVf","1086400GNJQdX","appendChild","get","4px","54px","localidad","https://api.whatsapp.com/send/?phone=5491121891006","transform","minHeight","aviso-edicion-pedido",".btn-agregar-carrito","Sin stock disponible","1px solid #4CAF50","info","btn-agregar-carrito","cliente","ultimoPedidoModal","fixed","disabled","clientes","DOMContentLoaded","lightbox","cart-list","flex","push","all 0.3s ease","8uNWZhw","input","_blank","ultimoPedidoMensaje","buscarSpinner",'\n    <div style="background: #fff; padding: 30px 40px; border-radius: 12px; text-align: center; max-width: 90vw;">\n      <h2 style=\'color:#d32f2f;\'>\xa1Ya tienes un pedido abierto en proceso! \uD83D\uDED2</h2>\n      <p>Si quieres hacer cambios, puedes modificarlo o cancelarlo para crear uno completamente nuevo.</p>\n      <button id="verPedidoBtn" style="background:#4CAF50;color:#fff;padding:10px 30px;border:none;border-radius:6px;font-size:1.1em;cursor:pointer;">Ver Pedido</button>\n    </div>\n  ',"send","src",'\n        <div class="modal-content" style="max-width:450px;position:relative;">\n            <div class="modal-header">\n                <h2 style=\'margin:0;\'><i class="fas fa-check-circle"></i> \xa1Pedido Confirmado!</h2>\n                <p style=\'margin:8px 0 0 0;\'>Tu pedido se ha procesado exitosamente</p>\n            </div>\n            <div class="modal-body" style="padding:30px; text-align:center;">\n                <div style="background:#f0f9f0;border-radius:12px;padding:20px;margin-bottom:20px;">\n                    <i class="fas fa-envelope" style="font-size:3em;color:#4CAF50;margin-bottom:15px;"></i>\n                    <p style="margin:0;color:#333;line-height:1.6;">\n                        Se envi\xf3 una notificaci\xf3n a tu email con todos los detalles del pedido. \n                        Puedes verlo, modificarlo o realizar el seguimiento desde all\xed.\n                    </p>\n                </div>\n                <button id="verPedidoBtnConfirmado" class="btn-primary" style="width:100%;margin:0;">\n                    <i class="fas fa-eye"></i> Ver Mi Pedido\n                </button>\n            </div>\n        </div>\n    ',"scale(1)","Error consulta email cliente","498LpGtCq","exists","max","cliente/email","</s></span>","4px solid #e53e3e","display","email","buscar","alignItems","#2b6cb0","inline","RANGO","fontSize","pagination","SPREADSHEET_ID","100vh","toLowerCase","nombre",'<span style="color: #ff9800;">✗ Sin stock</span>',"blur","fas fa-info-circle","color","success","message","35px","Error al buscar el pedido. Por favor, intenta de nuevo","map","borderLeft","lazy","change","pedido-confirmado-modal","span","localeCompare","#e6ffed","type","9999","min","scale(0.8)","pedidos","background","auto","button","Ingres\xe1 tu nombre."," - Cantidad: ","No se encontr\xf3 el email ingresado. Por favor, registrate antes de poder ingresar el pedido.","web","cantidad","lightbox-img","match","marginBottom",".carousel-slide","pointer","error","marginTop",'input[type="number"]',"Error al acceder a la API: ","then","replace","justifyContent","gap","locked","createElement","timestamp","#fff","target","closeUltimoPedidoModal","localidadInput","1px solid #ddd","codigo","zIndex","direccion","div","16px","undefined","Error enviando email:","body","provincia","scrollTo","ceil","Stock insuficiente. Solo hay ",".fas","padding","findIndex","categorias","floor","pedido","No se encontraron pedidos registrados con este email","continuarBtn","next-btn","initializeApp","dni","verPedidoBtnConfirmado","opacity","100px",".card","buscarUltimoPedidoBtn","val","block","documentElement","modal","resize","backgroundColor","borderColor","no-disponible.png","getBoundingClientRect","textAlign","from","provinciaInput"," unidades disponibles.","no disponible","filter","log","pagination-button","focus","test","https://sheets.googleapis.com/v4/spreadsheets/","441276PdoIUQ","vcbQsbE2bgLwFAnDr","not-allowed","categoria","pedido-abierto-overlay","2975rvATwc","Este pedido no existe o est\xe1 cerrado.","pedidos.html?id=","keydown","top",'<span style="color: #ffeb3b;">⚠ Pocas unidades</span>',"active","innerHTML","borderRadius","4px solid #48bb78","Por favor, ingres\xe1 un email v\xe1lido","addEventListener","click","add","Ingres\xe1 un email v\xe1lido.","780772JujrMu","pedidos/","img","style","ref","1261980EzOZzV","base","bold","center","todos","direccionInput","toString","ABIERTO","0.7","50px",'<span style="font-size:0.93em;"><strong>Antes $</strong> <s style="color: #e61919;">',"values","clienteModal","width"];return(_0x35a9=function(){return $})()}function refreshStockInfo(){let $=_0x25b592,x=document[$(532)]($(470));x[$(553)](x=>{let e=$,t=x[e(563)](".stock-info");if(t){let a=x[e(563)](e(618));if(a){let i=a[e(566)],o=productos[e(554)]($=>$[2]===i),n=0;o&&void 0!==o[10]&&null!==o[10]&&""!==o[10]&&(n=parseInt(o[10])),isNaN(n)?t[e(504)]=e(394):n<=0?t[e(504)]=e(394):n<=10?t[e(504)]=e(502):t[e(504)]='<span style="color: #4CAF50;">✓ Disponible</span>';let d=x[e(563)](e(430)),r=x[e(563)](".btn-agregar-carrito");d&&(!isNaN(n)&&n>0?(d[e(377)]=n,d[e(356)]=!1,d[e(552)]=e(580)+n+e(562),r&&r[e(356)]&&(r.disabled=!1,r.style[e(477)]=e(603),r[e(515)][e(478)]=e(603),r[e(515)][e(606)]=e(427),r[e(552)]="")):(d[e(356)]=!0,d.title=e(634),r&&(r.disabled=!0,r[e(515)][e(477)]=e(565),r[e(515)].borderColor=e(565),r.style[e(606)]=e(494),r[e(552)]=e(634))))}}})}function agregarAlCarrito($,x,e,t,a){let i=_0x25b592,o=carrito[i(554)](x=>x[i(393)]===$);o?o[i(422)]+=e:carrito[i(362)]({nombre:$,precio:x,cantidad:e,codigo:t,categoria:a}),actualizarCarrito()}function getMaxVisiblePaginationButtons(){let $=_0x25b592,x=document.getElementById($(389)),e=window[$(558)];x&&(e=x[$(571)]||e);let t=Math[$(377)](3,Math.floor((e-220)/48));return Math[$(412)](t,15)}function actualizarPaginacion($,x){let e=_0x25b592,t=document[e(593)](e(389));t.innerHTML="";let a=Math[e(454)](x[e(613)]/30);if($>1){let i=document[e(437)](e(417));i[e(567)]=e(620),i[e(515)][e(530)]=e(469),i[e(508)](e(509),()=>mostrarPagina($-1,x)),t[e(624)](i)}let o=getMaxVisiblePaginationButtons(),n=Math[e(377)](1,$-Math[e(460)](o/2)),d=Math[e(412)](a,n+o-1);d-n<o-1&&(n=Math[e(377)](1,d-o+1));for(let r=n;r<=d;r++){let l=document[e(437)](e(417));l.textContent=r,l[e(573)][e(510)](e(488)),r===$&&l[e(573)][e(510)](e(503)),l.addEventListener(e(509),()=>mostrarPagina(r,x)),t[e(624)](l)}if($<a){let _=document[e(437)]("button");_[e(567)]="Siguiente",_[e(515)].width=e(469),_[e(508)](e(509),()=>mostrarPagina($+1,x)),t[e(624)](_)}}function isValidImageUrl($){return $&&$[_0x25b592(424)](/\.(jpeg|jpg|gif|png)$/i)}function abrirLightbox($){let x=_0x25b592;currentLightboxImages=$,currentImageIndex=0,document[x(593)]("lightbox-img")[x(371)]=currentLightboxImages[currentImageIndex],document.getElementById(x(359))[x(515)][x(381)]=x(361),actualizarBotonesLightbox()}function actualizarBotonesLightbox(){let $=_0x25b592,x=document.getElementById($(599)),e=document[$(593)]($(464));currentLightboxImages[$(613)]>1?(x[$(515)][$(381)]=$(473),e.style[$(381)]=$(473)):(x.style[$(381)]=$(557),e[$(515)][$(381)]=$(557))}function closeLightbox($){let x=_0x25b592;($[x(440)]===$.currentTarget||$[x(440)].classList[x(612)](x(546)))&&(document[x(593)](x(359))[x(515)][x(381)]=x(557))}function actualizarCarrito(){let $=_0x25b592,x=document[$(593)]($(360)),e=document[$(563)]($(598));x.innerHTML="",0===carrito.length?e[$(515)].display=$(557):e[$(515)][$(381)]=$(473),carrito[$(553)](e=>{let t=$,a=document[t(437)]("li");a[t(567)]=e[t(393)]+t(419)+e[t(422)],x[t(624)](a)})}window[_0x25b592(508)](_0x25b592(476),()=>{let $=_0x25b592;if(typeof currentPage!==$(449)){let x=datosFiltrados[$(613)]>0?datosFiltrados:productos;actualizarPaginacion(currentPage,x)}}),document.getElementById(_0x25b592(464))[_0x25b592(508)](_0x25b592(509),$=>{let x=_0x25b592;$[x(602)](),currentLightboxImages[x(613)]>0&&(currentImageIndex=(currentImageIndex+1)%currentLightboxImages.length,document.getElementById(x(423))[x(371)]=currentLightboxImages[currentImageIndex])}),document[_0x25b592(593)](_0x25b592(599)).addEventListener(_0x25b592(509),$=>{let x=_0x25b592;$[x(602)](),currentLightboxImages.length>0&&(currentImageIndex=(currentLightboxImages[x(613)]+currentImageIndex-1)%currentLightboxImages[x(613)],document[x(593)]("lightbox-img")[x(371)]=currentLightboxImages[currentImageIndex])}),document[_0x25b592(593)](_0x25b592(423))[_0x25b592(508)](_0x25b592(428),function(){let $=_0x25b592;currentLightboxImages[$(613)]>0&&0!==currentImageIndex&&(currentImageIndex=0,this[$(371)]=currentLightboxImages[0])});let datosExtraCliente={},pedidoEnviado=!1,autofillDisparado=!1;const modal=document.getElementById(_0x25b592(529)),continuarBtn=document[_0x25b592(593)](_0x25b592(463)),emailInput=document[_0x25b592(593)](_0x25b592(536)),nombreInput=document.getElementById("nombreInput"),localidadInput=document[_0x25b592(593)](_0x25b592(442)),direccionInput=document[_0x25b592(593)](_0x25b592(522)),dniNuevoInput=document[_0x25b592(593)](_0x25b592(574)),emailClienteInput=document[_0x25b592(593)](_0x25b592(587)),telefonoInput=document.getElementById("telefonoInput"),provinciaInput=document[_0x25b592(593)](_0x25b592(483));function enviarPedido(){let $=_0x25b592;if(modoEdicion){if(0===carrito[$(613)]){alert($(619));return}enviarPedidoFinal();return}autofillDisparado=!1,modal[$(515)].display="flex"}function validarPedidoAbierto($,x){let e=_0x25b592;db.ref(e(414))[e(555)](e(378))[e(575)]($)[e(578)]("value")[e(432)]($=>{let t=e,a=null,i=null;$[t(553)]($=>{let x=t,e=$[x(472)]();e[x(535)]!==x(524)||a||(a=e,i=e.id||$.key)}),x(a,i)})[e(541)]($=>{console[e(428)]("Error validando pedido abierto",$),x(null,null)})}function mostrarMensajePedidoAbierto($){let x=_0x25b592;modal[x(515)][x(381)]=x(557);let e=document[x(593)](x(496));e||((e=document[x(437)](x(447))).id="pedido-abierto-overlay",e[x(515)].position=x(640),e.style[x(501)]="0",e.style.left="0",e[x(515)][x(530)]="100vw",e[x(515)][x(584)]=x(391),e[x(515)][x(415)]="rgba(0,0,0,0.6)",e[x(515)][x(381)]="flex",e.style[x(540)]="column",e[x(515)].justifyContent=x(520),e.style[x(384)]=x(520),e[x(515)][x(445)]=x(411),document[x(451)][x(624)](e)),e[x(504)]=x(369),document.getElementById(x(533))[x(570)]=function(){let e=x;window[e(590)][e(539)]="pedidos.html?id="+$}}function continuarPedido(){let $=_0x25b592,x=emailInput[$(566)][$(594)]().toLowerCase(),e=(nombreInput[$(566)][$(594)](),telefonoInput.value[$(594)](),localidadInput[$(566)][$(594)](),direccionInput[$(566)][$(594)](),provinciaInput.value,dniNuevoInput[$(566)][$(594)](),emailClienteInput[$(566)][$(594)]()[$(392)]()),t=x||e;if(!t||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/[$(490)](t)){alert("Ingres\xe1 un email v\xe1lido.");return}db[$(516)]($(357))[$(555)]($(382))[$(575)](t)[$(608)](1).once($(566))[$(432)]($=>{$.exists()&&validarPedidoAbierto(t,(x,e)=>{let a=_0x3e44;if(x){mostrarMensajePedidoAbierto(e);return}let i=Object[a(528)]($[a(472)]())[0];nombreInput[a(566)]=i[a(393)]||"",telefonoInput.value=i.telefono||"",localidadInput[a(566)]=i[a(628)]||"",direccionInput[a(566)]=i.direccion||"",provinciaInput.value=i[a(452)]||"",dniNuevoInput[a(566)]=i.dni||"",emailInput.value=i[a(382)]||"",datosExtraCliente={email:t,nombre:i[a(393)],telefono:i.telefono,localidad:i[a(628)],direccion:i[a(446)],provincia:i[a(452)],dni:i[a(466)],tipoCliente:i[a(617)]||"mayorista"},mostrarModalConfirmacion()})})}function enviarPedidoFinal(){let $=_0x25b592;if(pedidoEnviado)return;if(pedidoEnviado=!0,0===carrito[$(613)]){alert($(619));return}if(!modoEdicion){let x=db.ref($(414))[$(362)](),e=x[$(601)],t={id:e,timestamp:Date[$(556)](),locked:!1,adminViewed:!1,createdby:$(421),status:$(524),cliente:{nombre:datosExtraCliente[$(393)]||"",telefono:datosExtraCliente[$(544)]||"",localidad:datosExtraCliente[$(628)]||"",direccion:datosExtraCliente.direccion||"",provincia:datosExtraCliente[$(452)]||"",dni:String(datosExtraCliente[$(466)]||""),email:datosExtraCliente[$(382)]||"",tipoCliente:datosExtraCliente[$(617)]||$(547)},items:carrito[$(402)](x=>({nombre:x[$(393)],cantidad:x.cantidad,valorUSD:x.precio,codigo:x[$(444)]||"",categoria:x[$(495)]||""}))};x.set(t).then(()=>{let x=$;datosExtraCliente[x(382)]&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/[x(490)](datosExtraCliente[x(382)])?emailjs[x(370)]("service_lu9cpxk",x(592),{email:datosExtraCliente[x(382)],name:datosExtraCliente[x(393)],linkPedido:x(591)+e})[x(432)](function($){let e=x;console[e(487)]("Email enviado!",$[e(535)],$.text)},function($){console.error(x(450),$)}):(alert("El email del cliente est\xe1 vac\xedo o no es v\xe1lido. No se env\xeda el pedido por email."),console[x(428)](x(561))),mostrarModalPedidoConfirmado(e,datosExtraCliente[x(382)]),limpiarCarrito()});return}let a=db[$(516)]($(513)+pedidoEditId);a[$(578)]("value")[$(432)](x=>{let e=$,t=x[e(472)]();if(!t||t[e(436)]){alert(e(498));return}return carrito[e(553)]($=>{let x=e,a=t[x(579)][x(458)](e=>e[x(393)]===$[x(393)]);a>-1?t.items[a][x(422)]+=$[x(422)]:t[x(579)][x(362)]({nombre:$.nombre,cantidad:$.cantidad,valorUSD:$[x(596)],codigo:$[x(444)]||"",categoria:$[x(495)]||""})}),t.cliente={nombre:datosExtraCliente[e(393)]||t[e(638)]?.[e(393)]||"",telefono:datosExtraCliente[e(544)]||t[e(638)]?.[e(544)]||"",localidad:datosExtraCliente[e(628)]||t.cliente?.[e(628)]||"",direccion:datosExtraCliente[e(446)]||t[e(638)]?.direccion||"",provincia:datosExtraCliente.provincia||t.cliente?.[e(452)]||"",dni:String(datosExtraCliente[e(466)]||t[e(638)]?.[e(466)]||""),email:datosExtraCliente[e(382)]||t[e(638)]?.[e(382)]||"",tipoCliente:datosExtraCliente[e(617)]||t[e(638)]?.tipoCliente||e(547)},a.update({items:t[e(579)],cliente:t.cliente,adminViewed:!1,lastUpdated:Date[e(556)]()})}).then(()=>{let x=$;alert("Art\xedculos agregados al pedido \uD83D\uDC4C"),window[x(590)].href=x(499)+pedidoEditId})[$(541)]($=>{console.error($),alert("Error actualizando el pedido")})}function mostrarModalPedidoConfirmado($,x){let e=_0x25b592,t=document[e(593)](e(406));t&&t[e(551)]();let a=document[e(437)]("div");a.id="pedido-confirmado-modal",a[e(543)]=e(475),a[e(515)][e(381)]=e(361),a.innerHTML=e(372),document[e(451)].appendChild(a),document[e(593)](e(467)).onclick=function(){let x=e;window[x(590)].href="pedidos.html?id="+$}}function limpiarCarrito(){let $=_0x25b592;carrito=[],actualizarCarrito(),document[$(532)]($(470))[$(553)](x=>{let e=$,t=x[e(563)](e(633)),a=x[e(563)](e(430)).parentElement,i=x[e(563)]('input[type="number"]');t&&a&&i&&(i[e(566)]="1",a[e(515)].display=e(557),a.style[e(468)]="0",a[e(515)][e(630)]="scale(0.8)",t[e(515)][e(381)]=e(473),t[e(515)][e(468)]="1",t[e(515)][e(630)]=e(373),t[e(515)][e(415)]="",t.style.color="",t[e(515)][e(581)]="")})}[_0x25b592(587)][_0x25b592(553)]($=>{let x=_0x25b592,e=document[x(593)]($);e&&e.addEventListener(x(395),$=>{let e=x,t=$[e(440)][e(566)][e(594)]()[e(392)]();t&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/[e(490)](t)&&db[e(516)](e(357)).orderByChild(e(382)).equalTo(t)[e(608)](1)[e(578)](e(566))[e(432)]($=>{let x=e,t=$[x(376)]()?Object[x(528)]($[x(472)]())[0]:null;if(!t){alert(x(420)),nombreInput.value="",localidadInput[x(566)]="",direccionInput[x(566)]="",dniNuevoInput.value="",emailInput[x(566)]="",emailClienteInput[x(566)]="";return}nombreInput.value=t.nombre||"",localidadInput.value=t[x(628)]||"",direccionInput[x(566)]=t.direccion||"",dniNuevoInput[x(566)]=t[x(466)]||"",emailInput[x(566)]=t[x(382)]||"",carrito[x(613)]&&!autofillDisparado&&(autofillDisparado=!0,continuarBtn.click())})[e(541)]($=>console.error(e(374),$))})}),continuarBtn[_0x25b592(508)](_0x25b592(509),()=>{let $=_0x25b592,x=emailInput[$(566)][$(594)]()[$(392)](),e=nombreInput.value[$(594)](),t=telefonoInput[$(566)].trim(),a=localidadInput[$(566)][$(594)](),i=direccionInput[$(566)][$(594)](),o=provinciaInput.value,n=dniNuevoInput[$(566)][$(594)](),d=emailClienteInput[$(566)][$(594)]().toLowerCase(),r=n,l=x||d;if(!l||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/[$(490)](l)){alert($(511));return}db[$(516)]($(357))[$(555)]($(382)).equalTo(l)[$(608)](1)[$(578)]("value")[$(432)](x=>{let n=$;if(x[n(376)]()){if(pedidoEnviado){let d=Object.values(x[n(472)]())[0];nombreInput[n(566)]=d.nombre||"",telefonoInput[n(566)]=d.telefono||"",localidadInput[n(566)]=d[n(628)]||"",direccionInput[n(566)]=d.direccion||"",provinciaInput[n(566)]=d[n(452)]||"",dniNuevoInput[n(566)]=d[n(466)]||"",emailInput[n(566)]=d[n(382)]||"",datosExtraCliente={email:l,nombre:d.nombre,telefono:d[n(544)],localidad:d[n(628)],direccion:d.direccion,provincia:d[n(452)],dni:d[n(466)],tipoCliente:d[n(617)]||"mayorista"},mostrarModalConfirmacion()}else validarPedidoAbierto(l,($,e)=>{let t=n;if($){mostrarMensajePedidoAbierto(e);return}let a=Object[t(528)](x[t(472)]())[0];nombreInput[t(566)]=a[t(393)]||"",telefonoInput[t(566)]=a.telefono||"",localidadInput[t(566)]=a[t(628)]||"",direccionInput.value=a[t(446)]||"",provinciaInput[t(566)]=a[t(452)]||"",dniNuevoInput[t(566)]=a.dni||"",emailInput.value=a[t(382)]||"",datosExtraCliente={email:l,nombre:a[t(393)],telefono:a.telefono,localidad:a.localidad,direccion:a[t(446)],provincia:a[t(452)],dni:a[t(466)],tipoCliente:a[t(617)]||t(547)},mostrarModalConfirmacion()})}else{if(!e){alert(n(418));return}datosExtraCliente={email:l,nombre:e,telefono:t,localidad:a,direccion:i,provincia:o,dni:r,tipoCliente:n(547)},db[n(516)]("clientes").push({email:l,nombre:e,telefono:t,localidad:a,direccion:i,provincia:o,dni:r,tipoCliente:"mayorista",registro:n(421)})[n(432)](()=>{mostrarModalConfirmacion()})}})}),document[_0x25b592(508)](_0x25b592(358),function(){let $=_0x25b592;document[$(593)]("marquee-text-1")[$(504)]=MARQUEE_TEXT,document[$(593)]("marquee-text-2").innerHTML=MARQUEE_TEXT}),modal[_0x25b592(508)]("mousedown",function($){let x=_0x25b592;$[x(440)]===modal&&(modal.style[x(381)]="none")});const ultimoPedidoBtn=document[_0x25b592(593)]("ultimoPedidoBtn"),ultimoPedidoModal=document[_0x25b592(593)](_0x25b592(639)),closeUltimoPedidoModal=document.getElementById(_0x25b592(441)),buscarUltimoPedidoBtn=document[_0x25b592(593)](_0x25b592(471)),ultimoPedidoEmailInput=document[_0x25b592(593)](_0x25b592(538)),buscarBtnText=document[_0x25b592(593)](_0x25b592(542)),buscarSpinner=document[_0x25b592(593)](_0x25b592(368)),ultimoPedidoMensaje=document[_0x25b592(593)](_0x25b592(367));function mostrarMensajeBusqueda($,x){let e=_0x25b592,t=ultimoPedidoMensaje,a=t[e(563)](e(456)),i=t[e(563)](e(407));$===e(428)?(t.style[e(477)]="#fee",t[e(515)][e(403)]=e(380),t[e(515)][e(397)]="#c53030",a[e(543)]=e(600)):$===e(398)?(t[e(515)][e(477)]=e(409),t[e(515)][e(403)]=e(506),t[e(515)][e(397)]=e(589),a.className="fas fa-check-circle"):$===e(636)&&(t.style.backgroundColor=e(548),t.style[e(403)]="4px solid #4299e1",t[e(515)][e(397)]=e(385),a[e(543)]=e(396)),i[e(567)]=x,t.style[e(381)]="flex",t[e(515)].alignItems=e(520)}function ocultarMensajeBusqueda(){let $=_0x25b592;ultimoPedidoMensaje.style[$(381)]=$(557)}function setEstadoCargaBusqueda($){let x=_0x25b592;buscarUltimoPedidoBtn[x(356)]=$,buscarUltimoPedidoBtn[x(515)].opacity=$?x(525):"1",buscarUltimoPedidoBtn[x(515)].cursor=x($?494:427),buscarBtnText[x(515)][x(381)]=$?"none":x(386),buscarSpinner[x(515)][x(381)]=$?"block":"none",ultimoPedidoEmailInput.disabled=$}ultimoPedidoBtn.addEventListener("click",function(){let $=_0x25b592;ultimoPedidoModal.style[$(381)]=$(361),ultimoPedidoEmailInput[$(566)]="",ocultarMensajeBusqueda(),setTimeout(()=>ultimoPedidoEmailInput[$(489)](),100)}),closeUltimoPedidoModal[_0x25b592(508)](_0x25b592(509),function(){let $=_0x25b592;ultimoPedidoModal[$(515)][$(381)]=$(557),ocultarMensajeBusqueda()}),ultimoPedidoModal[_0x25b592(508)]("mousedown",function($){let x=_0x25b592;$[x(440)]===ultimoPedidoModal&&(ultimoPedidoModal[x(515)][x(381)]=x(557),ocultarMensajeBusqueda())}),buscarUltimoPedidoBtn[_0x25b592(508)](_0x25b592(509),function(){let $=_0x25b592,x=ultimoPedidoEmailInput[$(566)].trim().toLowerCase();if(ocultarMensajeBusqueda(),!x||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)){mostrarMensajeBusqueda($(428),$(507)),ultimoPedidoEmailInput.focus();return}setEstadoCargaBusqueda(!0),db[$(516)]($(414))[$(555)]($(378))[$(575)](x)[$(578)]($(566))[$(432)](x=>{let e=$;if(setEstadoCargaBusqueda(!1),!x[e(376)]()){mostrarMensajeBusqueda(e(428),"No se encontraron pedidos registrados con este email");return}let t=null;x[e(553)]($=>{let x=e,a=$[x(472)]();(!t||a[x(438)]>t[x(438)])&&(t=a)}),t&&t.id?(mostrarMensajeBusqueda(e(398),e(531)),setTimeout(()=>{let $=e;window[$(614)]($(499)+t.id,$(366)),ultimoPedidoModal[$(515)].display="none",ocultarMensajeBusqueda(),ultimoPedidoEmailInput[$(566)]=""},800)):mostrarMensajeBusqueda("error",e(462))}).catch(()=>{let x=$;setEstadoCargaBusqueda(!1),mostrarMensajeBusqueda(x(428),x(401))})}),ultimoPedidoEmailInput.addEventListener(_0x25b592(500),function($){let x=_0x25b592;"Enter"===$[x(601)]&&buscarUltimoPedidoBtn[x(509)]()});const carouselPieImages=document.getElementById("carousel-pie-images"),slidesPie=carouselPieImages.querySelectorAll(_0x25b592(426));let currentPieIndex=0;function updateCarouselPie(){let $=_0x25b592,x=-(100*currentPieIndex);carouselPieImages[$(515)][$(630)]="translateX("+x+"%)"}setInterval(()=>{let $=_0x25b592;currentPieIndex=(currentPieIndex+1)%slidesPie[$(613)],updateCarouselPie()},5e3);
+// Initialize EmailJS
+emailjs.init("vcbQsbE2bgLwFAnDr");
+
+// Constants
+const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=5491121891006";
+const MARQUEE_TEXT = "💲&nbsp; Los valores publicados se encuentran ligados a la cotización del dólar del día &nbsp; 🛒🛍️ &nbsp; Visita nuestro Showroom y comprá sin requisitos minimos de compra &nbsp; 🚚 &nbsp; ENVÍOS A TODO EL PAÍS";
+const ITEMPESOS = "6";
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Carousel functionality
+const carouselImages = document.getElementById('carousel-images');
+const slides = document.querySelectorAll('.carousel-slide');
+let currentIndex = 0;
+
+function updateCarousel() {
+    const offset = -currentIndex * 100;
+    carouselImages.style.transform = `translateX(${offset}%)`;
+}
+
+setInterval(() => {
+    currentIndex = (currentIndex + 1) % slides.length;
+    updateCarousel();
+}, 5000); // Cambiar imagen cada 5 segundos
+
+// Main application variables
+const ITEMS_PER_PAGE = 30;
+
+let productos = [];
+let datosFiltrados = []; // Variable para mantener los datos filtrados actuales
+let currentPage = 1;
+let carrito = [];
+let currentLightboxImages = [];
+let currentImageIndex = 0;
+
+// Función para guardar el carrito en localStorage
+function guardarCarritoLocal() {
+    try {
+        localStorage.setItem('carritoMayorista', JSON.stringify(carrito));
+    } catch (e) {
+        console.error('Error al guardar carrito en localStorage:', e);
+    }
+}
+
+// Función para cargar el carrito desde localStorage
+function cargarCarritoLocal() {
+    try {
+        const carritoGuardado = localStorage.getItem('carritoMayorista');
+        if (carritoGuardado) {
+            carrito = JSON.parse(carritoGuardado);
+            actualizarCarrito();
+        }
+    } catch (e) {
+        console.error('Error al cargar carrito desde localStorage:', e);
+        carrito = [];
+    }
+}
+
+// === soporte para editar un pedido existente ===
+const urlParams    = new URLSearchParams(window.location.search);
+const pedidoEditId = urlParams.get('pedido');   // si viene de pedidos.html
+const modoEdicion  = !!pedidoEditId;
+
+if (modoEdicion) {
+    const aviso = document.createElement('div');
+    aviso.textContent = `⚙️ Estás agregando artículos al pedido #${pedidoEditId}`;
+    aviso.id = 'aviso-edicion-pedido';
+    aviso.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      z-index: 3001;
+      background: #fff7c2;
+      padding: 10px 0;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.1em;
+      box-shadow: 0 2px 8px #0002;
+      border-bottom: 2px solid #ffe066;
+    `;
+    document.body.appendChild(aviso);
+    // Agregar margen superior al body para que no tape el header
+    document.body.style.marginTop = '54px';
+}
+
+const loadingOverlay = document.getElementById('loadingOverlay');
+
+// Fetch data from Google Sheets
+fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.RANGO}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`)
+    .then(response => {
+        if (!response.ok) throw new Error(`Error al acceder a la API: ${response.statusText}`);
+        return response.json();
+    })
+    .then(data => {
+        if (loadingOverlay) loadingOverlay.style.display = 'none'; // Ocultar el overlay de carga
+        const items = data.values;
+        if (!items || items.length === 0) throw new Error("No se encontraron datos en la hoja.");
+        
+        // Filtrar para ocultar artículos con etiqueta "No disponible"
+        // y ordenar descendente por la fecha (índice 12 - columna M)
+        productos = items
+            .filter(item => item[4].toLowerCase() !== 'no disponible') //FILTRAR NO DISPONIBLE
+            .sort((a, b) => {
+                // Función para convertir fecha DD/MM/YYYY a objeto Date
+                function parsearFecha(fechaStr) {
+                    if (!fechaStr || fechaStr === '' || fechaStr === null || fechaStr === undefined) {
+                        return new Date(1900, 0, 1); // Fecha muy antigua
+                    }
+                    
+                    // Si está en formato DD/MM/YYYY
+                    if (fechaStr.includes('/')) {
+                        const partes = fechaStr.split('/');
+                        if (partes.length === 3) {
+                            const dia = parseInt(partes[0]);
+                            const mes = parseInt(partes[1]) - 1; // Los meses en JS van de 0-11
+                            const año = parseInt(partes[2]);
+                            return new Date(año, mes, dia);
+                        }
+                    }
+                    
+                    // Si no puede parsearse, devolver fecha antigua
+                    return new Date(1900, 0, 1);
+                }
+                
+                // Obtener las fechas de la columna M (índice 12)
+                const dateA = parsearFecha(a[12]);
+                const dateB = parsearFecha(b[12]);
+                
+                // Ordenar por fecha descendente (más recientes primero)
+                return dateB - dateA;
+            });
+        
+        // Inicializar datosFiltrados con todos los productos
+        datosFiltrados = productos;
+        
+        // Asegurar que el scroll esté en la parte superior al cargar
+        window.scrollTo(0, 0);
+        
+        mostrarPagina(1);
+        
+        // Primero refrescar la información de stock, luego aplicar filtros
+        // Esto previene la condición de carrera en navegadores móviles
+        setTimeout(() => {
+            refreshStockInfo();
+            // Aplicar filtros después de actualizar el stock
+            if (document.getElementById('filtroDisponibles').checked) {
+                aplicarFiltros();
+            }
+            // Después de completar la carga inicial, permitir scroll hacia categorías
+            setTimeout(() => {
+                primeraCarga = false;
+            }, 100);
+        }, 100);
+
+        // Usar la lista filtrada para obtener categorías
+        const categoriasSet = new Set(productos.map(item => item[0]));
+        const selectCategorias = document.getElementById('categorias');
+        
+        // Convertir a array, filtrar categorías vacías y ordenar alfabéticamente
+        const categoriasOrdenadas = Array.from(categoriasSet)
+            .filter(categoria => categoria && categoria.trim() !== '') // Filtrar categorías vacías
+            .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' })); // Ordenar alfabéticamente
+        
+        categoriasOrdenadas.forEach(categoria => {
+            const option = document.createElement('option');
+            option.value = categoria;
+            option.textContent = categoria;
+            selectCategorias.appendChild(option);
+        });
+
+        selectCategorias.addEventListener('change', () => {
+            aplicarFiltros();
+        });
+
+        document.getElementById('buscar').addEventListener('input', (e) => {
+            aplicarFiltros();
+        });
+
+        document.getElementById('filtroDisponibles').addEventListener('change', () => {
+            aplicarFiltros();
+        });
+
+        document.getElementById('todos').addEventListener('click', () => {
+            // Resetear todos los filtros
+            document.getElementById('categorias').value = 'todos';
+            document.getElementById('buscar').value = '';
+            document.getElementById('filtroDisponibles').checked = false;
+            // Resetear los datos filtrados para mostrar todos los productos
+            datosFiltrados = productos;
+            // Mostrar todos los productos
+            mostrarPagina(1);
+        });
+
+        // Función para aplicar todos los filtros combinados
+        function aplicarFiltros() {
+            const categoria = document.getElementById('categorias').value;
+            const query = document.getElementById('buscar').value.toLowerCase();
+            const soloDisponibles = document.getElementById('filtroDisponibles').checked;
+            
+            let filtrados = productos;
+            
+            // Filtrar por categoría
+            if (categoria !== "todos") {
+                filtrados = filtrados.filter(item => item[0] === categoria);
+            }
+            
+            // Filtrar por búsqueda
+            if (query.trim() !== '') {
+                filtrados = filtrados.filter(item => 
+                    item[3].toLowerCase().includes(query) || item[2].toLowerCase().includes(query)
+                );
+            }
+            
+            // Filtrar por disponibilidad (solo disponibles y pocas unidades)
+            if (soloDisponibles) {
+                filtrados = filtrados.filter(item => {
+                    // Extraer y validar el valor de stock
+                    const stockValue = item[10];
+                    if (stockValue === undefined || stockValue === null || stockValue === "") {
+                        return false; // Sin stock
+                    }
+                    // Convertir a string y limpiar espacios antes de parsear
+                    const stock = parseInt(String(stockValue).trim());
+                    // Mostrar solo si tiene stock válido (mayor a 0)
+                    return !isNaN(stock) && stock > 0;
+                });
+            }
+            
+            // Guardar los datos filtrados en la variable global
+            datosFiltrados = filtrados;
+            mostrarPagina(1, filtrados);
+        }
+    })
+    .catch(error => {
+        if (loadingOverlay) loadingOverlay.style.display = 'none'; // Ocultar el overlay de carga en caso de error
+        console.error('Error al cargar los datos:', error);
+        document.querySelector('#error').textContent = error.message;
+    });
+
+let primeraCarga = true;
+function mostrarPagina(pagina, datos = productos) {
+    currentPage = pagina;
+    const totalPaginas = Math.ceil(datos.length / ITEMS_PER_PAGE);
+    const inicio = (pagina - 1) * ITEMS_PER_PAGE;
+    const fin = inicio + ITEMS_PER_PAGE;
+    const datosPagina = datos.slice(inicio, fin);
+
+    cargarGrid(datosPagina);
+    actualizarPaginacion(pagina, datos);
+
+    // Solo hacer scroll si no se está escribiendo en el campo de búsqueda
+    if (document.activeElement !== document.getElementById('buscar')) {
+        // Usar setTimeout para asegurar que el DOM se haya actualizado
+        setTimeout(() => {
+            if (primeraCarga) {
+                // En la primera carga, mantener scroll arriba
+                window.scrollTo({ top: 0, behavior: 'auto' });
+            } else {
+                // En interacciones posteriores, scroll hacia categorías
+                const selectCategorias = document.getElementById('categorias');
+                if (selectCategorias) {
+                    const rect = selectCategorias.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    window.scrollTo({
+                        top: rect.top + scrollTop - 20, // 20px de margen superior opcional
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }, 0);
+    }
+}
+
+function cargarGrid(data) {
+    const grid = document.getElementById('catalogo');
+    grid.innerHTML = '';
+
+    data.forEach(item => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+
+        // Agregar input hidden con el código del artículo para referencias posteriores
+        const hiddenCode = document.createElement('input');
+        hiddenCode.type = 'hidden';
+        hiddenCode.value = item[2]; // Código del artículo
+        card.appendChild(hiddenCode);
+
+        // 1. Imagen
+        if (isValidImageUrl(item[1])) {
+            let imageUrls = [];
+            if (item[1].indexOf(',') !== -1) {
+                imageUrls = item[1].split(',').map(url => url.trim());
+            } else {
+                imageUrls.push(item[1]);
+            }
+            const img = document.createElement('img');
+            img.src = imageUrls[0];
+            img.loading = 'lazy'; // Agregar lazy loading
+            img.onerror = function() {
+                this.src = 'no-disponible.png'; // Imagen de respaldo
+            };
+            img.addEventListener('click', () => {
+                abrirLightbox(imageUrls);
+            });
+            card.appendChild(img);
+        }
+
+        // 2. Nombre del Artículo
+        const articulo = document.createElement('h3');
+        articulo.textContent = item[3];
+        card.appendChild(articulo);
+
+        // 3. Código
+        const info = document.createElement('div');
+        info.classList.add('info');
+        info.textContent = `Código: ${item[2]}`;
+        card.appendChild(info);
+
+        // 4. Disponibilidad de stock (ahora desde columna K, item[10])
+        const stockInfo = document.createElement('div');
+        stockInfo.classList.add('stock-info');
+        stockInfo.style.margin = '5px 0';
+        stockInfo.style.fontWeight = 'bold';
+
+        let stock = 0;
+        if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
+            stock = parseInt(item[10]);
+        }
+        if (!isNaN(stock)) {
+            if (stock <= 0) {
+                stockInfo.innerHTML = `<span style="color: #ff9800;">✗ Sin stock</span>`;
+            } else if (stock <= 10) {
+                stockInfo.innerHTML = `<span style="color: #ffeb3b;">⚠ Pocas unidades</span>`;
+            } else {
+                stockInfo.innerHTML = `<span style="color: #4CAF50;">✓ Disponible</span>`;
+            }
+        } else {
+            stockInfo.innerHTML = `<span style="color: #ff9800;">✗ Sin stock</span>`;
+        }
+        card.appendChild(stockInfo);
+
+        // 5. Valor ANTES
+        if (ITEMPESOS == "6") {
+            const valorUSD = document.createElement('p');
+            valorUSD.innerHTML = `<span style=\"font-size:0.93em;\"><strong>Antes $</strong> <s style=\"color: #e61919;\">${item[13]}</s></span>`;
+            valorUSD.style.marginBottom = '5px';
+            card.appendChild(valorUSD);
+        }
+
+        // 6. Valor $
+        const valorPesos = document.createElement('p');
+        valorPesos.innerHTML = `<strong>Ahora $</strong> ${item[ITEMPESOS]}`;
+        valorPesos.style.marginTop = '2px';
+        card.appendChild(valorPesos);
+
+        // 7. Cantidad + Botón carrito
+        const actionContainer = document.createElement('div');
+        actionContainer.style.display = 'flex';
+        actionContainer.style.alignItems = 'center';
+        actionContainer.style.justifyContent = 'center';
+        actionContainer.style.gap = '5px';
+        actionContainer.style.minHeight = '50px';
+
+        // Contenedor para el control de cantidad (inicialmente oculto)
+        const quantityContainer = document.createElement('div');
+        quantityContainer.style.display = 'none';
+        quantityContainer.style.alignItems = 'center';
+        quantityContainer.style.gap = '5px';
+        quantityContainer.style.transition = 'all 0.3s ease';
+        quantityContainer.style.opacity = '0';
+
+        // Botón decrementar
+        const btnDecrementar = document.createElement('button');
+        btnDecrementar.innerHTML = '-';
+        btnDecrementar.style.padding = '5px 10px';
+        btnDecrementar.style.fontSize = '16px';
+        btnDecrementar.style.height = '35px';
+        btnDecrementar.style.width = '35px';
+        btnDecrementar.style.backgroundColor = '#ff9800';
+        btnDecrementar.style.color = '#fff';
+        btnDecrementar.style.border = '1px solid #ff9800';
+        btnDecrementar.style.borderRadius = '4px';
+        btnDecrementar.style.cursor = 'pointer';
+
+        // Campo de cantidad
+        const cantidadSelector = document.createElement('input');
+        cantidadSelector.type = 'number';
+        cantidadSelector.min = '1';
+        cantidadSelector.value = '1';
+        cantidadSelector.style.width = '50px';
+        cantidadSelector.style.height = '35px';
+        cantidadSelector.style.padding = '5px';
+        cantidadSelector.style.textAlign = 'center';
+        cantidadSelector.style.border = '1px solid #ddd';
+        cantidadSelector.style.borderRadius = '4px';
+
+        // Botón incrementar
+        const btnIncrementar = document.createElement('button');
+        btnIncrementar.innerHTML = '+';
+        btnIncrementar.style.padding = '5px 10px';
+        btnIncrementar.style.fontSize = '16px';
+        btnIncrementar.style.height = '35px';
+        btnIncrementar.style.width = '35px';
+        btnIncrementar.style.backgroundColor = '#ff9800';
+        btnIncrementar.style.color = '#fff';
+        btnIncrementar.style.border = '1px solid #ff9800';
+        btnIncrementar.style.borderRadius = '4px';
+        btnIncrementar.style.cursor = 'pointer';
+
+        // Agregar elementos al contenedor de cantidad
+        quantityContainer.appendChild(btnDecrementar);
+        quantityContainer.appendChild(cantidadSelector);
+        quantityContainer.appendChild(btnIncrementar);
+
+        // Botón inicial del carrito
+        const btnCarrito = document.createElement('button');
+        btnCarrito.innerHTML = '<i class="fas fa-cart-plus"></i>';
+        btnCarrito.style.padding = '10px 10px';
+        btnCarrito.style.fontSize = '16px';
+        btnCarrito.style.height = '50px';
+        btnCarrito.style.width = '50px';
+        btnCarrito.style.backgroundColor = '#4CAF50';
+        btnCarrito.style.color = '#fff';
+        btnCarrito.style.border = '1px solid #4CAF50';
+        btnCarrito.style.borderRadius = '4px';
+        btnCarrito.style.cursor = 'pointer';
+        btnCarrito.style.transition = 'all 0.3s ease';
+        btnCarrito.classList.add('btn-agregar-carrito');
+
+        // Establecer máximo basado en stock disponible (desde columna K)
+        if (!isNaN(stock) && stock > 0) {
+            cantidadSelector.max = stock;
+            cantidadSelector.title = `Máximo ${stock} unidades disponibles`;
+        } else {
+            // Sin stock disponible o sin información de stock
+            btnCarrito.disabled = true;
+            btnCarrito.style.backgroundColor = '#cccccc';
+            btnCarrito.style.borderColor = '#cccccc';
+            btnCarrito.style.cursor = 'not-allowed';
+            btnCarrito.title = 'Sin stock disponible';
+        }
+
+        // Función para actualizar carrito
+        function actualizarArticuloEnCarrito() {
+            const cantidad = parseInt(cantidadSelector.value);
+            if (cantidad > 0) {
+                const existe = carrito.find(cartItem => cartItem.nombre === articulo.textContent);
+                if (existe) {
+                    existe.cantidad = cantidad;
+                } else {
+                    agregarAlCarrito(articulo.textContent, item[6], cantidad, item[2], item[0], item[7].toString().replace(/[,\.]/g, ''), item[6].toString().replace(/[,\.]/g, ''));
+                }
+                actualizarCarrito();
+            }
+        }
+
+        // Función para mostrar control de cantidad
+        function mostrarControlCantidad() {
+            btnCarrito.style.opacity = '0';
+            btnCarrito.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                btnCarrito.style.display = 'none';
+                quantityContainer.style.display = 'flex';
+                
+                setTimeout(() => {
+                    quantityContainer.style.opacity = '1';
+                    quantityContainer.style.transform = 'scale(1)';
+                }, 50);
+            }, 150);
+        }
+
+        // Evento click del botón carrito
+        btnCarrito.addEventListener('click', () => {
+            // Consultar stock desde columna K
+            let stockDisponibleClick = 0;
+            if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
+                stockDisponibleClick = parseInt(item[10]);
+            }
+            if (isNaN(stockDisponibleClick) || stockDisponibleClick <= 0) {
+                alert('Este producto no tiene stock disponible.');
+                return;
+            }
+            // Agregar al carrito y mostrar control
+            cantidadSelector.value = '1';
+            actualizarArticuloEnCarrito();
+            mostrarControlCantidad();
+        });
+
+        // Eventos de los botones de cantidad
+        btnIncrementar.addEventListener('click', () => {
+            // Consultar stock desde columna K
+            let stockDisponibleClick = 0;
+            if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
+                stockDisponibleClick = parseInt(item[10]);
+            }
+            const cantidad = parseInt(cantidadSelector.value);
+            if (!isNaN(stockDisponibleClick) && cantidad >= stockDisponibleClick) {
+                alert(`Stock insuficiente. Solo hay ${stockDisponibleClick} unidades disponibles.`);
+                return;
+            }
+            cantidadSelector.value = cantidad + 1;
+            actualizarArticuloEnCarrito();
+        });
+
+        btnDecrementar.addEventListener('click', () => {
+            const cantidad = parseInt(cantidadSelector.value);
+            if (cantidad > 1) {
+                cantidadSelector.value = cantidad - 1;
+                actualizarArticuloEnCarrito();
+            } else {
+                // Remover del carrito y volver al botón inicial
+                const existe = carrito.find(cartItem => cartItem.nombre === articulo.textContent);
+                if (existe) {
+                    const index = carrito.indexOf(existe);
+                    carrito.splice(index, 1);
+                    actualizarCarrito();
+                }
+                
+                // Animación de vuelta al botón carrito
+                quantityContainer.style.opacity = '0';
+                quantityContainer.style.transform = 'scale(0.8)';
+                
+                setTimeout(() => {
+                    quantityContainer.style.display = 'none';
+                    btnCarrito.style.display = 'block';
+                    btnCarrito.style.opacity = '0';
+                    btnCarrito.style.transform = 'scale(0.8)';
+                    
+                    setTimeout(() => {
+                        btnCarrito.style.opacity = '1';
+                        btnCarrito.style.transform = 'scale(1)';
+                    }, 50);
+                }, 150);
+            }
+        });
+
+        // Evento change del input de cantidad
+        cantidadSelector.addEventListener('change', () => {
+            const cantidad = parseInt(cantidadSelector.value);
+            let stockDisponibleClick = 0;
+            if (item[10] !== undefined && item[10] !== null && item[10] !== "") {
+                stockDisponibleClick = parseInt(item[10]);
+            }
+            if (cantidad <= 0) {
+                cantidadSelector.value = '1';
+            } else if (!isNaN(stockDisponibleClick) && cantidad > stockDisponibleClick) {
+                alert(`Stock insuficiente. Solo hay ${stockDisponibleClick} unidades disponibles.`);
+                cantidadSelector.value = stockDisponibleClick;
+            }
+            actualizarArticuloEnCarrito();
+        });
+
+        // Agregar elementos al contenedor principal
+        actionContainer.appendChild(btnCarrito);
+        actionContainer.appendChild(quantityContainer);
+
+        card.appendChild(actionContainer);
+        grid.appendChild(card);
+    });
+}
+
+// Función para refrescar la información de stock en todas las tarjetas visibles
+function refreshStockInfo() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        const stockInfo = card.querySelector('.stock-info');
+        if (stockInfo) {
+            // Obtener el código del artículo desde el input hidden
+            const hiddenInput = card.querySelector('input[type="hidden"]');
+            if (hiddenInput) {
+                // Buscar el producto en la lista global productos
+                const codigo = hiddenInput.value;
+                const producto = productos.find(item => item[2] === codigo);
+                let stock = 0;
+                if (producto && producto[10] !== undefined && producto[10] !== null && producto[10] !== "") {
+                    stock = parseInt(producto[10]);
+                }
+                if (!isNaN(stock)) {
+                    if (stock <= 0) {
+                        stockInfo.innerHTML = `<span style="color: #ff9800;">✗ Sin stock</span>`;
+                    } else if (stock <= 10) {
+                        stockInfo.innerHTML = `<span style="color: #ffeb3b;">⚠ Pocas unidades</span>`;
+                    } else {
+                        stockInfo.innerHTML = `<span style="color: #4CAF50;">✓ Disponible</span>`;
+                    }
+                } else {
+                    stockInfo.innerHTML = `<span style="color: #ff9800;">✗ Sin stock</span>`;
+                }
+
+                // También actualizar los controles de cantidad si existen
+                const cantidadSelector = card.querySelector('input[type="number"]');
+                const btnCarrito = card.querySelector('.btn-agregar-carrito');
+
+                if (cantidadSelector) {
+                    if (!isNaN(stock) && stock > 0) {
+                        cantidadSelector.max = stock;
+                        cantidadSelector.disabled = false;
+                        cantidadSelector.title = `Máximo ${stock} unidades disponibles`;
+
+                        // Rehabilitar botón carrito si existe y está deshabilitado
+                        if (btnCarrito && btnCarrito.disabled) {
+                            btnCarrito.disabled = false;
+                            btnCarrito.style.backgroundColor = '#4CAF50';
+                            btnCarrito.style.borderColor = '#4CAF50';
+                            btnCarrito.style.cursor = 'pointer';
+                            btnCarrito.title = '';
+                        }
+                    } else {
+                        cantidadSelector.disabled = true;
+                        cantidadSelector.title = 'Sin stock disponible';
+
+                        // Deshabilitar botón carrito si existe
+                        if (btnCarrito) {
+                            btnCarrito.disabled = true;
+                            btnCarrito.style.backgroundColor = '#cccccc';
+                            btnCarrito.style.borderColor = '#cccccc';
+                            btnCarrito.style.cursor = 'not-allowed';
+                            btnCarrito.title = 'Sin stock disponible';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function agregarAlCarrito(nombre, precio, cantidad, codigo, categoria) {
+    const existe = carrito.find(item => item.nombre === nombre);
+    if (existe) {
+        // Si el artículo ya existe, actualizamos la cantidad
+        existe.cantidad += cantidad;
+    } else {
+        // Si no existe, lo agregamos al carrito
+        carrito.push({ nombre, precio, cantidad, codigo, categoria});
+    }
+    actualizarCarrito();
+    guardarCarritoLocal();
+}
+
+function getMaxVisiblePaginationButtons() {
+    // Cada botón ocupa 48px (40px ancho + 8px margen), ajusta si tu CSS es diferente
+    const minButtonWidth = 48;
+    const container = document.getElementById('pagination');
+    let availableWidth = window.innerWidth;
+    if (container) {
+        // Si la paginación está en un contenedor más pequeño, usa su ancho
+        availableWidth = container.offsetWidth || availableWidth;
+    }
+    // Deja espacio para botones "Anterior" y "Siguiente" (2x100px)
+    const reserved = 220;
+    const maxButtons = Math.max(3, Math.floor((availableWidth - reserved) / minButtonWidth));
+    return Math.min(maxButtons, 15); // Límite máximo de 15 botones
+}
+
+function actualizarPaginacion(paginaActual, datos) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+
+    const totalPaginas = Math.ceil(datos.length / ITEMS_PER_PAGE);
+
+    // Botón "Anterior"
+    if (paginaActual > 1) {
+        const btnAnterior = document.createElement('button');
+        btnAnterior.textContent = 'Anterior';
+        btnAnterior.style.width = '100px';
+        btnAnterior.addEventListener('click', () => mostrarPagina(paginaActual - 1, datos));
+        pagination.appendChild(btnAnterior);
+    }
+
+    // Botones numerados
+    const MAX_VISIBLE_BUTTONS = getMaxVisiblePaginationButtons();
+    let startPage = Math.max(1, paginaActual - Math.floor(MAX_VISIBLE_BUTTONS / 2));
+    let endPage = Math.min(totalPaginas, startPage + MAX_VISIBLE_BUTTONS - 1);
+
+    if (endPage - startPage < MAX_VISIBLE_BUTTONS - 1) {
+        startPage = Math.max(1, endPage - MAX_VISIBLE_BUTTONS + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const btnPagina = document.createElement('button');
+        btnPagina.textContent = i;
+        btnPagina.classList.add('pagination-button');
+        if (i === paginaActual) {
+            btnPagina.classList.add('active'); // Clase para el botón activo
+        }
+        btnPagina.addEventListener('click', () => mostrarPagina(i, datos));
+        pagination.appendChild(btnPagina);
+    }
+
+    // Botón "Siguiente"
+    if (paginaActual < totalPaginas) {
+        const btnSiguiente = document.createElement('button');
+        btnSiguiente.textContent = 'Siguiente';
+        btnSiguiente.style.width = '100px'; // Define el ancho del botón
+        btnSiguiente.addEventListener('click', () => mostrarPagina(paginaActual + 1, datos));
+        pagination.appendChild(btnSiguiente);
+    }
+}
+
+// Recalcular paginación al redimensionar la ventana
+window.addEventListener('resize', () => {
+    // Usar datosFiltrados si existen filtros aplicados, sino productos
+    if (typeof currentPage !== 'undefined') {
+        const datosActuales = datosFiltrados.length > 0 ? datosFiltrados : productos;
+        actualizarPaginacion(currentPage, datosActuales);
+    }
+});
+
+function isValidImageUrl(url) {
+    return url && url.match(/\.(jpeg|jpg|gif|png)$/i);
+}
+
+function abrirLightbox(images) {
+    currentLightboxImages = images;
+    currentImageIndex = 0;
+    document.getElementById('lightbox-img').src = currentLightboxImages[currentImageIndex];
+    document.getElementById('lightbox').style.display = 'flex';
+    actualizarBotonesLightbox();
+}
+
+function actualizarBotonesLightbox() {
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    if (currentLightboxImages.length > 1) {
+        prevBtn.style.display = 'block';
+        nextBtn.style.display = 'block';
+    } else {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+    }
+}
+
+document.getElementById('next-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (currentLightboxImages.length > 0) {
+        currentImageIndex = (currentImageIndex + 1) % currentLightboxImages.length;
+        document.getElementById('lightbox-img').src = currentLightboxImages[currentImageIndex];
+    }
+});
+
+document.getElementById('prev-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (currentLightboxImages.length > 0) {
+        currentImageIndex = (currentLightboxImages.length + currentImageIndex - 1) % currentLightboxImages.length;
+        document.getElementById('lightbox-img').src = currentLightboxImages[currentImageIndex];
+    }
+});
+
+document.getElementById('lightbox-img').addEventListener('error', function() {
+    // Si ocurre un error y no se trata de la primera imagen, mostramos la primera
+    if (currentLightboxImages.length > 0 && currentImageIndex !== 0) {
+        currentImageIndex = 0;
+        this.src = currentLightboxImages[0];
+    }
+});
+
+function closeLightbox(event) {
+    if (event.target === event.currentTarget || event.target.classList.contains('close')) {
+        document.getElementById('lightbox').style.display = 'none';
+    }
+}
+
+function actualizarCarrito() {
+    const cartList = document.getElementById('cart-list');
+    const cartFloatBtn = document.getElementById('cartFloatBtn');
+    const cartBadge = document.getElementById('cartBadge');
+
+    cartList.innerHTML = '';
+
+    // Calcular total de unidades
+    let totalUnidades = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+
+    if (carrito.length === 0) {
+        // Ocultar botón flotante y badge si está vacío
+        if (cartFloatBtn) cartFloatBtn.style.display = 'none';
+        // Cerrar el carrito expandido si está abierto
+        const cartContainer = document.getElementById('cartContainer');
+        if (cartContainer) {
+            cartContainer.classList.remove('active');
+            if (typeof cartExpanded !== 'undefined') cartExpanded = false;
+        }
+    } else {
+        // Mostrar botón flotante si hay items
+        if (cartFloatBtn) cartFloatBtn.style.display = 'flex';
+    }
+
+    // Actualizar badge
+    if (cartBadge) {
+        cartBadge.textContent = totalUnidades;
+    }
+
+    // Renderizar items con botón de eliminar
+    carrito.forEach((item, index) => {
+        let li = document.createElement('li');
+        li.style.position = 'relative';
+        li.style.paddingRight = '35px';
+        
+        const itemInfo = document.createElement('div');
+        itemInfo.innerHTML = `
+            <strong>${item.nombre}</strong><br>
+            <small>Código: ${item.codigo}</small><br>
+            <small>Cantidad: ${item.cantidad} | Precio: $${item.precio}</small>
+        `;
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'cart-item-delete';
+        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            eliminarItemCarrito(index);
+        };
+        
+        li.appendChild(itemInfo);
+        li.appendChild(deleteBtn);
+        cartList.appendChild(li);
+    });
+}
+
+// Función para eliminar un item individual del carrito
+function eliminarItemCarrito(index) {
+    if (index >= 0 && index < carrito.length) {
+        const item = carrito[index];
+        
+        // Buscar la card correspondiente y restaurar su estado
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            const cardNombre = card.querySelector('h3')?.textContent;
+            if (cardNombre === item.nombre) {
+                const btnCarrito = card.querySelector('.btn-agregar-carrito');
+                const quantityContainer = card.querySelector('input[type="number"]')?.parentElement;
+                const cantidadInput = card.querySelector('input[type="number"]');
+                
+                if (btnCarrito && quantityContainer && cantidadInput) {
+                    // Resetear valor del input
+                    cantidadInput.value = '1';
+                    
+                    // Ocultar controles de cantidad
+                    quantityContainer.style.display = 'none';
+                    quantityContainer.style.opacity = '0';
+                    quantityContainer.style.transform = 'scale(0.8)';
+                    
+                    // Mostrar botón de carrito original
+                    btnCarrito.style.display = 'block';
+                    btnCarrito.style.opacity = '1';
+                    btnCarrito.style.transform = 'scale(1)';
+                    
+                    // Restaurar estilos del botón
+                    btnCarrito.style.background = '';
+                    btnCarrito.style.color = '';
+                    btnCarrito.style.border = '';
+                }
+            }
+        });
+        
+        // Eliminar el item del carrito
+        carrito.splice(index, 1);
+        
+        // Actualizar el carrito y guardar
+        actualizarCarrito();
+        guardarCarritoLocal();
+    }
+}
+
+/* === Variables globales === */
+let datosExtraCliente = {};              // email, nombre, localidad, direccion, dni
+let pedidoEnviado = false;  // ← nueva bandera
+let autofillDisparado = false;
+
+/* === Referencias al modal === */
+const modal        = document.getElementById('clienteModal');
+const continuarBtn = document.getElementById('continuarBtn');
+const emailInput = document.getElementById('emailInput');
+const nombreInput = document.getElementById('nombreInput');
+const localidadInput = document.getElementById('localidadInput');
+const direccionInput = document.getElementById('direccionInput');
+const dniNuevoInput = document.getElementById('dniNuevoInput');
+const emailClienteInput = document.getElementById('emailClienteInput');
+const telefonoInput = document.getElementById('telefonoInput');
+const provinciaInput = document.getElementById('provinciaInput');
+
+// Autocompletar datos si el email ya existe en la tabla clientes
+['emailClienteInput'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('blur', e => {
+      const email = e.target.value.trim().toLowerCase();
+      if (email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        db.ref('clientes').orderByChild('email').equalTo(email).limitToFirst(1).once('value')
+          .then(snap => {
+            const cli = snap.exists() ? Object.values(snap.val())[0] : null;
+            if (!cli) {
+              alert('No se encontró el email ingresado. Por favor, registrate antes de poder ingresar el pedido.');
+              // Limpiar campos por si había datos previos
+              nombreInput.value = '';
+              localidadInput.value = '';
+              direccionInput.value = '';
+              dniNuevoInput.value = '';
+              emailInput.value = '';
+              emailClienteInput.value = '';
+              return;
+            }
+            nombreInput.value    = cli.nombre    || '';
+            localidadInput.value = cli.localidad || '';
+            direccionInput.value = cli.direccion || '';
+            dniNuevoInput.value  = cli.dni       || '';
+            emailInput.value     = cli.email     || '';
+            // Si carrito NO está vacío y aún no se lanzó, continúa solo
+            if (carrito.length && !autofillDisparado) {
+              autofillDisparado = true;
+              continuarBtn.click();
+            }
+          })
+          .catch(e => console.error('Error consulta email cliente', e));
+      }
+    });
+  }
+});
+
+/* --- 1. abrir modal --- */
+function enviarPedido(){
+    /* Si estoy en modo edición NO vuelvo a pedir datos */
+    if (modoEdicion){
+        if (carrito.length === 0){
+            alert("El carrito está vacío.");
+            return;
+        }
+        enviarPedidoFinal();          // guarda directamente
+        return;                       // ← importante
+    }
+
+    /* Nuevo pedido: abro el modal */
+    autofillDisparado = false;      // resetea flag
+    modal.style.display = 'flex';
+}
+
+// === Validación de pedido abierto ===
+function validarPedidoAbierto(email, callback) {
+  db.ref('pedidos')
+    .orderByChild('cliente/email')
+    .equalTo(email)
+    .once('value')
+    .then(snap => {
+      let abierto = null;
+      let pedidoId = null;
+      snap.forEach(child => {
+        const pedido = child.val();
+        if (pedido.status === 'ABIERTO' && !abierto) {
+          abierto = pedido;
+          pedidoId = pedido.id || child.key;
+        }
+      });
+      callback(abierto, pedidoId);
+    })
+    .catch(err => {
+      console.error('Error validando pedido abierto', err);
+      callback(null, null);
+    });
+}
+
+function mostrarMensajePedidoAbierto(pedidoId) {
+  modal.style.display = 'none';
+  let overlay = document.getElementById('pedido-abierto-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'pedido-abierto-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.background = 'rgba(0,0,0,0.6)';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.zIndex = '9999';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `
+    <div style="background: #fff; padding: 30px 40px; border-radius: 12px; text-align: center; max-width: 90vw;">
+      <h2 style='color:#d32f2f;'>¡Ya tienes un pedido abierto en proceso! 🛒</h2>
+      <p>Si quieres hacer cambios, puedes modificarlo o cancelarlo para crear uno completamente nuevo.</p>
+      <button id="verPedidoBtn" style="background:#4CAF50;color:#fff;padding:10px 30px;border:none;border-radius:6px;font-size:1.1em;cursor:pointer;">Ver Pedido</button>
+    </div>
+  `;
+  document.getElementById('verPedidoBtn').onclick = function() {
+    window.location.href = `pedidos.html?id=${pedidoId}`;
+  };
+}
+
+// --- ÚNICO manejador para continuarBtn ---
+continuarBtn.addEventListener('click', () => {
+  const email      = emailInput.value.trim().toLowerCase();
+  const nombre     = nombreInput.value.trim();
+  const telefono   = telefonoInput.value.trim();
+  const localidad  = localidadInput.value.trim();
+  const direccion  = direccionInput.value.trim();
+  const provincia  = provinciaInput.value;
+  const dniNuevo   = dniNuevoInput.value.trim();
+  const emailCli   = emailClienteInput.value.trim().toLowerCase();
+  const dni        = dniNuevo;
+
+  let emailFinal = email || emailCli;
+  if (!emailFinal || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailFinal)) {
+    alert("Ingresá un email válido.");
+    return;
+  }
+
+  db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
+    .then(snap => {
+      if (snap.exists()) {
+                // Solo validar pedido abierto si NO se acaba de enviar uno
+                if (!pedidoEnviado) {
+                    validarPedidoAbierto(emailFinal, (abierto, pedidoId) => {
+                        if (abierto) {
+                            mostrarMensajePedidoAbierto(pedidoId);
+                            return;
+                        }
+                        // --- FLUJO ORIGINAL PARA CLIENTE REGISTRADO ---
+                        const cli = Object.values(snap.val())[0];
+                        nombreInput.value    = cli.nombre    || '';
+                        telefonoInput.value  = cli.telefono  || '';
+                        localidadInput.value = cli.localidad || '';
+                        direccionInput.value = cli.direccion || '';
+                        provinciaInput.value = cli.provincia || '';
+                        dniNuevoInput.value  = cli.dni       || '';
+                        emailInput.value     = cli.email     || '';
+                        datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, localidad: cli.localidad, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
+                        mostrarModalConfirmacion();
+                    });
+                } else {
+                    // Si se acaba de enviar un pedido, simplemente continuar flujo normal
+                    const cli = Object.values(snap.val())[0];
+                    nombreInput.value    = cli.nombre    || '';
+                    telefonoInput.value  = cli.telefono  || '';
+                    localidadInput.value = cli.localidad || '';
+                    direccionInput.value = cli.direccion || '';
+                    provinciaInput.value = cli.provincia || '';
+                    dniNuevoInput.value  = cli.dni       || '';
+                    emailInput.value     = cli.email     || '';
+                    datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, localidad: cli.localidad, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
+                    mostrarModalConfirmacion();
+                }
+      } else {
+        // --- FLUJO ORIGINAL PARA NUEVO CLIENTE ---
+        if (!nombre) {
+          alert("Ingresá tu nombre.");
+          return;
+        }
+        datosExtraCliente = { email: emailFinal, nombre, telefono, localidad, direccion, provincia, dni, tipoCliente: 'mayorista' };
+        db.ref('clientes').push({
+          email: emailFinal,
+          nombre,
+          telefono,
+          localidad,
+          direccion,
+          provincia,
+          dni,
+          tipoCliente: 'mayorista',
+          registro: 'web'
+        }).then(() => {
+          mostrarModalConfirmacion();
+        });
+      }
+    });
+});
+
+function continuarPedido() {
+    const email      = emailInput.value.trim().toLowerCase();
+    const nombre     = nombreInput.value.trim();
+    const telefono   = telefonoInput.value.trim();
+    const localidad  = localidadInput.value.trim();
+    const direccion  = direccionInput.value.trim();
+    const provincia  = provinciaInput.value;
+    const dniNuevo   = dniNuevoInput.value.trim();
+    const emailCli   = emailClienteInput.value.trim().toLowerCase();
+    const dni        = dniNuevo;
+
+    let emailFinal = email || emailCli;
+    if (!emailFinal || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailFinal)) {
+        alert("Ingresá un email válido.");
+        return;
+    }
+
+    // Solo para usuarios registrados (clientes existentes)
+    db.ref('clientes').orderByChild('email').equalTo(emailFinal).limitToFirst(1).once('value')
+        .then(snap => {
+            if (snap.exists()) {
+                // Validar si ya tiene pedido abierto
+                validarPedidoAbierto(emailFinal, (abierto, pedidoId) => {
+                    if (abierto) {
+                        mostrarMensajePedidoAbierto(pedidoId);
+                        return;
+                    }
+                    // --- FLUJO ORIGINAL PARA CLIENTE REGISTRADO ---
+                    const cli = Object.values(snap.val())[0];
+                    nombreInput.value    = cli.nombre    || '';
+                    telefonoInput.value  = cli.telefono  || '';
+                    localidadInput.value = cli.localidad || '';
+                    direccionInput.value = cli.direccion || '';
+                    provinciaInput.value = cli.provincia || '';
+                    dniNuevoInput.value  = cli.dni       || '';
+                    emailInput.value     = cli.email     || '';
+                    datosExtraCliente = { email: emailFinal, nombre: cli.nombre, telefono: cli.telefono, localidad: cli.localidad, direccion: cli.direccion, provincia: cli.provincia, dni: cli.dni, tipoCliente: cli.tipoCliente || 'mayorista' };
+                    mostrarModalConfirmacion();
+                });
+            } else {
+                // Si no es cliente registrado, continuar lógica normal
+                // ...existing code... (el resto de la lógica original)
+            }
+        });
+}
+
+function enviarPedidoFinal() {
+    if (pedidoEnviado) return;  // Si ya se envió, salimos
+    pedidoEnviado = true;
+    
+    if (carrito.length === 0) { alert("El carrito está vacío."); return; }
+
+    /* ------------------ NUEVO PEDIDO ------------------ */
+    if (!modoEdicion) {
+        const pedidoRef = db.ref('pedidos').push();
+        const pedidoId  = pedidoRef.key;
+
+        const pedidoObj = {
+            id:        pedidoId,
+            timestamp: Date.now(),
+            locked:    false,
+            adminViewed: false,
+            createdby: "web",
+            status:    'ABIERTO',
+
+            cliente: {
+                nombre:    datosExtraCliente.nombre    || '',
+                telefono:  datosExtraCliente.telefono  || '',
+                localidad: datosExtraCliente.localidad || '',
+                direccion: datosExtraCliente.direccion || '',
+                provincia: datosExtraCliente.provincia || '',
+                dni:       String(datosExtraCliente.dni || ''),
+                email:     datosExtraCliente.email     || '',
+                tipoCliente: datosExtraCliente.tipoCliente || 'mayorista'
+            },
+
+            items: carrito.map(it => ({
+                nombre:    it.nombre,
+                cantidad:  it.cantidad,
+                valorUSD:  it.precio,
+                codigo:    it.codigo || '',
+                categoria: it.categoria || ''
+            }))
+        };
+
+        pedidoRef.set(pedidoObj).then(() => {
+            // Enviar email automático como hasta ahora
+            if (datosExtraCliente.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(datosExtraCliente.email)) {
+                emailjs.send("service_lu9cpxk", "template_xqo1j5z", {
+                    email: datosExtraCliente.email,
+                    name: datosExtraCliente.nombre,
+                    linkPedido: `https://www.home-point.com.ar/pedidos.html?id=${pedidoId}`
+                })
+                .then(function(response) {
+                    console.log("Email enviado!", response.status, response.text);
+                }, function(error) {
+                    console.error("Error enviando email:", error);
+                });
+            } else {
+                alert("El email del cliente está vacío o no es válido. No se envía el pedido por email.");
+                console.error("Email del cliente no válido o vacío.");
+            }
+
+            // Mostrar modal de confirmación profesional
+            mostrarModalPedidoConfirmado(pedidoId, datosExtraCliente.email);
+            limpiarCarrito();
+        });
+        return;
+    }
+
+    /* -------------- EDITAR PEDIDO EXISTENTE -------------- */
+    const pedidoRef = db.ref('pedidos/' + pedidoEditId);
+
+    pedidoRef.once('value').then(snap => {
+        const pedido = snap.val();
+        if (!pedido || pedido.locked) { alert("Este pedido no existe o está cerrado."); return; }
+
+        // fusiono artículos
+        carrito.forEach(sel => {
+            const idx = pedido.items.findIndex(it => it.nombre === sel.nombre);
+            if (idx > -1) {
+                pedido.items[idx].cantidad += sel.cantidad;
+            } else {
+                pedido.items.push({
+                    nombre:    sel.nombre,
+                    cantidad:  sel.cantidad,
+                    valorUSD:  sel.precio,
+                    codigo:    sel.codigo || '',
+                    categoria: sel.categoria || ''
+                });
+            }
+        });
+
+        pedido.cliente = {
+            nombre:    datosExtraCliente.nombre    || pedido.cliente?.nombre    || '',
+            telefono:  datosExtraCliente.telefono  || pedido.cliente?.telefono || '',
+            localidad: datosExtraCliente.localidad || pedido.cliente?.localidad || '',
+            direccion: datosExtraCliente.direccion || pedido.cliente?.direccion || '',
+            provincia: datosExtraCliente.provincia || pedido.cliente?.provincia || '',
+            dni:       String(
+                        datosExtraCliente.dni ||
+                        pedido.cliente?.dni    || ''
+                        ),
+            email:     datosExtraCliente.email     || pedido.cliente?.email || '',
+            tipoCliente: datosExtraCliente.tipoCliente || pedido.cliente?.tipoCliente || 'mayorista'
+        };
+        return pedidoRef.update({
+            items:   pedido.items,
+            cliente: pedido.cliente,
+            adminViewed: false,
+            lastUpdated: Date.now()
+        });
+
+    })
+    .then(() => {
+        alert("Artículos agregados al pedido 👌");
+        window.location.href = `pedidos.html?id=${pedidoEditId}`;
+    })
+    .catch(err => { console.error(err); alert("Error actualizando el pedido"); });
+}
+
+// Modal de confirmación de pedido realizado
+function mostrarModalPedidoConfirmado(pedidoId, email) {
+    // Elimina cualquier modal previo
+    let modalExistente = document.getElementById('pedido-confirmado-modal');
+    if (modalExistente) {
+        modalExistente.remove();
+    }
+    let overlay = document.createElement('div');
+    overlay.id = 'pedido-confirmado-modal';
+    overlay.className = 'modal';
+    overlay.style.display = 'flex';
+    overlay.innerHTML = `
+        <div class="modal-content" style="max-width:450px;position:relative;">
+            <div class="modal-header">
+                <h2 style='margin:0;'><i class="fas fa-check-circle"></i> ¡Pedido Confirmado!</h2>
+                <p style='margin:8px 0 0 0;'>Tu pedido se ha procesado exitosamente</p>
+            </div>
+            <div class="modal-body" style="padding:30px; text-align:center;">
+                <div style="background:#f0f9f0;border-radius:12px;padding:20px;margin-bottom:20px;">
+                    <i class="fas fa-envelope" style="font-size:3em;color:#4CAF50;margin-bottom:15px;"></i>
+                    <p style="margin:0;color:#333;line-height:1.6;">
+                        Se envió una notificación a tu email con todos los detalles del pedido. 
+                        Puedes verlo, modificarlo o realizar el seguimiento desde allí.
+                    </p>
+                </div>
+                <button id="verPedidoBtnConfirmado" class="btn-primary" style="width:100%;margin:0;">
+                    <i class="fas fa-eye"></i> Ver Mi Pedido
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    // Botón para ver el pedido - redirige directamente
+    document.getElementById('verPedidoBtnConfirmado').onclick = function() {
+        window.location.href = `pedidos.html?id=${pedidoId}`;
+    };
+}
+
+function limpiarCarrito() {
+    carrito = [];
+    
+    // Restaurar todos los controles a su estado original
+    document.querySelectorAll('.card').forEach(card => {
+        const btnCarrito = card.querySelector('.btn-agregar-carrito');
+        const quantityContainer = card.querySelector('input[type="number"]')?.parentElement;
+        const cantidadInput = card.querySelector('input[type="number"]');
+        
+        if (btnCarrito && quantityContainer && cantidadInput) {
+            // Resetear valor del input
+            cantidadInput.value = '1';
+            
+            // Ocultar controles de cantidad
+            quantityContainer.style.display = 'none';
+            quantityContainer.style.opacity = '0';
+            quantityContainer.style.transform = 'scale(0.8)';
+            
+            // Mostrar botón de carrito original
+            btnCarrito.style.display = 'block';
+            btnCarrito.style.opacity = '1';
+            btnCarrito.style.transform = 'scale(1)';
+            
+            // Restaurar estilos del botón
+            btnCarrito.style.background = '';
+            btnCarrito.style.color = '';
+            btnCarrito.style.border = '';
+        }
+    });
+    
+    // Actualizar el carrito (esto ocultará el botón flotante automáticamente)
+    actualizarCarrito();
+    guardarCarritoLocal();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('marquee-text-1').innerHTML = MARQUEE_TEXT;
+    document.getElementById('marquee-text-2').innerHTML = MARQUEE_TEXT;
+    
+    // Cargar el carrito guardado en localStorage
+    cargarCarritoLocal();
+});
+
+// Permitir cerrar el modal al hacer clic fuera del contenido
+modal.addEventListener('mousedown', function(e) {
+  if (e.target === modal) {
+    modal.style.display = 'none';
+  }
+});
+
+// === Último Pedido ===
+const ultimoPedidoBtn = document.getElementById('ultimoPedidoBtn');
+const ultimoPedidoModal = document.getElementById('ultimoPedidoModal');
+const closeUltimoPedidoModal = document.getElementById('closeUltimoPedidoModal');
+const buscarUltimoPedidoBtn = document.getElementById('buscarUltimoPedidoBtn');
+const ultimoPedidoEmailInput = document.getElementById('ultimoPedidoEmailInput');
+const buscarBtnText = document.getElementById('buscarBtnText');
+const buscarSpinner = document.getElementById('buscarSpinner');
+const ultimoPedidoMensaje = document.getElementById('ultimoPedidoMensaje');
+
+function mostrarMensajeBusqueda(tipo, texto) {
+  const mensajeDiv = ultimoPedidoMensaje;
+  const iconoElement = mensajeDiv.querySelector('.fas');
+  const textoElement = mensajeDiv.querySelector('span');
+  
+  // Configurar estilos según el tipo
+  if (tipo === 'error') {
+    mensajeDiv.style.backgroundColor = '#fee';
+    mensajeDiv.style.borderLeft = '4px solid #e53e3e';
+    mensajeDiv.style.color = '#c53030';
+    iconoElement.className = 'fas fa-exclamation-circle';
+  } else if (tipo === 'success') {
+    mensajeDiv.style.backgroundColor = '#e6ffed';
+    mensajeDiv.style.borderLeft = '4px solid #48bb78';
+    mensajeDiv.style.color = '#2f855a';
+    iconoElement.className = 'fas fa-check-circle';
+  } else if (tipo === 'info') {
+    mensajeDiv.style.backgroundColor = '#e6f7ff';
+    mensajeDiv.style.borderLeft = '4px solid #4299e1';
+    mensajeDiv.style.color = '#2b6cb0';
+    iconoElement.className = 'fas fa-info-circle';
+  }
+  
+  textoElement.textContent = texto;
+  mensajeDiv.style.display = 'flex';
+  mensajeDiv.style.alignItems = 'center';
+}
+
+function ocultarMensajeBusqueda() {
+  ultimoPedidoMensaje.style.display = 'none';
+}
+
+function setEstadoCargaBusqueda(cargando) {
+  buscarUltimoPedidoBtn.disabled = cargando;
+  buscarUltimoPedidoBtn.style.opacity = cargando ? '0.7' : '1';
+  buscarUltimoPedidoBtn.style.cursor = cargando ? 'not-allowed' : 'pointer';
+  buscarBtnText.style.display = cargando ? 'none' : 'inline';
+  buscarSpinner.style.display = cargando ? 'block' : 'none';
+  ultimoPedidoEmailInput.disabled = cargando;
+}
+
+ultimoPedidoBtn.addEventListener('click', function() {
+  ultimoPedidoModal.style.display = 'flex';
+  ultimoPedidoEmailInput.value = '';
+  ocultarMensajeBusqueda();
+  setTimeout(() => ultimoPedidoEmailInput.focus(), 100);
+});
+
+closeUltimoPedidoModal.addEventListener('click', function() {
+  ultimoPedidoModal.style.display = 'none';
+  ocultarMensajeBusqueda();
+});
+
+// Cerrar modal al hacer click fuera del contenido
+ultimoPedidoModal.addEventListener('mousedown', function(e) {
+  if (e.target === ultimoPedidoModal) {
+    ultimoPedidoModal.style.display = 'none';
+    ocultarMensajeBusqueda();
+  }
+});
+
+buscarUltimoPedidoBtn.addEventListener('click', function() {
+  const email = ultimoPedidoEmailInput.value.trim().toLowerCase();
+  ocultarMensajeBusqueda();
+  
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    mostrarMensajeBusqueda('error', 'Por favor, ingresá un email válido');
+    ultimoPedidoEmailInput.focus();
+    return;
+  }
+  
+  setEstadoCargaBusqueda(true);
+  
+  // Buscar el último pedido por email
+  db.ref('pedidos').orderByChild('cliente/email').equalTo(email).once('value')
+    .then(snap => {
+      setEstadoCargaBusqueda(false);
+      
+      if (!snap.exists()) {
+        mostrarMensajeBusqueda('error', 'No se encontraron pedidos registrados con este email');
+        return;
+      }
+      
+      // Buscar el pedido con mayor timestamp
+      let ultimo = null;
+      snap.forEach(child => {
+        const pedido = child.val();
+        if (!ultimo || (pedido.timestamp > ultimo.timestamp)) {
+          ultimo = pedido;
+        }
+      });
+      
+      if (ultimo && ultimo.id) {
+        mostrarMensajeBusqueda('success', '¡Pedido encontrado! Redirigiendo...');
+        setTimeout(() => {
+          window.open(`pedidos.html?id=${ultimo.id}`, '_blank');
+          ultimoPedidoModal.style.display = 'none';
+          ocultarMensajeBusqueda();
+          ultimoPedidoEmailInput.value = '';
+        }, 800);
+      } else {
+        mostrarMensajeBusqueda('error', 'No se encontraron pedidos registrados con este email');
+      }
+    })
+    .catch(() => {
+      setEstadoCargaBusqueda(false);
+      mostrarMensajeBusqueda('error', 'Error al buscar el pedido. Por favor, intenta de nuevo');
+    });
+});
+
+// Permitir Enter para buscar
+ultimoPedidoEmailInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') buscarUltimoPedidoBtn.click();
+});
+
+// Carrusel Pie de Página
+const carouselPieImages = document.getElementById('carousel-pie-images');
+const slidesPie = carouselPieImages.querySelectorAll('.carousel-slide');
+let currentPieIndex = 0;
+
+function updateCarouselPie() {
+    const offset = -currentPieIndex * 100;
+    carouselPieImages.style.transform = `translateX(${offset}%)`;
+}
+
+setInterval(() => {
+    currentPieIndex = (currentPieIndex + 1) % slidesPie.length;
+    updateCarouselPie();
+}, 5000);
