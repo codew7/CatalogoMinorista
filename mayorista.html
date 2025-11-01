@@ -510,12 +510,15 @@
             background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-            padding: 10px 12px;
+            padding: 10px 35px 10px 12px;
             margin-bottom: 8px;
             font-size: 0.85em;
             line-height: 1.5;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 40px;
         }
 
         #cart-list li:hover {
@@ -529,10 +532,10 @@
         .cart-item-delete {
             position: absolute;
             top: 50%;
-            right: 10px;
+            right: 8px;
             transform: translateY(-50%);
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
             border: none;
             border-radius: 4px;
@@ -545,6 +548,7 @@
             transition: all 0.2s ease;
             padding: 0;
             box-shadow: 0 1px 3px rgba(244, 67, 54, 0.3);
+            flex-shrink: 0;
         }
 
         .cart-item-delete:hover {
