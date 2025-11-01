@@ -366,7 +366,7 @@
         /* Botón flotante del carrito (minimizado) */
         .cart-float-btn {
             position: fixed;
-            bottom: 30px;
+            bottom: 90px;
             left: 20px;
             width: 50px;
             height: 50px;
@@ -411,7 +411,7 @@
         /* Contenedor del carrito (expandido) */
         .cart-container {
             position: fixed;
-            bottom: 20px;
+            bottom: 80px;
             left: 20px;
             background: linear-gradient(145deg, #ffffff, #f8f9fa);
             padding: 0;
@@ -543,22 +543,26 @@
             background: #f44336;
             color: white;
             border: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            min-height: 18px;
+            border-radius: 3px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 16px;
+            line-height: 1;
+            padding: 0;
             transition: all 0.2s ease;
             flex-shrink: 0;
-            font-weight: bold;
+            font-weight: normal;
         }
 
         .cart-item-delete:hover {
             background: #d32f2f;
-            transform: scale(1.1);
+            transform: scale(1.15);
         }
 
         .cart-buttons-container {
@@ -1089,6 +1093,10 @@
                 height: 50px;
             }
 
+            .cart-float-btn {
+                bottom: 90px;
+            }
+
             .cart-float-btn i {
                 font-size: 16px;
             }
@@ -1100,7 +1108,7 @@
             }
 
             .cart-container {
-                bottom: 10px;
+                bottom: 80px;
                 left: 10px;
                 right: 10px;
                 min-width: auto;
@@ -1137,8 +1145,10 @@
             }
 
             .cart-item-delete {
-                width: 18px;
-                height: 18px;
+                width: 16px;
+                height: 16px;
+                min-width: 16px;
+                min-height: 16px;
                 font-size: 14px;
             }
 
@@ -1159,7 +1169,7 @@
 
         @media (max-width: 400px) {
             .cart-float-btn {
-                bottom: 15px;
+                bottom: 80px;
                 left: 10px;
                 width: 50px;
                 height: 50px;
@@ -1176,7 +1186,7 @@
             }
 
             .cart-container {
-                bottom: 5px;
+                bottom: 70px;
                 left: 5px;
                 right: 5px;
             }
@@ -1206,8 +1216,10 @@
             }
 
             .cart-item-delete {
-                width: 16px;
-                height: 16px;
+                width: 14px;
+                height: 14px;
+                min-width: 14px;
+                min-height: 14px;
                 font-size: 12px;
             }
 
