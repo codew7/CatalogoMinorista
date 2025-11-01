@@ -491,6 +491,24 @@
             gap: 8px;
         }
 
+        #btnNuevoUsuario {
+            background: rgba(76, 175, 80, 0.08);
+        }
+
+        #btnNuevoUsuario:hover {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4CAF50;
+        }
+
+        #btnUsuarioRegistrado {
+            background: rgba(33, 150, 243, 0.08);
+        }
+
+        #btnUsuarioRegistrado:hover {
+            background: rgba(33, 150, 243, 0.15);
+            color: #2196F3;
+        }
+
         .user-type-btn:hover {
             background: #e8e8e8;
             color: #333;
@@ -498,8 +516,17 @@
 
         .user-type-btn.active {
             background: white;
-            color: #4CAF50;
             box-shadow: 0 2px 8px rgba(0,0,0,.1);
+        }
+
+        #btnNuevoUsuario.active {
+            color: #4CAF50;
+            border: 2px solid #4CAF50;
+        }
+
+        #btnUsuarioRegistrado.active {
+            color: #2196F3;
+            border: 2px solid #2196F3;
         }
 
         .form-section {
@@ -1562,8 +1589,14 @@ function mostrarModalConfirmacion() {
     let detalleHTML = '';
     let total = 0;
     
+    // Función para formatear números sin decimales y con separador de miles
+    function formatearPrecio(numero) {
+        return Math.round(numero).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    
     carrito.forEach(item => {
-        const subtotal = parseFloat(item.precio.replace(/[^0-9.-]+/g, '')) * item.cantidad;
+        const precioUnitario = parseFloat(item.precio.replace(/[^0-9.-]+/g, ''));
+        const subtotal = precioUnitario * item.cantidad;
         total += subtotal;
         
         detalleHTML += `
@@ -1571,18 +1604,18 @@ function mostrarModalConfirmacion() {
                 <div class="item-info">
                     <div class="item-nombre">${item.nombre}</div>
                     <div class="item-detalles">
-                        Código: ${item.codigo} | Cantidad: ${item.cantidad} | Precio unit: $${item.precio}
+                        Código: ${item.codigo} | Cantidad: ${item.cantidad} | Precio unit: $${formatearPrecio(precioUnitario)}
                     </div>
                 </div>
                 <div class="item-precio">
-                    $${subtotal.toFixed(2)}
+                    $${formatearPrecio(subtotal)}
                 </div>
             </div>
         `;
     });
     
     pedidoDetalle.innerHTML = detalleHTML;
-    document.getElementById('totalPedido').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('totalPedido').textContent = `$${formatearPrecio(total)}`;
     
     // Mostrar el modal de confirmación
     confirmacionModal.style.display = 'flex';
