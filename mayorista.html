@@ -366,52 +366,64 @@
         /* Botón flotante del carrito (minimizado) */
         .cart-float-btn {
             position: fixed;
-            bottom: 90px;
+            bottom: 30px;
             left: 20px;
             width: 50px;
             height: 50px;
-            background: #ff9800;
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
             border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 24px rgba(255, 152, 0, 0.4);
             display: none;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            border: 3px solid white;
         }
 
         .cart-float-btn:hover {
             transform: scale(1.1);
+            box-shadow: 0 8px 28px rgba(255, 152, 0, 0.5);
         }
 
         .cart-float-btn i {
             color: white;
-            font-size: 16px;
+            font-size: 24px;
         }
 
         .cart-badge {
             position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #f44336;
+            top: -6px;
+            right: -6px;
+            background: linear-gradient(135deg, #ff5722 0%, #f44336 100%);
             color: white;
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
             border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         /* Contenedor del carrito (expandido) */
         .cart-container {
             position: fixed;
-            bottom: 80px;
+            bottom: 20px;
             left: 20px;
             background: linear-gradient(145deg, #ffffff, #f8f9fa);
             padding: 0;
@@ -495,151 +507,98 @@
         }
 
         #cart-list li {
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 8px 10px;
-            margin-bottom: 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
             font-size: 0.85em;
-            transition: background 0.2s ease;
+            line-height: 1.5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
         }
 
         #cart-list li:hover {
-            background: #f8f9fa;
+            border-color: #4CAF50;
         }
 
         #cart-list li:last-child {
-            border-bottom: none;
-        }
-
-        .cart-item-info {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 0;
-        }
-
-        .cart-item-info strong {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex: 1;
-            font-size: 0.95em;
-        }
-
-        .cart-item-info span {
-            color: #666;
-            font-size: 0.9em;
-            white-space: nowrap;
-            flex-shrink: 0;
+            margin-bottom: 0;
         }
 
         .cart-item-delete {
-            background: #f44336;
-            color: white;
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
             border: none;
-            width: 18px;
-            height: 18px;
-            min-width: 18px;
-            min-height: 18px;
-            border-radius: 3px;
+            border-radius: 4px;
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            font-size: 16px;
-            line-height: 1;
-            padding: 0;
             transition: all 0.2s ease;
-            flex-shrink: 0;
-            font-weight: normal;
+            padding: 0;
+            box-shadow: 0 1px 3px rgba(244, 67, 54, 0.3);
         }
 
         .cart-item-delete:hover {
-            background: #d32f2f;
-            transform: scale(1.15);
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+            box-shadow: 0 2px 5px rgba(244, 67, 54, 0.4);
         }
 
         .cart-buttons-container {
-            padding: 15px;
+            padding: 10px 12px;
             background: #f8f9fa;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            border-top: 2px solid #e0e0e0;
+            flex-direction: row;
+            gap: 8px;
+            border-top: 1px solid #e0e0e0;
         }
 
         .cart-container button {
-            width: 100%;
-            padding: 14px 20px;
-            font-size: 0.95em;
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 0.85em;
             font-weight: 600;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            letter-spacing: 0.3px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cart-container button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .cart-container button:hover::before {
-            left: 100%;
+            gap: 6px;
         }
 
         .cart-container button.whatsapp-link {
             background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.25);
         }
 
         .cart-container button.whatsapp-link:hover {
             background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
-            box-shadow: 0 6px 18px rgba(76, 175, 80, 0.4);
-            transform: translateY(-2px);
-        }
-
-        .cart-container button.whatsapp-link:active {
-            transform: translateY(0);
+            box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3);
         }
 
         .cart-container button:not(.whatsapp-link):not(.cart-item-delete) {
             background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+            box-shadow: 0 2px 6px rgba(244, 67, 54, 0.25);
         }
 
         .cart-container button:not(.whatsapp-link):not(.cart-item-delete):hover {
             background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
-            box-shadow: 0 6px 18px rgba(244, 67, 54, 0.4);
-            transform: translateY(-2px);
-        }
-
-        .cart-container button:not(.whatsapp-link):not(.cart-item-delete):active {
-            transform: translateY(0);
+            box-shadow: 0 3px 8px rgba(244, 67, 54, 0.3);
         }
 
         .cart-container button i {
-            font-size: 1.1em;
+            font-size: 1em;
         }
 
         .modal{
@@ -1088,27 +1047,24 @@
             /* Responsive cart styles */
             .cart-float-btn {
                 bottom: 20px;
-                left: 15px;
+                left: 25px;
                 width: 50px;
                 height: 50px;
             }
 
-            .cart-float-btn {
-                bottom: 90px;
-            }
-
             .cart-float-btn i {
-                font-size: 16px;
+                font-size: 22px;
             }
 
             .cart-badge {
-                width: 20px;
-                height: 20px;
-                font-size: 10px;
+                width: 22px;
+                height: 22px;
+                font-size: 11px;
+                border: 2px solid white;
             }
 
             .cart-container {
-                bottom: 80px;
+                bottom: 10px;
                 left: 10px;
                 right: 10px;
                 min-width: auto;
@@ -1131,25 +1087,16 @@
             }
 
             #cart-list li {
-                padding: 6px 8px;
-                font-size: 0.8em;
-                gap: 6px;
-            }
-
-            .cart-item-info strong {
-                font-size: 0.9em;
-            }
-
-            .cart-item-info span {
+                padding: 10px 32px 10px 12px;
                 font-size: 0.85em;
+                margin-bottom: 8px;
             }
 
             .cart-item-delete {
-                width: 16px;
-                height: 16px;
-                min-width: 16px;
-                min-height: 16px;
-                font-size: 14px;
+                width: 15px;
+                height: 15px;
+                font-size: 11px;
+                border-radius: 3px;
             }
 
             .cart-buttons-container {
@@ -1169,24 +1116,25 @@
 
         @media (max-width: 400px) {
             .cart-float-btn {
-                bottom: 80px;
-                left: 10px;
+                bottom: 15px;
+                left: 20px;
                 width: 50px;
                 height: 50px;
             }
 
             .cart-float-btn i {
-                font-size: 16px;
+                font-size: 20px;
             }
 
             .cart-badge {
-                width: 18px;
-                height: 18px;
-                font-size: 9px;
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+                border: 2px solid white;
             }
 
             .cart-container {
-                bottom: 70px;
+                bottom: 5px;
                 left: 5px;
                 right: 5px;
             }
@@ -1202,25 +1150,17 @@
             }
 
             #cart-list li {
-                padding: 5px 6px;
-                font-size: 0.75em;
-                gap: 4px;
-            }
-
-            .cart-item-info strong {
-                font-size: 0.9em;
-            }
-
-            .cart-item-info span {
-                font-size: 0.85em;
+                padding: 8px 28px 8px 10px;
+                font-size: 0.8em;
             }
 
             .cart-item-delete {
-                width: 14px;
-                height: 14px;
-                min-width: 14px;
-                min-height: 14px;
-                font-size: 12px;
+                width: 15px;
+                height: 15px;
+                font-size: 10px;
+                top: 6px;
+                right: 6px;
+                border-radius: 3px;
             }
 
             .cart-buttons-container {
@@ -1932,6 +1872,63 @@ document.addEventListener('DOMContentLoaded', function() {
         formUsuarioRegistrado.classList.add('active');
         formNuevoUsuario.classList.remove('active');
     });
+
+    // Event listener para el botón Continuar
+    const continuarBtn = document.getElementById('continuarBtn');
+    if (continuarBtn) {
+        continuarBtn.addEventListener('click', function() {
+            const formNuevoActivo = formNuevoUsuario.classList.contains('active');
+            const formRegistradoActivo = formUsuarioRegistrado.classList.contains('active');
+            
+            if (formNuevoActivo) {
+                // Validar y obtener datos del formulario de nuevo usuario
+                const nombre = document.getElementById('nombreInput').value.trim();
+                const email = document.getElementById('emailInput').value.trim();
+                const telefono = document.getElementById('telefonoInput').value.trim();
+                
+                if (!nombre || !email || !telefono) {
+                    alert('Por favor completa los campos obligatorios: Nombre, Email y Teléfono');
+                    return;
+                }
+                
+                // Guardar datos del cliente
+                datosExtraCliente = {
+                    nombre: nombre,
+                    email: email,
+                    telefono: telefono,
+                    direccion: document.getElementById('direccionInput').value.trim(),
+                    localidad: document.getElementById('localidadInput').value.trim(),
+                    provincia: document.getElementById('provinciaInput').value,
+                    dni: document.getElementById('dniNuevoInput').value.trim()
+                };
+                
+                // Mostrar modal de confirmación
+                mostrarModalConfirmacion();
+                
+            } else if (formRegistradoActivo) {
+                // Validar email del usuario registrado
+                const emailCliente = document.getElementById('emailClienteInput').value.trim();
+                
+                if (!emailCliente) {
+                    alert('Por favor ingresa tu email registrado');
+                    return;
+                }
+                
+                // Por ahora, solo guardamos el email
+                // En producción, aquí buscarías los datos en Firebase
+                datosExtraCliente = {
+                    email: emailCliente,
+                    nombre: 'Cliente Registrado' // Placeholder
+                };
+                
+                // Mostrar modal de confirmación
+                mostrarModalConfirmacion();
+                
+            } else {
+                alert('Por favor selecciona si eres nuevo cliente o ya estás registrado');
+            }
+        });
+    }
 });
 
 // Función global para mostrar el modal de confirmación
