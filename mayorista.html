@@ -497,15 +497,15 @@
         #cart-list li {
             background: white;
             border-bottom: 1px solid #e0e0e0;
-            padding: 10px 40px 10px 15px;
+            padding: 8px 10px;
             margin-bottom: 0;
-            font-size: 0.9em;
-            line-height: 1.5;
+            font-size: 0.85em;
             transition: background 0.2s ease;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 10px;
         }
 
         #cart-list li:hover {
@@ -518,33 +518,47 @@
 
         .cart-item-info {
             flex: 1;
-            padding-right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .cart-item-info strong {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            font-size: 0.95em;
+        }
+
+        .cart-item-info span {
+            color: #666;
+            font-size: 0.9em;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .cart-item-delete {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
             background: #f44336;
             color: white;
             border: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 12px;
             transition: all 0.2s ease;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             flex-shrink: 0;
+            font-weight: bold;
         }
 
         .cart-item-delete:hover {
             background: #d32f2f;
-            transform: translateY(-50%) scale(1.1);
+            transform: scale(1.1);
         }
 
         .cart-buttons-container {
@@ -1109,15 +1123,23 @@
             }
 
             #cart-list li {
-                padding: 8px 35px 8px 12px;
+                padding: 6px 8px;
+                font-size: 0.8em;
+                gap: 6px;
+            }
+
+            .cart-item-info strong {
+                font-size: 0.9em;
+            }
+
+            .cart-item-info span {
                 font-size: 0.85em;
             }
 
             .cart-item-delete {
-                width: 20px;
-                height: 20px;
-                font-size: 10px;
-                right: 8px;
+                width: 18px;
+                height: 18px;
+                font-size: 14px;
             }
 
             .cart-buttons-container {
@@ -1170,15 +1192,23 @@
             }
 
             #cart-list li {
-                padding: 7px 32px 7px 10px;
-                font-size: 0.8em;
+                padding: 5px 6px;
+                font-size: 0.75em;
+                gap: 4px;
+            }
+
+            .cart-item-info strong {
+                font-size: 0.9em;
+            }
+
+            .cart-item-info span {
+                font-size: 0.85em;
             }
 
             .cart-item-delete {
-                width: 18px;
-                height: 18px;
-                font-size: 9px;
-                right: 6px;
+                width: 16px;
+                height: 16px;
+                font-size: 12px;
             }
 
             .cart-buttons-container {

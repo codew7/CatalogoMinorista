@@ -799,11 +799,11 @@ function actualizarCarrito() {
         
         const itemInfo = document.createElement('div');
         itemInfo.className = 'cart-item-info';
-        itemInfo.innerHTML = `<strong>${item.nombre}</strong> <span style="color: #666;">x${item.cantidad}</span>`;
+        itemInfo.innerHTML = `<strong>${item.nombre}</strong> <span>x${item.cantidad}</span>`;
         
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'cart-item-delete';
-        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+        deleteBtn.innerHTML = '×';
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
             eliminarItemCarrito(index);
