@@ -368,56 +368,44 @@
             position: fixed;
             bottom: 30px;
             left: 20px;
-            width: 65px;
-            height: 65px;
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            width: 50px;
+            height: 50px;
+            background: #ff9800;
             border-radius: 50%;
-            box-shadow: 0 6px 24px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             display: none;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-            border: 3px solid white;
+            transition: all 0.3s ease;
+            z-index: 1000;
         }
 
         .cart-float-btn:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 10px 32px rgba(76, 175, 80, 0.5);
+            transform: scale(1.1);
         }
 
         .cart-float-btn i {
             color: white;
-            font-size: 28px;
+            font-size: 16px;
         }
 
         .cart-badge {
             position: absolute;
             top: -5px;
             right: -5px;
-            background: linear-gradient(135deg, #ff5722 0%, #f44336 100%);
+            background: #f44336;
             color: white;
-            width: 28px;
-            height: 28px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 700;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
-            animation: pulse-badge 2s infinite;
-        }
-
-        @keyframes pulse-badge {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         /* Contenedor del carrito (expandido) */
@@ -507,50 +495,56 @@
         }
 
         #cart-list li {
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 12px 14px;
-            margin-bottom: 10px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 10px 40px 10px 15px;
+            margin-bottom: 0;
             font-size: 0.9em;
-            line-height: 1.6;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            line-height: 1.5;
+            transition: background 0.2s ease;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         #cart-list li:hover {
-            transform: translateX(-3px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15);
-            border-color: #4CAF50;
+            background: #f8f9fa;
         }
 
         #cart-list li:last-child {
-            margin-bottom: 0;
+            border-bottom: none;
+        }
+
+        .cart-item-info {
+            flex: 1;
+            padding-right: 10px;
         }
 
         .cart-item-delete {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #f44336;
             color: white;
             border: none;
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 6px rgba(244, 67, 54, 0.3);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
         }
 
         .cart-item-delete:hover {
-            transform: scale(1.15);
-            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.5);
+            background: #d32f2f;
+            transform: translateY(-50%) scale(1.1);
         }
 
         .cart-buttons-container {
@@ -1077,18 +1071,18 @@
             .cart-float-btn {
                 bottom: 20px;
                 left: 15px;
-                width: 58px;
-                height: 58px;
+                width: 50px;
+                height: 50px;
             }
 
             .cart-float-btn i {
-                font-size: 24px;
+                font-size: 16px;
             }
 
             .cart-badge {
-                width: 24px;
-                height: 24px;
-                font-size: 11px;
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
             }
 
             .cart-container {
@@ -1115,15 +1109,15 @@
             }
 
             #cart-list li {
-                padding: 10px 32px 10px 12px;
+                padding: 8px 35px 8px 12px;
                 font-size: 0.85em;
-                margin-bottom: 8px;
             }
 
             .cart-item-delete {
-                width: 22px;
-                height: 22px;
-                font-size: 11px;
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+                right: 8px;
             }
 
             .cart-buttons-container {
@@ -1145,18 +1139,18 @@
             .cart-float-btn {
                 bottom: 15px;
                 left: 10px;
-                width: 52px;
-                height: 52px;
+                width: 50px;
+                height: 50px;
             }
 
             .cart-float-btn i {
-                font-size: 22px;
+                font-size: 16px;
             }
 
             .cart-badge {
-                width: 22px;
-                height: 22px;
-                font-size: 10px;
+                width: 18px;
+                height: 18px;
+                font-size: 9px;
             }
 
             .cart-container {
@@ -1176,15 +1170,14 @@
             }
 
             #cart-list li {
-                padding: 8px 28px 8px 10px;
+                padding: 7px 32px 7px 10px;
                 font-size: 0.8em;
             }
 
             .cart-item-delete {
-                width: 20px;
-                height: 20px;
-                font-size: 10px;
-                top: 6px;
+                width: 18px;
+                height: 18px;
+                font-size: 9px;
                 right: 6px;
             }
 

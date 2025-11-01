@@ -796,15 +796,10 @@ function actualizarCarrito() {
     // Renderizar items con botón de eliminar
     carrito.forEach((item, index) => {
         let li = document.createElement('li');
-        li.style.position = 'relative';
-        li.style.paddingRight = '35px';
         
         const itemInfo = document.createElement('div');
-        itemInfo.innerHTML = `
-            <strong>${item.nombre}</strong><br>
-            <small>Código: ${item.codigo}</small><br>
-            <small>Cantidad: ${item.cantidad} | Precio: $${item.precio}</small>
-        `;
+        itemInfo.className = 'cart-item-info';
+        itemInfo.innerHTML = `<strong>${item.nombre}</strong> <span style="color: #666;">x${item.cantidad}</span>`;
         
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'cart-item-delete';
